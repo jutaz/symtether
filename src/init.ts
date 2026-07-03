@@ -78,14 +78,20 @@ export async function init(options: InitOptions = {}): Promise<InitResult> {
 
   // Sum-file repos get the stale-handling line (§10). Re-running init after
   // the first `update` upgrades the block in place.
-  const block = managedBlock(existsSync(path.join(repoRoot, SUM_FILE)));
+  let block = managedBlock(existsSync(path.join(repoRoot, SUM_FILE)));
 
   const existing = await readFile(target, 'utf8').catch(() => null);
+  // Match the file's own line-ending convention — inserting LF into a CRLF
+  // file leaves mixed endings and noisy diffs.
+  if (existing !== null && /\r\n/.test(existing)) {
+    block = block.replace(/\n/g, '\r\n');
+  }
+  const eol = existing !== null && /\r\n/.test(existing) ? '\r\n' : '\n';
   let action: InitResult['action'];
   let next: string;
 
   if (existing === null) {
-    next = `${block}\n`;
+    next = `${block}${eol}`;
     action = 'created';
   } else {
     const beginIdx = existing.indexOf('<!-- symtether:begin');
@@ -102,8 +108,8 @@ export async function init(options: InitOptions = {}): Promise<InitResult> {
       next = existing.slice(0, beginIdx) + block + tail;
       action = next === existing ? 'unchanged' : 'updated';
     } else {
-      const sep = existing.endsWith('\n') ? '\n' : '\n\n';
-      next = `${existing}${sep}${block}\n`;
+      const sep = existing.endsWith(eol) ? eol : `${eol}${eol}`;
+      next = `${existing}${sep}${block}${eol}`;
       action = 'updated';
     }
   }

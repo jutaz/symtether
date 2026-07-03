@@ -130,6 +130,45 @@ describe('check on the basic fixture', () => {
     }
   });
 
+  it('checks CRLF markdown documents end-to-end', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'crlf.md'),
+        '# CRLF doc\r\n\r\n[ok](../src/client.ts#sym:ApiClient.fetchData)\r\n[bad](../src/client.ts#sym:Nope)\r\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/crlf.md'] });
+      expect(r.summary.refs).toBe(2);
+      expect(r.results[0]).toMatchObject({ status: 'ok', tier: 'ast' });
+      expect(r.results[1]).toMatchObject({ status: 'broken' });
+      expect(r.results[1]!.ref.line).toBe(4);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('resolves refs to files in directories with spaces (%20-encoded)', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile, mkdir } = await import('node:fs/promises');
+      await mkdir(path.join(fixture.dir, 'my lib'));
+      await writeFile(
+        path.join(fixture.dir, 'my lib', 'util.ts'),
+        'export function helper(): number {\n  return 1;\n}\n',
+      );
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'spaces.md'),
+        '[x](../my%20lib/util.ts#sym:fn:helper)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/spaces.md'] });
+      expect(r.results[0]).toMatchObject({ status: 'ok', tier: 'ast' });
+      expect(r.results[0]!.ref.targetPath).toBe('my lib/util.ts');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('resolves $-identifiers at tier 2 (lexical)', async () => {
     const fixture = await setupFixture('basic');
     try {

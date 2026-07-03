@@ -59,7 +59,12 @@ function buildRef(
   const fragment = hash === -1 ? '' : url.slice(hash + 1);
   if (!rawTarget) return null;
 
-  const decodedTarget = tryDecode(rawTarget);
+  // Normalize Windows separators before any path operation — authored-on-
+  // Windows docs write `src\a.ts`, and POSIX path functions would otherwise
+  // treat the whole thing as one segment (§11: normalize to `/` everywhere).
+  // Drive-letter absolutes (`C:\...`) never reach here: `C:` matches the
+  // scheme test above, so they're ignored like any other external URL.
+  const decodedTarget = tryDecode(rawTarget).replace(/\\/g, '/');
   // Directory-ish targets (`.`, `..`, trailing slash) can never contain a
   // symbol — skip them; they're navigation links, not code refs.
   const lastSegment = path.posix.basename(decodedTarget);

@@ -134,6 +134,27 @@ describe('extractRefs', () => {
     expect(ref!.syntaxError).toBeUndefined();
   });
 
+  it('normalizes Windows backslash separators in targets', () => {
+    const [ref] = refs('[x](..\\src\\client.ts#sym:ApiClient.fetchData)');
+    expect(ref).toMatchObject({
+      targetPath: 'src/client.ts',
+      dotpath: ['ApiClient', 'fetchData'],
+    });
+    expect(ref!.syntaxError).toBeUndefined();
+  });
+
+  it('ignores Windows drive-letter absolutes like external URLs', () => {
+    // `C:` parses as a URL scheme — same bucket as https:, never a repo path.
+    expect(refs('[x](C:\\Program%20Files\\x.ts#sym:Foo)')).toHaveLength(0);
+  });
+
+  it('extracts refs from CRLF documents with correct line numbers', () => {
+    const md = '# Title\r\n\r\n[x](../src/a.ts#sym:Foo)\r\n';
+    const result = refs(md);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ line: 3, dotpath: ['Foo'] });
+  });
+
   it('ignores directory-ish targets (., .., trailing slash)', () => {
     const md = [
       '[a](.#sym:Foo)',

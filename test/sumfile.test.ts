@@ -95,6 +95,14 @@ describe('sumfile format', () => {
   it('formats an empty sum file as an empty string', () => {
     expect(formatSumFile([])).toBe('');
   });
+
+  it('parses CRLF sum files (e.g. after core.autocrlf checkout)', () => {
+    const parsed = parseSumFile(
+      'a.ts#A  ast:sha256:11  2026-01-01\r\nb.ts#B  ast:sha256:22  2026-01-01\r\n',
+    );
+    expect(parsed.size).toBe(2);
+    expect(parsed.get('a.ts#A')?.hash).toBe('ast:sha256:11');
+  });
 });
 
 describe('update output snapshot', () => {

@@ -134,6 +134,24 @@ describe('init', () => {
     }
   });
 
+  it('matches CRLF line endings in existing files', async () => {
+    const fixture = await setupFixture('basic');
+    const agentsPath = path.join(fixture.dir, 'AGENTS.md');
+    try {
+      await writeFile(agentsPath, '# Rules\r\n\r\nUse tabs.\r\n');
+      await init({ cwd: fixture.dir });
+      const content = await readFile(agentsPath, 'utf8');
+      // No bare-LF lines — every newline in the file is CRLF.
+      expect(content.replace(/\r\n/g, '')).not.toContain('\n');
+      expect(content).toContain('symtether:begin');
+      // Still idempotent under CRLF.
+      const again = await init({ cwd: fixture.dir });
+      expect(again.action).toBe('unchanged');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('writes the CI workflow with --ci', async () => {
     const fixture = await setupFixture('basic');
     try {

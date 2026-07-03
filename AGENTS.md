@@ -41,6 +41,9 @@ the resolver's behavior.
 - Deviation on record: sum-file lines use fixed two-space separators, not
   aligned columns — alignment would rewrite every line when a longer entry
   lands, amplifying the merge conflicts §9.1 exists to avoid.
+- Deviation on record: hashes are full SHA-256, not §9.1's 16-hex
+  truncation — the only cost is line width in a derived file, and the
+  `sha256:` prefix should mean sha256.
 - `queries/*.extra.scm` supplement the upstream tags.scm (const/let/var,
   TS namespaces/type/enum, Python class attributes, JS private methods);
   `copy-grammars.mjs` concatenates them at build time. Never duplicate a

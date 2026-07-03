@@ -5,9 +5,8 @@ import type { Node } from 'web-tree-sitter';
  * Content hashes for sum-file entries (design doc §9.1).
  *
  * Tier 1: SHA-256 over the normalized AST subtree of the matched definition —
- * named node kinds + leaf token text, positions and whitespace stripped —
- * truncated to 16 hex chars. Normalization means reformatting never triggers
- * staleness.
+ * named node kinds + leaf token text, positions and whitespace stripped.
+ * Normalization means reformatting never triggers staleness.
  *
  * Two deliberate choices on top of the spec:
  * - Comment nodes are skipped: a comment edit is prose, not implementation.
@@ -57,6 +56,8 @@ function collect(node: Node, name: string, parts: string[]): void {
   }
 }
 
+// Full digest, not truncated (deviation from §9.1's 16-hex): the cost is
+// line width in a derived file, and the `sha256:` prefix should mean sha256.
 function digest(input: string): string {
-  return createHash('sha256').update(input, 'utf8').digest('hex').slice(0, 16);
+  return createHash('sha256').update(input, 'utf8').digest('hex');
 }
