@@ -130,7 +130,7 @@ describe('update + check --strict', () => {
       expect(stale[0]!.message).toContain('docs/guide.md');
       expect(stale[0]!.message).toContain('symtether update');
       // Broken refs stay broken; stale only replaces ok.
-      expect(report.summary.broken).toBe(3);
+      expect(report.summary.broken).toBe(5);
 
       // Stale output must still satisfy the stable JSON contract.
       const schema = JSON.parse(readFileSync(SCHEMA_PATH, 'utf8'));
@@ -236,6 +236,96 @@ describe('update + check --strict', () => {
       await update({ cwd: fixture.dir, targets: ['src/tasks.py'] });
       const report = await check({ cwd: fixture.dir, strict: true });
       expect(report.summary.stale).toBeGreaterThan(0);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
+describe('update --check (CI mode)', () => {
+  it('passes when the sum file is current, without touching it', async () => {
+    const fixture = await setupFixture('basic');
+    const sumPath = path.join(fixture.dir, 'symtether.sum');
+    try {
+      await update({ cwd: fixture.dir });
+      const before = await readFile(sumPath, 'utf8');
+      const result = await update({ cwd: fixture.dir, check: true });
+      expect(result.upToDate).toBe(true);
+      expect(result.changed).toEqual([]);
+      expect(await readFile(sumPath, 'utf8')).toBe(before);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('fails with named targets when implementations changed', async () => {
+    const fixture = await setupFixture('basic');
+    const clientPath = path.join(fixture.dir, 'src', 'client.ts');
+    try {
+      await update({ cwd: fixture.dir });
+      const original = await readFile(clientPath, 'utf8');
+      await writeFile(
+        clientPath,
+        original.replace(
+          'return Promise.resolve(url);',
+          'return url as never;',
+        ),
+      );
+      const result = await update({ cwd: fixture.dir, check: true });
+      expect(result.upToDate).toBe(false);
+      expect(
+        result.changed!.some((c) =>
+          c.includes('src/client.ts#ApiClient.fetchData'),
+        ),
+      ).toBe(true);
+      expect(result.changed![0]).toContain('hash differs');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('fails when the sum file is missing entries for new refs', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      await update({ cwd: fixture.dir });
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'new-ref.md'),
+        '[schedule](../src/tasks.py#sym:fn:schedule)\n',
+      );
+      const result = await update({ cwd: fixture.dir, check: true });
+      expect(result.upToDate).toBe(false);
+      expect(
+        result.changed!.some(
+          (c) => c.includes('schedule') && c.includes('missing'),
+        ),
+      ).toBe(true);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('fails on orphaned entries and never fails on date-only differences', async () => {
+    const fixture = await setupFixture('basic');
+    const sumPath = path.join(fixture.dir, 'symtether.sum');
+    try {
+      await update({ cwd: fixture.dir });
+      // Date column is informational (§9.1) — rewriting it must not fail CI.
+      const dated = (await readFile(sumPath, 'utf8')).replace(
+        /\d{4}-\d{2}-\d{2}/g,
+        '1999-01-01',
+      );
+      await writeFile(sumPath, dated);
+      const ok = await update({ cwd: fixture.dir, check: true });
+      expect(ok.upToDate).toBe(true);
+
+      // An entry whose target no doc references anymore is orphaned.
+      await writeFile(
+        sumPath,
+        dated + 'src/gone.ts#nothing  ast:sha256:00  1999-01-01\n',
+      );
+      const stale = await update({ cwd: fixture.dir, check: true });
+      expect(stale.upToDate).toBe(false);
+      expect(stale.changed!.some((c) => c.includes('orphaned'))).toBe(true);
     } finally {
       await fixture.cleanup();
     }

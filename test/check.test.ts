@@ -114,7 +114,8 @@ describe('check on the basic fixture', () => {
 
   it('summarizes correctly', () => {
     expect(report.summary.refs).toBe(report.results.length);
-    expect(report.summary.broken).toBe(3);
+    // 3 broken in guide.md + 2 per-language broken in languages.md.
+    expect(report.summary.broken).toBe(5);
     expect(report.summary.lexical).toBe(1);
   });
 

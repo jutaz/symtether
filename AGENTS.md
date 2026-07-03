@@ -26,6 +26,7 @@ the resolver's behavior.
 - `npm run build` — tsc + copy WASM grammars into `grammars/`
 - `node dist/cli.js check --strict --exclude 'test/fixtures/**'` — dogfood check (CI runs this)
 - `node dist/cli.js update --exclude 'test/fixtures/**'` — re-stamp `symtether.sum` after reviewing docs whose refs went stale
+- `node dist/cli.js update --check --exclude 'test/fixtures/**'` — CI gate: fail when `symtether.sum` is out of date (also runs in the dogfood job)
 - `npm run build:site` / `npm run dev:site` — VitePress site (symtether.dev)
   from `docs/`; the config resolves every `#sym:` ref through the library and
   fails the build on broken ones. Deployed by Cloudflare Workers Builds

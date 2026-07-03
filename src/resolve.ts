@@ -199,6 +199,8 @@ export class Resolver {
         end: number;
         line: number;
         hash: string;
+        /** Chain prefix from an explicit @receiver capture (Go/Rust). */
+        receiver?: string;
       }
       const raw: RawDef[] = [];
       for (const match of lang.tagsQuery.matches(tree.rootNode)) {
@@ -207,6 +209,9 @@ export class Resolver {
         );
         const name = match.captures.find((c) => c.name === 'name');
         if (!def || !name) continue;
+        // @receiver ties a method to its type when nesting isn't lexical:
+        // Go receivers and Rust impl blocks (our queries/*.extra.scm).
+        const receiver = match.captures.find((c) => c.name === 'receiver');
         raw.push({
           name: name.node.text,
           kind: def.name.slice('definition.'.length),
@@ -214,8 +219,23 @@ export class Resolver {
           end: def.node.endIndex,
           line: name.node.startPosition.row + 1,
           hash: hashDefinition(def.node, name.node.text),
+          receiver: receiver?.node.text,
         });
       }
+
+      // The upstream query and a receiver-aware extra can capture the same
+      // definition node; keep only the receiver-aware one — it produces the
+      // richer chain (Server.Start), and the plain one would pollute
+      // matching with a duplicate short chain.
+      const byRange = new Map<string, RawDef>();
+      for (const d of raw) {
+        const key = `${d.start}:${d.end}:${d.name}`;
+        const existing = byRange.get(key);
+        if (!existing || (d.receiver && !existing.receiver)) {
+          byRange.set(key, d);
+        }
+      }
+      const deduped = [...byRange.values()];
 
       const hasParseErrors = tree.rootNode.hasError;
 
@@ -223,11 +243,15 @@ export class Resolver {
       // first. Overloads / merged declarations with an identical chain
       // collapse into one Definition (§11).
       const merged = new Map<string, Definition & { hashes: string[] }>();
-      for (const d of raw) {
-        const enclosing = raw
+      for (const d of deduped) {
+        const enclosing = deduped
           .filter((o) => o !== d && o.start <= d.start && o.end >= d.end)
           .sort((a, b) => a.start - b.start || b.end - a.end);
-        const chain = [...enclosing.map((o) => o.name), d.name];
+        const chain = [
+          ...enclosing.map((o) => o.name),
+          ...(d.receiver ? [d.receiver] : []),
+          d.name,
+        ];
         const key = chain.join('.');
         const existing = merged.get(key);
         if (existing) {

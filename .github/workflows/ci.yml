@@ -59,6 +59,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run build
       - run: node dist/cli.js check --strict --exclude 'test/fixtures/**'
+      - run: node dist/cli.js update --check --exclude 'test/fixtures/**'
 
   site:
     name: Site builds (refs verified)

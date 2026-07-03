@@ -17,15 +17,24 @@ export interface UpdateOptions {
   targets?: string[];
   /** Extra doc-glob excludes (mirrors `check --exclude`). */
   exclude?: string[];
+  /**
+   * CI mode: compute the sum file but write nothing; report whether the
+   * on-disk file matches. Like `terraform plan` or `prettier --check`.
+   */
+  check?: boolean;
 }
 
 export interface UpdateResult {
-  /** Entries written to the sum file. */
+  /** Entries written (or, under check, that would be written). */
   written: number;
   /** Entries removed because no doc references the target anymore. */
   pruned: number;
   /** Refs that could not be stamped because they're broken. */
   skippedBroken: number;
+  /** Under check: true when the on-disk sum file already matches. */
+  upToDate?: boolean;
+  /** Under check: targets whose entries differ / are missing / are orphaned. */
+  changed?: string[];
   file: string;
 }
 
@@ -92,12 +101,36 @@ export async function update(
     }
   }
 
-  await writeSumFile(repoRoot, next.values());
-
   let pruned = 0;
   for (const key of previous.keys()) {
     if (!next.has(key)) pruned++;
   }
+
+  if (options.check) {
+    // Compare keys + hashes only — the date column is informational (§9.1)
+    // and must never fail CI by itself.
+    const changed: string[] = [];
+    for (const [key, entry] of next) {
+      const prev = previous.get(key);
+      if (!prev) changed.push(`${key} (missing — not stamped)`);
+      else if (prev.hash !== entry.hash) changed.push(`${key} (hash differs)`);
+    }
+    for (const key of previous.keys()) {
+      if (!next.has(key))
+        changed.push(`${key} (orphaned — no doc references it)`);
+    }
+    changed.sort();
+    return {
+      written: next.size,
+      pruned,
+      skippedBroken,
+      upToDate: changed.length === 0,
+      changed,
+      file: SUM_FILE,
+    };
+  }
+
+  await writeSumFile(repoRoot, next.values());
 
   return { written: next.size, pruned, skippedBroken, file: SUM_FILE };
 }

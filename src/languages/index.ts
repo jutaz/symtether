@@ -36,6 +36,19 @@ const SPECS: Record<string, GrammarSpec> = {
   '.cjs': { grammar: 'javascript', tags: ['javascript'] },
   '.jsx': { grammar: 'javascript', tags: ['javascript'] },
   '.py': { grammar: 'python', tags: ['python'] },
+  '.go': { grammar: 'go', tags: ['go'] },
+  '.rs': { grammar: 'rust', tags: ['rust'] },
+  '.java': { grammar: 'java', tags: ['java'] },
+  '.rb': { grammar: 'ruby', tags: ['ruby'] },
+  '.php': { grammar: 'php', tags: ['php'] },
+  '.c': { grammar: 'c', tags: ['c'] },
+  '.h': { grammar: 'c', tags: ['c'] },
+  '.cpp': { grammar: 'cpp', tags: ['cpp'] },
+  '.cc': { grammar: 'cpp', tags: ['cpp'] },
+  '.cxx': { grammar: 'cpp', tags: ['cpp'] },
+  '.hpp': { grammar: 'cpp', tags: ['cpp'] },
+  '.hh': { grammar: 'cpp', tags: ['cpp'] },
+  '.cs': { grammar: 'c_sharp', tags: ['c_sharp'] },
 };
 
 /**
@@ -44,10 +57,10 @@ const SPECS: Record<string, GrammarSpec> = {
  * never satisfy an explicit `<kind>` filter.
  */
 const KIND_MAP: Record<string, string[]> = {
-  fn: ['function', 'method'],
-  class: ['class'],
-  type: ['interface', 'type', 'enum', 'module'],
-  const: ['constant'],
+  fn: ['function', 'method', 'macro'],
+  class: ['class', 'struct'],
+  type: ['interface', 'type', 'enum', 'module', 'class', 'struct'],
+  const: ['constant', 'field'],
 };
 
 export function kindSatisfies(

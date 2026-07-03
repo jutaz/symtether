@@ -28,7 +28,8 @@ npx symtether fix --write          # apply them
 npx symtether fix --canonicalize   # also rewrite compat-form refs to #sym:
 npx symtether init                 # install the agent block into AGENTS.md
 npx symtether init --ci            # + a GitHub Actions workflow
-npx symtether update [targets…]    # stamp review: write symtether.sum hashes
+npx symtether update [targets…]    # stamp review: (re)generate symtether.sum
+npx symtether update --check       # CI: fail if symtether.sum is out of date
 npx symtether check --strict       # also fail when stamped targets changed
 npx symtether check --strict=warn  # …or just report staleness
 ```
@@ -48,13 +49,12 @@ couldn't fully verify is never silently passed
 
 | Tier | When | Meaning |
 |---|---|---|
-| `ast` | TypeScript, TSX, JavaScript, Python | Symbol verified against the parsed AST |
+| `ast` | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Ruby, PHP, C, C++, C# | Symbol verified against the parsed AST |
 | `lexical` | any other text file | Word-boundary match for the symbol name |
 | `file-only` | fragment not checkable | Path existence only, reported as a warning |
 
-More tier-1 languages (Go, Rust, Java) land on request — each is roughly a
-grammar import plus fixtures
-([loadLanguage](/src/languages/index.ts#sym:fn:loadLanguage)).
+More tier-1 languages land on request — each is roughly a grammar import
+plus fixtures ([loadLanguage](/src/languages/index.ts#sym:fn:loadLanguage)).
 
 ## Teaching your agents
 

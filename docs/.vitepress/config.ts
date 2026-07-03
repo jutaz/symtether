@@ -3,6 +3,7 @@ import { globby } from 'globby';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitepress';
+import llmstxt from 'vitepress-plugin-llms';
 // The site build dogfoods the library itself (Law 9): every #sym: ref in the
 // docs is resolved through the real Resolver; broken refs fail the build.
 // Requires `npm run build` first (imports from dist/).
@@ -74,6 +75,20 @@ export default defineConfig({
   cleanUrls: true,
   srcExclude: [],
 
+  vite: {
+    plugins: [
+      // Generates /llms.txt (index) and /llms-full.txt (all pages inlined)
+      // plus per-page .md routes — the llmstxt.org convention.
+      llmstxt({
+        domain: 'https://symtether.dev',
+        description:
+          'Stateless linter for #sym: symbol references in markdown. ' +
+          'Links like [x](path/file.ts#sym:Class.method) point at a symbol ' +
+          'in that file; `npx symtether check` fails CI when a reference is broken.',
+      }),
+    ],
+  },
+
   themeConfig: {
     nav: [
       { text: 'Guide', link: '/guide' },
@@ -119,24 +134,12 @@ export default defineConfig({
   },
 
   async buildEnd(siteConfig) {
-    // Plain-text routes for fetching agents (§13): /spec.md and /llms.txt.
+    // Root-level /spec.md alias (§13): the plugin already emits per-page
+    // .md routes, but the spec URL is baked into third-party AGENTS.md
+    // files — keep the stable short path serving the file verbatim.
     await copyFile(
       path.join(repoRoot, 'SPEC.md'),
       path.join(siteConfig.outDir, 'spec.md'),
-    );
-    await writeFile(
-      path.join(siteConfig.outDir, 'llms.txt'),
-      `# symtether
-
-> Stateless linter for #sym: symbol references in markdown. Links like
-> [x](path/file.ts#sym:Class.method) point at a symbol in that file;
-> \`npx symtether check\` fails CI when a reference is broken.
-
-## Docs
-
-- [Spec](https://symtether.dev/spec.md): the #sym: reference syntax — canonical form, compat forms, matching semantics
-- [README](https://github.com/jutaz/symtether#readme): commands, resolution tiers, staleness workflow
-`,
     );
   },
 });

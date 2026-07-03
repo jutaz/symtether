@@ -173,6 +173,54 @@ describe('cli --json', () => {
   });
 });
 
+describe('cli update --check', () => {
+  it('exits 1 when outdated, 0 after regenerating', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      // No sum file yet: everything is missing → outdated.
+      const missing = await run(['update', '--check'], fixture.dir);
+      expect(missing.code).toBe(1);
+      expect(missing.stdout).toContain('out of date');
+
+      await run(['update'], fixture.dir);
+      const current = await run(['update', '--check'], fixture.dir);
+      expect(current.code).toBe(0);
+      expect(current.stdout).toContain('up to date');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
+describe('cli help', () => {
+  it('root help explains the syntax, exit codes, and spec URL', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const r = await run(['--help'], fixture.dir);
+      expect(r.stdout).toContain('#sym:');
+      expect(r.stdout).toContain('Exit codes');
+      expect(r.stdout).toContain('symtether.dev/spec');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('per-command help carries examples', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      for (const cmd of ['check', 'fix', 'update']) {
+        const r = await run([cmd, '--help'], fixture.dir);
+        expect(r.code).toBe(0);
+        expect(r.stdout, `${cmd} --help should have examples`).toContain(
+          'Examples:',
+        );
+      }
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
 describe('cli fix and update round trip', () => {
   it('fix --write repairs, update stamps, strict check goes green', async () => {
     const fixture = await setupFixture('fixable');

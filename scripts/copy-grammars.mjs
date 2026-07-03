@@ -35,6 +35,15 @@ const grammars = [
     ['javascript'],
   ],
   ['tree-sitter-python', 'tree-sitter-python.wasm', 'python', ['python']],
+  ['tree-sitter-go', 'tree-sitter-go.wasm', 'go', ['go']],
+  ['tree-sitter-rust', 'tree-sitter-rust.wasm', 'rust', ['rust']],
+  ['tree-sitter-java', 'tree-sitter-java.wasm', 'java', ['java']],
+  ['tree-sitter-ruby', 'tree-sitter-ruby.wasm', 'ruby', ['ruby']],
+  // Full PHP grammar (not php_only): real .php files embed HTML.
+  ['tree-sitter-php', 'tree-sitter-php.wasm', 'php', []],
+  ['tree-sitter-c', 'tree-sitter-c.wasm', 'c', []],
+  ['tree-sitter-cpp', 'tree-sitter-cpp.wasm', 'cpp', []],
+  ['tree-sitter-c-sharp', 'tree-sitter-c_sharp.wasm', 'c_sharp', []],
 ];
 
 await mkdir(outDir, { recursive: true });
