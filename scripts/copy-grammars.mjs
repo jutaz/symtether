@@ -3,7 +3,7 @@
 // Grammar packages are devDependencies on purpose: their `install` scripts
 // run node-gyp for the *native* bindings, which we never use — the published
 // package carries only the prebuilt WASM (no native compilation, ever).
-import { copyFile, mkdir } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,22 +14,46 @@ const outDir = path.join(root, 'grammars');
 
 const pkgDir = (name) => path.dirname(require.resolve(`${name}/package.json`));
 
-// [source package, wasm file in package, output basename]
+// [source package, wasm file in package, output basename, extra-query basenames]
+// Extras live in queries/*.extra.scm and cover definitions the upstream
+// tags.scm misses (const/let/var, TS namespaces, Python class attributes).
 const grammars = [
-  ['tree-sitter-typescript', 'tree-sitter-typescript.wasm', 'typescript'],
-  ['tree-sitter-typescript', 'tree-sitter-tsx.wasm', 'tsx'],
-  ['tree-sitter-javascript', 'tree-sitter-javascript.wasm', 'javascript'],
-  ['tree-sitter-python', 'tree-sitter-python.wasm', 'python'],
+  // The resolver concatenates javascript.tags.scm with typescript.tags.scm
+  // at load time, so the JS extras must appear only in the JS file —
+  // duplicated patterns would produce duplicate matches and skew hashes.
+  [
+    'tree-sitter-typescript',
+    'tree-sitter-typescript.wasm',
+    'typescript',
+    ['typescript'],
+  ],
+  ['tree-sitter-typescript', 'tree-sitter-tsx.wasm', 'tsx', ['typescript']],
+  [
+    'tree-sitter-javascript',
+    'tree-sitter-javascript.wasm',
+    'javascript',
+    ['javascript'],
+  ],
+  ['tree-sitter-python', 'tree-sitter-python.wasm', 'python', ['python']],
 ];
 
 await mkdir(outDir, { recursive: true });
 
-for (const [pkg, wasm, out] of grammars) {
+for (const [pkg, wasm, out, extras] of grammars) {
   const dir = pkgDir(pkg);
   await copyFile(path.join(dir, wasm), path.join(outDir, `${out}.wasm`));
-  await copyFile(
+  const upstream = await readFile(
     path.join(dir, 'queries', 'tags.scm'),
+    'utf8',
+  );
+  const extraSources = await Promise.all(
+    extras.map((e) =>
+      readFile(path.join(root, 'queries', `${e}.extra.scm`), 'utf8'),
+    ),
+  );
+  await writeFile(
     path.join(outDir, `${out}.tags.scm`),
+    [upstream, ...extraSources].join('\n'),
   );
 }
 

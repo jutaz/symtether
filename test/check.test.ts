@@ -38,6 +38,11 @@ describe('check on the basic fixture', () => {
       'sym:fn:parseConfig',
       'sym:withRetry',
       'sym:type:AgentSkill',
+      // Regression: const declarations and namespace nesting are invisible
+      // to the upstream tags.scm — covered by our supplementary queries.
+      'sym:const:MAX_RETRIES',
+      'sym:helpers.formatUrl',
+      'sym:fn:countdown',
     ]) {
       expect(find(fragment)).toMatchObject({ status: 'ok', tier: 'ast' });
     }
@@ -103,6 +108,48 @@ describe('check on the basic fixture', () => {
     expect(report.summary.refs).toBe(report.results.length);
     expect(report.summary.broken).toBe(3);
     expect(report.summary.lexical).toBe(1);
+  });
+
+  it('reports parse errors instead of a bare "symbol not found"', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(
+        path.join(fixture.dir, 'src', 'broken.ts'),
+        'export function ( {} class @@@ !!!\n',
+      );
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'broken.md'),
+        '[x](../src/broken.ts#sym:anything)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/broken.md'] });
+      expect(r.results[0]!.status).toBe('broken');
+      expect(r.results[0]!.message).toContain('syntax errors');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('resolves $-identifiers at tier 2 (lexical)', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(
+        path.join(fixture.dir, 'src', 'inject.sh'),
+        '#!/bin/sh\n$inject() { echo hi; }\n',
+      );
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'dollar.md'),
+        '[x](../src/inject.sh#sym:$inject)\n[y](../src/inject.sh#sym:$injectable)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/dollar.md'] });
+      // \b would fail on $inject; lookaround with the spec charset works…
+      expect(r.results[0]).toMatchObject({ status: 'ok', tier: 'lexical' });
+      // …and does not match inside a longer identifier.
+      expect(r.results[1]!.status).toBe('broken');
+    } finally {
+      await fixture.cleanup();
+    }
   });
 
   it('produces JSON that validates against the shipped schema', () => {

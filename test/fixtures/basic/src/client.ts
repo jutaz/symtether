@@ -23,3 +23,16 @@ export const withRetry = (attempts: number) => attempts;
 export interface AgentSkill {
   name: string;
 }
+
+export const MAX_RETRIES = 5;
+
+export namespace helpers {
+  export function formatUrl(base: string): string {
+    return base;
+  }
+}
+
+export function countdown(n: number): number {
+  if (n <= 0) return 0;
+  return countdown(n - 1);
+}

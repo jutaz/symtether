@@ -43,12 +43,30 @@ describe('sumfile format', () => {
     expect(parsed.size).toBe(1);
   });
 
-  it('builds keys with and without kind', () => {
+  it('builds kind-independent keys (§9.1: one entry per unique target)', () => {
     expect(sumKey('src/a.ts', ['Api', 'fetch'])).toBe('src/a.ts#Api.fetch');
-    expect(sumKey('src/a.ts', ['parse'], 'fn')).toBe('src/a.ts#fn:parse');
+    // #sym:fn:parse, #sym:parse, and compat #parse all share one key.
+    expect(sumKey('src/a.ts', ['parse'])).toBe('src/a.ts#parse');
   });
 
-  it('formats aligned columns (snapshot)', () => {
+  it('round-trips targets containing spaces', () => {
+    const entries = [
+      {
+        target: 'my docs/x.ts#parseConfig',
+        hash: 'ast:sha256:1c88d0e2bb40f915',
+        date: '2026-07-03',
+      },
+    ];
+    const parsed = parseSumFile(formatSumFile(entries));
+    expect(parsed.get('my docs/x.ts#parseConfig')?.hash).toBe(
+      'ast:sha256:1c88d0e2bb40f915',
+    );
+  });
+
+  it('formats fixed two-space separators, no alignment (snapshot)', () => {
+    // No column alignment on purpose: aligned columns would rewrite every
+    // line whenever a longer entry lands, amplifying merge conflicts — the
+    // opposite of §9.1's intent.
     const out = formatSumFile([
       {
         target: 'src/api/client.ts#ApiClient.fetchData',
@@ -56,7 +74,7 @@ describe('sumfile format', () => {
         date: '2026-07-03',
       },
       {
-        target: 'src/config.ts#fn:parseConfig',
+        target: 'src/config.ts#parseConfig',
         hash: 'ast:sha256:1c88d0e2bb40f915',
         date: '2026-07-03',
       },
@@ -67,9 +85,9 @@ describe('sumfile format', () => {
       },
     ]);
     expect(out).toMatchInlineSnapshot(`
-      "scripts/deploy.sh#main                 lex:sha256:aa11bb22cc33dd44  2026-07-01
+      "scripts/deploy.sh#main  lex:sha256:aa11bb22cc33dd44  2026-07-01
       src/api/client.ts#ApiClient.fetchData  ast:sha256:9f2ab41c0e11d3a7  2026-07-03
-      src/config.ts#fn:parseConfig           ast:sha256:1c88d0e2bb40f915  2026-07-03
+      src/config.ts#parseConfig  ast:sha256:1c88d0e2bb40f915  2026-07-03
       "
     `);
   });

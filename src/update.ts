@@ -60,12 +60,12 @@ export async function update(
     const content = await readFile(path.join(repoRoot, doc), 'utf8');
     for (const ref of extractRefs(repoRoot, docPath, content)) {
       if (ref.dotpath.length === 0) continue; // file-only refs carry no hash
-      const key = sumKey(ref.targetPath, ref.dotpath, ref.kind);
+      const key = sumKey(ref.targetPath, ref.dotpath);
       if (next.has(key)) continue; // dedup across docs (§9.1)
 
       const inScope =
         targetFilter.length === 0 ||
-        targetFilter.some((t) => ref.targetPath.startsWith(toPosix(t)));
+        targetFilter.some((t) => pathInScope(ref.targetPath, toPosix(t)));
 
       const resolution = await resolver.resolve(ref);
       if (resolution.status === 'ok' && resolution.hash) {
@@ -81,8 +81,13 @@ export async function update(
             prev ?? { target: key, hash: resolution.hash, date: today },
           );
         }
-      } else if (resolution.status === 'broken') {
-        skippedBroken++;
+      } else {
+        if (resolution.status === 'broken') skippedBroken++;
+        // Broken or unverifiable refs never get a fresh stamp, but a scoped
+        // run must not silently discard existing stamps either — the sum
+        // file is a shadow; only a full-scope run prunes.
+        const prev = previous.get(key);
+        if (prev && !inScope) next.set(key, prev);
       }
     }
   }
@@ -95,4 +100,10 @@ export async function update(
   }
 
   return { written: next.size, pruned, skippedBroken, file: SUM_FILE };
+}
+
+/** `src/foo` matches `src/foo.ts`? No — only exact paths or directory prefixes. */
+function pathInScope(targetPath: string, scope: string): boolean {
+  const clean = scope.replace(/\/+$/, '');
+  return targetPath === clean || targetPath.startsWith(`${clean}/`);
 }

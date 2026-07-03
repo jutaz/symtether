@@ -8,11 +8,17 @@ import {
 } from './languages/index.js';
 import type { Candidate, Definition, Ref, Resolution, Tier } from './types.js';
 
+interface ExtractedDefinitions {
+  definitions: Definition[];
+  /** Tree-sitter recovered from syntax errors while parsing the file. */
+  hasParseErrors: boolean;
+}
+
 /** Caches parses and file reads per run (§11 performance). */
 export class Resolver {
   private readonly definitions = new Map<
     string,
-    Promise<Definition[] | null>
+    Promise<ExtractedDefinitions | null>
   >();
   private readonly contents = new Map<string, Promise<string | null>>();
 
@@ -42,13 +48,14 @@ export class Resolver {
       };
     }
 
-    const defs = await this.definitionsFor(abs);
-    if (defs !== null) return this.resolveAst(ref, defs);
+    const extracted = await this.definitionsFor(abs);
+    if (extracted !== null) return this.resolveAst(ref, extracted);
     return this.resolveLexical(ref, abs);
   }
 
   /** Tier 1: suffix-match the dotpath against definition nesting chains (SPEC §5.2). */
-  private resolveAst(ref: Ref, defs: Definition[]): Resolution {
+  private resolveAst(ref: Ref, extracted: ExtractedDefinitions): Resolution {
+    const defs = extracted.definitions;
     const nameMatches = defs.filter((d) => chainEndsWith(d.chain, ref.dotpath));
     const matches = ref.kind
       ? nameMatches.filter((d) =>
@@ -68,10 +75,13 @@ export class Resolver {
 
     if (matches.length > 1) {
       const chains = matches.map((m) => m.chain.join('.')).join(', ');
+      const hint = ref.kind
+        ? 'qualify with a parent segment'
+        : 'add a parent segment or a kind to qualify';
       return broken(
         ref,
         'ast',
-        `ambiguous: ${matches.length} definitions match (${chains}); add a parent segment or a kind to qualify`,
+        `ambiguous: ${matches.length} definitions match (${chains}); ${hint}`,
         matches.map((m) => ({
           symbol: m.chain.join('.'),
           kind: m.kinds[0] ?? 'unknown',
@@ -89,6 +99,18 @@ export class Resolver {
         'ast',
         `file OK; "${ref.dotpath.join('.')}" exists but is not a ${ref.kind} (found: ${kinds})`,
         candidatesFor(ref, nameMatches),
+      );
+    }
+
+    // A file that failed to parse may be missing definitions the query
+    // would otherwise find — say so instead of a misleading "not found"
+    // (Law 8: an agent needs the real cause to act).
+    if (extracted.hasParseErrors) {
+      return broken(
+        ref,
+        'ast',
+        'file OK but has syntax errors; symbol not found (fix the target file, then re-check)',
+        candidatesFor(ref, defs),
       );
     }
 
@@ -114,28 +136,40 @@ export class Resolver {
     }
 
     const name = ref.dotpath[ref.dotpath.length - 1]!;
-    const pattern = new RegExp(`\\b${escapeRegExp(name)}\\b`);
-    const matchedLine = content
+    // Not \b: `$` is legal in identifiers (SPEC §5.1) but is not a regex
+    // word character, so \b$inject\b can never match. Use lookaround with
+    // the spec's own identifier charset as the boundary.
+    const pattern = new RegExp(
+      `(?<![A-Za-z0-9_$])${escapeRegExp(name)}(?![A-Za-z0-9_$])`,
+    );
+    const matchedLines = content
       .split('\n')
-      .find((lineText) => pattern.test(lineText));
-    if (matchedLine !== undefined) {
+      .filter((lineText) => pattern.test(lineText));
+    if (matchedLines.length > 0) {
       return {
         ref,
         status: 'ok',
         tier: 'lexical',
         candidates: [],
-        hash: hashLexicalLine(matchedLine),
+        // Hash every matching line, not just the first. A lexical stamp
+        // can't know which line is "the definition" in an unknown language;
+        // what it can attest is "the set of lines mentioning this symbol" —
+        // exactly the lines an agent following the ref would grep to.
+        hash: hashLexicalLine(matchedLines.join('\n')),
       };
     }
     return broken(ref, 'lexical', 'file OK; symbol not found (lexical search)');
   }
 
   /** Public lookup for fix's hash-verified rename detection (§9.2). */
-  definitionsForFile(repoRelPath: string): Promise<Definition[] | null> {
-    return this.definitionsFor(path.join(this.repoRoot, repoRelPath));
+  async definitionsForFile(repoRelPath: string): Promise<Definition[] | null> {
+    const extracted = await this.definitionsFor(
+      path.join(this.repoRoot, repoRelPath),
+    );
+    return extracted?.definitions ?? null;
   }
 
-  private definitionsFor(abs: string): Promise<Definition[] | null> {
+  private definitionsFor(abs: string): Promise<ExtractedDefinitions | null> {
     let defs = this.definitions.get(abs);
     if (!defs) {
       defs = this.extractDefinitions(abs);
@@ -144,7 +178,9 @@ export class Resolver {
     return defs;
   }
 
-  private async extractDefinitions(abs: string): Promise<Definition[] | null> {
+  private async extractDefinitions(
+    abs: string,
+  ): Promise<ExtractedDefinitions | null> {
     const lang = await loadLanguage(path.extname(abs));
     if (!lang) return null;
     const content = await this.contentFor(abs);
@@ -176,13 +212,11 @@ export class Resolver {
           start: def.node.startIndex,
           end: def.node.endIndex,
           line: name.node.startPosition.row + 1,
-          hash: hashDefinition(
-            def.node,
-            name.node.startIndex,
-            name.node.endIndex,
-          ),
+          hash: hashDefinition(def.node, name.node.text),
         });
       }
+
+      const hasParseErrors = tree.rootNode.hasError;
 
       // Nesting chain = names of strictly-enclosing definitions, outermost
       // first. Overloads / merged declarations with an identical chain
@@ -197,7 +231,7 @@ export class Resolver {
         const existing = merged.get(key);
         if (existing) {
           if (!existing.kinds.includes(d.kind)) existing.kinds.push(d.kind);
-          existing.hashes.push(d.hash);
+          if (!existing.hashes.includes(d.hash)) existing.hashes.push(d.hash);
         } else {
           merged.set(key, {
             name: d.name,
@@ -209,10 +243,13 @@ export class Resolver {
           });
         }
       }
-      return [...merged.values()].map(({ hashes, ...def }) => ({
-        ...def,
-        hash: combineHashes(hashes),
-      }));
+      return {
+        definitions: [...merged.values()].map(({ hashes, ...def }) => ({
+          ...def,
+          hash: combineHashes(hashes),
+        })),
+        hasParseErrors,
+      };
     } finally {
       parser.delete();
     }
@@ -240,7 +277,7 @@ function tierFor(ref: Ref): Tier {
 }
 
 function chainEndsWith(chain: string[], suffix: string[]): boolean {
-  if (suffix.length > chain.length) return false;
+  if (suffix.length === 0 || suffix.length > chain.length) return false;
   const offset = chain.length - suffix.length;
   return suffix.every((seg, i) => chain[offset + i] === seg);
 }

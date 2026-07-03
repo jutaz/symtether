@@ -1,7 +1,9 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { init, MANAGED_BLOCK } from '../src/init.js';
+import { UsageError } from '../src/types.js';
 import { setupFixture } from './helpers.js';
 
 describe('init', () => {
@@ -83,6 +85,50 @@ describe('init', () => {
         'utf8',
       );
       expect(content).toContain('symtether:begin');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('rejects --file paths escaping the repo', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      await expect(
+        init({ cwd: fixture.dir, file: '../../outside.md' }),
+      ).rejects.toThrow(UsageError);
+      expect(existsSync(path.join(fixture.dir, '..', 'outside.md'))).toBe(
+        false,
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('refuses files with multiple managed blocks instead of guessing', async () => {
+    const fixture = await setupFixture('basic');
+    const agentsPath = path.join(fixture.dir, 'AGENTS.md');
+    try {
+      await writeFile(agentsPath, `${MANAGED_BLOCK}\n\n${MANAGED_BLOCK}\n`);
+      await expect(init({ cwd: fixture.dir })).rejects.toThrow(
+        /multiple symtether blocks/,
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('handles a stray end-marker before the real block', async () => {
+    const fixture = await setupFixture('basic');
+    const agentsPath = path.join(fixture.dir, 'AGENTS.md');
+    try {
+      await writeFile(
+        agentsPath,
+        `some text with <!-- symtether:end --> in prose\n\n${MANAGED_BLOCK}\n`,
+      );
+      const result = await init({ cwd: fixture.dir });
+      expect(result.action).toBe('unchanged');
+      const content = await readFile(agentsPath, 'utf8');
+      expect(content.match(/symtether:begin/g)).toHaveLength(1);
     } finally {
       await fixture.cleanup();
     }

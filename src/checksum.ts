@@ -11,18 +11,17 @@ import type { Node } from 'web-tree-sitter';
  *
  * Two deliberate choices on top of the spec:
  * - Comment nodes are skipped: a comment edit is prose, not implementation.
- * - The definition's *own name token* is replaced with a placeholder. This is
- *   what makes hash-verified rename detection (§9.2) possible at all — if the
- *   name participated in the hash, renaming would change it and "identical
- *   body hash under a new name" could never occur.
+ * - Every token whose text equals the definition's name is replaced with a
+ *   placeholder — not just the name in the signature but also recursive
+ *   self-references in the body. This is what makes hash-verified rename
+ *   detection (§9.2) possible: rename `fact` → `gamma` in a recursive
+ *   function and the hash is unchanged. The trade-off (an unrelated local
+ *   variable that happens to share the definition's name is also masked) is
+ *   harmless: masking is deterministic on both sides of the comparison.
  */
-export function hashDefinition(
-  node: Node,
-  nameStart: number,
-  nameEnd: number,
-): string {
+export function hashDefinition(node: Node, name: string): string {
   const parts: string[] = [];
-  collect(node, nameStart, nameEnd, parts);
+  collect(node, name, parts);
   return `ast:sha256:${digest(parts.join('\u0000'))}`;
 }
 
@@ -32,29 +31,29 @@ export function combineHashes(hashes: string[]): string {
   return `ast:sha256:${digest(hashes.slice().sort().join('\u0000'))}`;
 }
 
-/** Tier 2: hash of the matched line's trimmed text, prefixed `lex:` (§9.1). */
+/**
+ * Tier 2: hash of the matched lines' text, prefixed `lex:` (§9.1).
+ * Each line is trimmed individually so reindentation never triggers
+ * staleness — the closest tier-2 analogue of tier-1's normalization.
+ */
 export function hashLexicalLine(lineText: string): string {
-  return `lex:sha256:${digest(lineText.trim())}`;
+  const normalized = lineText
+    .split('\n')
+    .map((l) => l.trim())
+    .join('\n');
+  return `lex:sha256:${digest(normalized)}`;
 }
 
-function collect(
-  node: Node,
-  nameStart: number,
-  nameEnd: number,
-  parts: string[],
-): void {
+function collect(node: Node, name: string, parts: string[]): void {
   if (node.type === 'comment') return;
   if (node.childCount === 0) {
-    // Leaf: token text — with the definition's name identifier masked.
-    const isNameToken =
-      node.startIndex === nameStart && node.endIndex === nameEnd;
-    parts.push(node.type, isNameToken ? '\u0001NAME' : node.text);
+    parts.push(node.type, node.text === name ? '\u0001NAME' : node.text);
     return;
   }
   if (node.isNamed) parts.push(node.type);
   for (let i = 0; i < node.childCount; i++) {
     const child = node.child(i);
-    if (child) collect(child, nameStart, nameEnd, parts);
+    if (child) collect(child, name, parts);
   }
 }
 

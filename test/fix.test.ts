@@ -2,8 +2,44 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { check } from '../src/check.js';
-import { fix } from '../src/fix.js';
+import { applyEdits, fix } from '../src/fix.js';
 import { setupFixture } from './helpers.js';
+
+describe('applyEdits', () => {
+  const edit = (oldUrl: string, newUrl: string, line = 1) => ({
+    doc: 'a.md',
+    line,
+    oldUrl,
+    newUrl,
+    reason: 'test',
+  });
+
+  it('does not interpret $-patterns in the replacement (SPEC allows $ in names)', () => {
+    const out = applyEdits('[a](src/x.ts#sym:foo)\n', [
+      edit('src/x.ts#sym:foo', 'src/x.ts#sym:$&replace'),
+    ]);
+    expect(out).toBe('[a](src/x.ts#sym:$&replace)\n');
+  });
+
+  it('rewrites every identical URL on the target line', () => {
+    const out = applyEdits(
+      '[a](x.ts#sym:foo) [b](x.ts#sym:foo) [c](x.ts#sym:foo)\n',
+      [
+        edit('x.ts#sym:foo', 'x.ts#sym:bar'),
+        edit('x.ts#sym:foo', 'x.ts#sym:bar'),
+        edit('x.ts#sym:foo', 'x.ts#sym:bar'),
+      ],
+    );
+    expect(out).toBe('[a](x.ts#sym:bar) [b](x.ts#sym:bar) [c](x.ts#sym:bar)\n');
+  });
+
+  it('leaves identical URLs on other lines alone', () => {
+    const out = applyEdits('[a](x.ts#sym:foo)\n[b](x.ts#sym:foo)\n', [
+      edit('x.ts#sym:foo', 'x.ts#sym:bar', 2),
+    ]);
+    expect(out).toBe('[a](x.ts#sym:foo)\n[b](x.ts#sym:bar)\n');
+  });
+});
 
 describe('fix on the fixable fixture', () => {
   it('proposes the moved-file and rename repairs, refuses the hopeless case', async () => {

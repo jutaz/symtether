@@ -50,7 +50,9 @@ program
   .action(async (globs: string[], opts) => {
     // --strict / --strict=fail exit 1 on stale; --strict=warn reports only.
     const strictMode =
-      opts.strict === true ? 'fail' : (opts.strict as string | undefined);
+      opts.strict === true || opts.strict === ''
+        ? 'fail'
+        : (opts.strict as string | undefined);
     if (strictMode && strictMode !== 'fail' && strictMode !== 'warn') {
       throw new UsageError(`invalid --strict mode "${strictMode}" (fail|warn)`);
     }
@@ -137,6 +139,9 @@ try {
   if (code === 'commander.helpDisplayed' || code === 'commander.version') {
     process.exit(EXIT_OK);
   }
-  console.error(pc.red(err instanceof Error ? err.message : String(err)));
+  // Commander already printed its own usage error to stderr — don't repeat it.
+  if (!code?.startsWith('commander.')) {
+    console.error(pc.red(err instanceof Error ? err.message : String(err)));
+  }
   process.exit(EXIT_ERROR);
 }

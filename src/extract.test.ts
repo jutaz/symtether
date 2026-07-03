@@ -133,4 +133,40 @@ describe('extractRefs', () => {
     expect(ref!.dotpath).toEqual(['$inject', '_private']);
     expect(ref!.syntaxError).toBeUndefined();
   });
+
+  it('ignores directory-ish targets (., .., trailing slash)', () => {
+    const md = [
+      '[a](.#sym:Foo)',
+      '[b](..#sym:Foo)',
+      '[c](./#sym:Foo)',
+      '[d](../src/#sym:Foo)',
+    ].join('\n');
+    expect(refs(md)).toHaveLength(0);
+  });
+
+  it('ignores link URLs containing newlines (CommonMark soft breaks)', () => {
+    const md = '[x](../src/a.ts\\\n#sym:Foo)';
+    const result = refs(md);
+    expect(result.every((r) => !/[\n\r]/.test(r.targetPath + r.fragment))).toBe(
+      true,
+    );
+  });
+
+  it('does not suppress on comments that merely mention the directive', () => {
+    const md = [
+      '<!-- TODO: we used to use symtether-disable but rolled our own -->',
+      '[x](../src/a.ts#sym:Checked)',
+    ].join('\n');
+    const result = refs(md);
+    expect(result).toHaveLength(1);
+    expect(result[0]!.dotpath).toEqual(['Checked']);
+  });
+
+  it('accepts directives with flexible interior whitespace only', () => {
+    const md = [
+      '<!--symtether-disable-next-line-->',
+      '[x](../src/a.ts#sym:Suppressed)',
+    ].join('\n');
+    expect(refs(md)).toHaveLength(0);
+  });
 });

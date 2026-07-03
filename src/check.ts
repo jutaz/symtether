@@ -83,7 +83,7 @@ async function applyStrict(
   const staleTargets = new Map<string, Resolution[]>();
   for (const r of results) {
     if (r.status !== 'ok' || !r.hash || r.ref.dotpath.length === 0) continue;
-    const key = sumKey(r.ref.targetPath, r.ref.dotpath, r.ref.kind);
+    const key = sumKey(r.ref.targetPath, r.ref.dotpath);
     const entry = entries.get(key);
     if (entry && entry.hash !== r.hash) {
       const group = staleTargets.get(key) ?? [];

@@ -31,28 +31,35 @@ export function parseSumFile(content: string): Map<string, SumEntry> {
   for (const line of content.split('\n')) {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
+    // Parse from the right: the last two fields are hash and date, the rest
+    // is the target — which may legally contain spaces (paths do).
     const fields = trimmed.split(/\s+/);
-    if (fields.length !== 3) continue; // tolerate junk; derived data is regenerable
-    const [target, hash, date] = fields as [string, string, string];
+    if (fields.length < 3) continue; // tolerate junk; derived data is regenerable
+    const date = fields[fields.length - 1]!;
+    const hash = fields[fields.length - 2]!;
+    if (!/^(ast|lex):/.test(hash)) continue;
+    const target = trimmed
+      .slice(0, trimmed.length - date.length)
+      .trimEnd()
+      .slice(0, -hash.length)
+      .trimEnd();
     entries.set(target, { target, hash, date });
   }
   return entries;
 }
 
+/**
+ * Fixed two-space separators, no column alignment: aligned columns would
+ * mean one long new entry rewrites every line — exactly the merge-conflict
+ * amplification §9.1's line-oriented design exists to avoid.
+ */
 export function formatSumFile(entries: Iterable<SumEntry>): string {
   const sorted = [...entries].sort((a, b) =>
     a.target < b.target ? -1 : a.target > b.target ? 1 : 0,
   );
   if (sorted.length === 0) return '';
-  const width = Math.max(...sorted.map((e) => e.target.length));
-  const hashWidth = Math.max(...sorted.map((e) => e.hash.length));
   return (
-    sorted
-      .map(
-        (e) =>
-          `${e.target.padEnd(width + 2)}${e.hash.padEnd(hashWidth + 2)}${e.date}`,
-      )
-      .join('\n') + '\n'
+    sorted.map((e) => `${e.target}  ${e.hash}  ${e.date}`).join('\n') + '\n'
   );
 }
 
@@ -76,12 +83,13 @@ export async function writeSumFile(
   );
 }
 
-/** Canonical sum-file key for a ref: `path#dotpath`, kind included if written. */
-export function sumKey(
-  targetPath: string,
-  dotpath: string[],
-  kind?: string,
-): string {
-  const prefix = kind ? `${kind}:` : '';
-  return `${targetPath}#${prefix}${dotpath.join('.')}`;
+/**
+ * Canonical sum-file key for a ref: `path#dotpath`. The written kind is
+ * deliberately NOT part of the key — `#sym:fn:parse`, `#sym:parse`, and the
+ * compat form `#parse` all denote the same resolved symbol, and §9.1
+ * requires one entry per unique target. Kind stays on the Ref for
+ * resolve-time disambiguation only.
+ */
+export function sumKey(targetPath: string, dotpath: string[]): string {
+  return `${targetPath}#${dotpath.join('.')}`;
 }

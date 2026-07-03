@@ -50,6 +50,9 @@ function buildRef(
   line: number,
 ): Ref | null {
   if (!url || url.startsWith('#') || HAS_SCHEME.test(url)) return null;
+  // CommonMark soft line breaks can leak literal newlines into link URLs;
+  // never let control characters flow into paths or error messages.
+  if (/[\n\r\t]/.test(url)) return null;
 
   const hash = url.indexOf('#');
   const rawTarget = hash === -1 ? url : url.slice(0, hash);
@@ -57,6 +60,16 @@ function buildRef(
   if (!rawTarget) return null;
 
   const decodedTarget = tryDecode(rawTarget);
+  // Directory-ish targets (`.`, `..`, trailing slash) can never contain a
+  // symbol — skip them; they're navigation links, not code refs.
+  const lastSegment = path.posix.basename(decodedTarget);
+  if (
+    lastSegment === '.' ||
+    lastSegment === '..' ||
+    lastSegment === '' ||
+    decodedTarget.endsWith('/')
+  )
+    return null;
   if (MARKDOWN_EXTS.has(path.extname(decodedTarget).toLowerCase())) return null;
 
   const base: Ref = {
@@ -120,6 +133,13 @@ function parseSymFragment(base: Ref, body: string): Ref {
 }
 
 /**
+ * Anchored directive form: the whole comment must be the directive — a
+ * prose comment that merely *mentions* "symtether-disable" must never
+ * suppress checking.
+ */
+const DIRECTIVE = /^<!--\s*symtether-(disable-next-line|disable|enable)\s*-->$/;
+
+/**
  * Build a line-suppression predicate from `<!-- symtether-disable* -->`
  * comments (SPEC §5.5). Comments inside code fences are `code` nodes in
  * mdast, so examples never suppress anything.
@@ -131,15 +151,15 @@ function collectSuppressions(tree: Root): (line: number) => boolean {
 
   visit(tree, 'html', (node: Html) => {
     if (!node.position) return;
-    const value = node.value;
-    if (value.includes('symtether-disable-next-line')) {
+    const directive = DIRECTIVE.exec(node.value.trim())?.[1];
+    if (directive === 'disable-next-line') {
       nextLines.add(node.position.end.line + 1);
-    } else if (value.includes('symtether-enable')) {
+    } else if (directive === 'enable') {
       if (openRange !== null) {
         ranges.push([openRange, node.position.start.line]);
         openRange = null;
       }
-    } else if (value.includes('symtether-disable')) {
+    } else if (directive === 'disable') {
       openRange ??= node.position.end.line;
     }
   });

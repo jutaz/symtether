@@ -8,6 +8,9 @@ Valid refs:
 - [skill type](../src/client.ts#sym:type:AgentSkill)
 - [task runner](../src/tasks.py#sym:TaskRunner.run)
 - [timeout constant](../src/tasks.py#sym:const:DEFAULT_TIMEOUT)
+- [retry limit](../src/client.ts#sym:const:MAX_RETRIES)
+- [url helper](../src/client.ts#sym:helpers.formatUrl)
+- [recursive countdown](../src/client.ts#sym:fn:countdown)
 
 Tier 2 (lexical):
 

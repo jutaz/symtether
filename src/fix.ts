@@ -47,6 +47,9 @@ export async function fix(options: FixOptions = {}): Promise<FixReport> {
   // Sum file presence upgrades rename detection to content-verified (§9.2);
   // absence degrades gracefully to heuristics, never blocks.
   const sumEntries = await readSumFile(repoRoot);
+  // Memoize the moved-file candidate search: many broken refs to the same
+  // moved file must not re-glob the whole repo each time.
+  const basenameMatches = new Map<string, Promise<string[]>>();
   const edits: FixEdit[] = [];
   const skipped: FixReport['skipped'] = [];
 
@@ -66,6 +69,7 @@ export async function fix(options: FixOptions = {}): Promise<FixReport> {
           ref,
           resolution,
           sumEntries,
+          basenameMatches,
         );
         if ('edit' in edit) docEdits.push(edit.edit);
         else skipped.push({ resolution, reason: edit.reason });
@@ -101,6 +105,7 @@ async function proposeFix(
   ref: Ref,
   resolution: Resolution,
   sumEntries: Map<string, SumEntry> | null,
+  basenameMatches: Map<string, Promise<string[]>>,
 ): Promise<Proposal> {
   const fragment = `#${ref.fragment}`;
 
@@ -108,10 +113,15 @@ async function proposeFix(
   // repo has the same basename and still contains the symbol (§7.2).
   if (resolution.message === 'file not found') {
     const basename = path.basename(ref.targetPath);
-    const matches = await globby(`**/${basename}`, {
-      ...GLOB_OPTIONS,
-      cwd: repoRoot,
-    });
+    let matchesPromise = basenameMatches.get(basename);
+    if (!matchesPromise) {
+      matchesPromise = globby(`**/${basename}`, {
+        ...GLOB_OPTIONS,
+        cwd: repoRoot,
+      });
+      basenameMatches.set(basename, matchesPromise);
+    }
+    const matches = await matchesPromise;
     const confirmed: string[] = [];
     for (const m of matches) {
       const candidate = {
@@ -145,9 +155,7 @@ async function proposeFix(
   // symbol's stamped hash matches exactly one definition in the same file
   // under a new name. Content-identity beats string-similarity guessing.
   if (sumEntries) {
-    const stamped = sumEntries.get(
-      sumKey(ref.targetPath, ref.dotpath, ref.kind),
-    );
+    const stamped = sumEntries.get(sumKey(ref.targetPath, ref.dotpath));
     if (stamped) {
       const defs = await resolver.definitionsForFile(ref.targetPath);
       const sameHash = (defs ?? []).filter((d) => d.hash === stamped.hash);
@@ -202,14 +210,17 @@ function relativeUrl(ref: Ref, newRepoRelPath: string): string {
 
 /**
  * Replace old link URLs with new ones, scoped to the recorded line so an
- * identical URL elsewhere in the doc is left alone.
+ * identical URL elsewhere in the doc is left alone. split/join instead of
+ * String.replace: replacement strings must never interpret `$&`/`$$`
+ * patterns — `$` is legal in symbol names (SPEC §5.1) — and identical URLs
+ * repeated on one line must all be rewritten.
  */
 export function applyEdits(content: string, edits: FixEdit[]): string {
   const lines = content.split('\n');
   for (const edit of edits) {
     const i = edit.line - 1;
     if (lines[i] !== undefined) {
-      lines[i] = lines[i]!.replace(edit.oldUrl, edit.newUrl);
+      lines[i] = lines[i]!.split(edit.oldUrl).join(edit.newUrl);
     }
   }
   return lines.join('\n');

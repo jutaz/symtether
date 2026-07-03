@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { findRepoRoot } from './repo.js';
 import { SUM_FILE } from './sumfile.js';
+import { UsageError } from './types.js';
 
 const BEGIN =
   '<!-- symtether:begin v1 (managed by `symtether init` — do not edit) -->';
@@ -67,7 +68,13 @@ export interface InitResult {
 export async function init(options: InitOptions = {}): Promise<InitResult> {
   const repoRoot = findRepoRoot(options.cwd ?? process.cwd());
   const fileName = options.file ?? 'AGENTS.md';
-  const target = path.join(repoRoot, fileName);
+  const target = path.resolve(repoRoot, fileName);
+  const rel = path.relative(repoRoot, target);
+  if (rel.startsWith('..') || path.isAbsolute(rel)) {
+    throw new UsageError(
+      `--file must stay inside the repository (got "${fileName}")`,
+    );
+  }
 
   // Sum-file repos get the stale-handling line (§10). Re-running init after
   // the first `update` upgrades the block in place.
@@ -82,12 +89,17 @@ export async function init(options: InitOptions = {}): Promise<InitResult> {
     action = 'created';
   } else {
     const beginIdx = existing.indexOf('<!-- symtether:begin');
-    const endIdx = existing.indexOf(END);
-    if (beginIdx !== -1 && endIdx !== -1 && endIdx > beginIdx) {
-      next =
-        existing.slice(0, beginIdx) +
-        block +
-        existing.slice(endIdx + END.length);
+    // Search END only after BEGIN so a stray end-marker earlier in the file
+    // can't produce a negative-length block.
+    const endIdx = beginIdx === -1 ? -1 : existing.indexOf(END, beginIdx);
+    if (beginIdx !== -1 && endIdx !== -1) {
+      const tail = existing.slice(endIdx + END.length);
+      if (tail.includes('<!-- symtether:begin')) {
+        throw new UsageError(
+          `${fileName} contains multiple symtether blocks — remove the extras, then re-run init`,
+        );
+      }
+      next = existing.slice(0, beginIdx) + block + tail;
       action = next === existing ? 'unchanged' : 'updated';
     } else {
       const sep = existing.endsWith('\n') ? '\n' : '\n\n';

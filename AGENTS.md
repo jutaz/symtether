@@ -35,6 +35,17 @@ the resolver's behavior.
 - Deviation on record: file exclusion uses the repo's `.gitignore` (via
   globby) instead of a hardcoded exclude list — assume nothing about project
   layout beyond what git knows.
+- Deviation on record: sum-file keys are kind-independent (`path#dotpath`,
+  no `fn:` prefix) — §9.1 requires one entry per unique target, and
+  `#sym:fn:parse` / `#sym:parse` / compat `#parse` are the same target.
+- Deviation on record: sum-file lines use fixed two-space separators, not
+  aligned columns — alignment would rewrite every line when a longer entry
+  lands, amplifying the merge conflicts §9.1 exists to avoid.
+- `queries/*.extra.scm` supplement the upstream tags.scm (const/let/var,
+  TS namespaces/type/enum, Python class attributes, JS private methods);
+  `copy-grammars.mjs` concatenates them at build time. Never duplicate a
+  pattern across javascript.extra.scm and typescript.extra.scm — the
+  resolver already layers the JS query under the TS one.
 - Grammar packages are devDependencies only; the published package ships
   prebuilt WASM copied at build time by `scripts/copy-grammars.mjs`.
 - Every failure message must give an agent enough to act: doc + line, cause,

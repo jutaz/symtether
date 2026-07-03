@@ -61,7 +61,8 @@ describe('update + check --strict', () => {
         'utf8',
       );
       expect(sum).toContain('src/client.ts#ApiClient.fetchData');
-      expect(sum).toContain('src/client.ts#fn:parseConfig');
+      // Keys are kind-independent (§9.1): #sym:fn:parseConfig → #parseConfig.
+      expect(sum).toContain('src/client.ts#parseConfig');
       expect(sum).toMatch(/src\/deploy\.sh#main\s+lex:sha256:/);
       // Canonical and compat refs to the same target share one entry (§9.1).
       const entries = sum
@@ -167,6 +168,57 @@ describe('update + check --strict', () => {
     }
   });
 
+  it('scope matching respects path boundaries (src/task does not match src/tasks.py)', async () => {
+    const fixture = await setupFixture('basic');
+    const tasksPath = path.join(fixture.dir, 'src', 'tasks.py');
+    try {
+      await update({ cwd: fixture.dir });
+      const original = await readFile(tasksPath, 'utf8');
+      await writeFile(
+        tasksPath,
+        original.replace('return task', 'return None'),
+      );
+      // `src/task` is a prefix of `src/tasks.py` but not a path boundary —
+      // it must NOT re-stamp tasks.py, so staleness must survive.
+      await update({ cwd: fixture.dir, targets: ['src/task'] });
+      const report = await check({ cwd: fixture.dir, strict: true });
+      expect(report.summary.stale).toBeGreaterThan(0);
+      // The exact file path DOES re-stamp.
+      await update({ cwd: fixture.dir, targets: ['src/tasks.py'] });
+      const after = await check({ cwd: fixture.dir, strict: true });
+      expect(after.summary.stale).toBe(0);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('scoped update carries forward stamps of out-of-scope broken targets', async () => {
+    const fixture = await setupFixture('basic');
+    const clientPath = path.join(fixture.dir, 'src', 'client.ts');
+    try {
+      await update({ cwd: fixture.dir });
+      const original = await readFile(clientPath, 'utf8');
+      // Break withRetry (delete it), then run a scoped update elsewhere:
+      // the old stamp must survive — the sum file is a shadow, and only a
+      // full-scope update prunes.
+      await writeFile(
+        clientPath,
+        original.replace(
+          'export const withRetry = (attempts: number) => attempts;',
+          '',
+        ),
+      );
+      await update({ cwd: fixture.dir, targets: ['src/tasks.py'] });
+      const sum = await readFile(
+        path.join(fixture.dir, 'symtether.sum'),
+        'utf8',
+      );
+      expect(sum).toContain('src/client.ts#withRetry');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('scoped update leaves out-of-scope stamps untouched', async () => {
     const fixture = await setupFixture('basic');
     const clientPath = path.join(fixture.dir, 'src', 'client.ts');
@@ -191,6 +243,56 @@ describe('update + check --strict', () => {
 });
 
 describe('hash-verified renames in fix', () => {
+  it('detects a rename of a RECURSIVE function (self-references masked)', async () => {
+    const fixture = await setupFixture('basic');
+    const clientPath = path.join(fixture.dir, 'src', 'client.ts');
+    try {
+      await update({ cwd: fixture.dir });
+      const original = await readFile(clientPath, 'utf8');
+      // countdown calls itself in its body; if only the signature name were
+      // masked, the body occurrence would change the hash and this rename
+      // would be undetectable.
+      await writeFile(clientPath, original.replaceAll('countdown', 'ticker'));
+
+      const report = await fix({ cwd: fixture.dir });
+      const verified = report.edits.filter(
+        (e) =>
+          e.reason.includes('content-verified') && e.newUrl.includes('ticker'),
+      );
+      expect(verified.length).toBeGreaterThan(0);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('finds the stamp for compat-form refs (kind-independent key)', async () => {
+    const fixture = await setupFixture('basic');
+    const clientPath = path.join(fixture.dir, 'src', 'client.ts');
+    const docPath = path.join(fixture.dir, 'docs', 'compat-rename.md');
+    try {
+      await update({ cwd: fixture.dir });
+      // A compat-form ref written after stamping; the stamp key came from
+      // the canonical #sym:fn:parseConfig ref — same key either way.
+      await writeFile(docPath, '[cfg](../src/client.ts#parseConfig)\n');
+      const original = await readFile(clientPath, 'utf8');
+      await writeFile(
+        clientPath,
+        original.replaceAll('parseConfig', 'loadConfiguration'),
+      );
+
+      const report = await fix({ cwd: fixture.dir });
+      const verified = report.edits.filter(
+        (e) =>
+          e.reason.includes('content-verified') &&
+          e.doc === 'docs/compat-rename.md',
+      );
+      expect(verified).toHaveLength(1);
+      expect(verified[0]!.newUrl).toContain('loadConfiguration');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('detects a rename by identical content hash, beating edit distance', async () => {
     const fixture = await setupFixture('basic');
     const clientPath = path.join(fixture.dir, 'src', 'client.ts');
