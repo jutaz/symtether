@@ -73,6 +73,11 @@ export interface Resolution {
    * the matched definition at tier 1, the matched line at tier 2.
    */
   hash?: string;
+  /**
+   * 1-based line of the matched definition in the target file (tier-1 ok
+   * results only) — lets consumers deep-link, e.g. GitHub `#L<n>` anchors.
+   */
+  matchLine?: number;
 }
 
 export interface CheckSummary {

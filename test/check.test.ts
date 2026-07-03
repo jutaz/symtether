@@ -97,6 +97,14 @@ describe('check on the basic fixture', () => {
     expect(fragments).not.toContain('sym:Nope');
   });
 
+  it('reports the matched definition line for tier-1 ok results', () => {
+    const r = find('sym:ApiClient.fetchData');
+    // fetchData is defined on line 2 of the fixture's client.ts — consumers
+    // (like the site generator) use this for GitHub #L deep links.
+    expect(r.matchLine).toBe(2);
+    expect(find('sym:main').matchLine).toBeUndefined(); // lexical: no line
+  });
+
   it('resolves reference-style links', () => {
     expect(find('sym:ApiClient.fetchAgentData')).toMatchObject({
       status: 'ok',

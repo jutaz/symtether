@@ -70,6 +70,7 @@ export class Resolver {
         tier: 'ast',
         candidates: [],
         hash: matches[0]!.hash,
+        matchLine: matches[0]!.line,
       };
     }
 
