@@ -1,0 +1,14 @@
+// Cloudflare Workers config: symtether.dev serves the VitePress build as
+// static assets. Deployed by Workers Builds (native Git integration) — the
+// build/deploy configuration lives in the Cloudflare dashboard, where pull
+// requests cannot modify it. Build command: `npm run build:site`.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "symtether-site",
+  "compatibility_date": "2026-07-01",
+  "assets": {
+    "directory": "./docs/.vitepress/dist",
+    // VitePress emits 404.html at the dist root; this setting depends on it.
+    "not_found_handling": "404-page",
+  },
+}

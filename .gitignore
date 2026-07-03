@@ -4,6 +4,8 @@ node_modules/
 # Build output
 dist/
 grammars/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
 *.tsbuildinfo
 
 # Test artifacts
