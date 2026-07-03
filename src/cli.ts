@@ -54,7 +54,14 @@ program
         ? 'fail'
         : (opts.strict as string | undefined);
     if (strictMode && strictMode !== 'fail' && strictMode !== 'warn') {
-      throw new UsageError(`invalid --strict mode "${strictMode}" (fail|warn)`);
+      // Commander's optional-value options consume the next positional, so
+      // `--strict docs/x.md` lands here — point at the correct spelling.
+      const hint = /[/*.]/.test(strictMode)
+        ? ` — to pass globs, put them before the flag or use --strict=fail|warn`
+        : '';
+      throw new UsageError(
+        `invalid --strict mode "${strictMode}" (fail|warn)${hint}`,
+      );
     }
     const report = await check({
       globs,

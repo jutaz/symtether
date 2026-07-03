@@ -54,7 +54,8 @@ green
 ```
 
 No config, no lockfile, no index. Markdown links are the sole source of
-truth; exclusions come straight from your `.gitignore`.
+truth; exclusions come straight from your `.gitignore`
+([GLOB_OPTIONS](src/check.ts#sym:const:GLOB_OPTIONS)).
 
 ## Usage
 
@@ -68,14 +69,14 @@ npx symtether init               # install the agent block into AGENTS.md
 npx symtether init --ci          # + a GitHub Actions workflow
 npx symtether update [targets…]  # stamp review: write symtether.sum hashes
 npx symtether check --strict     # also fail when stamped targets changed
-npx symtether check --strict=warn# …or just report staleness
+npx symtether check --strict=warn  # …or just report staleness
 ```
 
 Exit codes: `0` all refs pass · `1` broken refs (or stale under `--strict`) · `2` usage or runtime error.
 
 Or as a library — the CLI is a thin shell over
-[check](src/check.ts#sym:fn:check), [fix](src/fix.ts#sym:fn:fix), and
-[init](src/init.ts#sym:fn:init):
+[check](src/check.ts#sym:fn:check), [fix](src/fix.ts#sym:fn:fix),
+[init](src/init.ts#sym:fn:init), and [update](src/update.ts#sym:fn:update):
 
 ```ts
 import { check } from 'symtether';
@@ -109,7 +110,8 @@ couldn't fully verify is never silently passed (see
 | `file-only` | fragment not checkable | Path existence only, reported as a warning |
 
 More tier-1 languages (Go, Rust, Java) land on request — each is roughly a
-grammar import plus fixtures.
+grammar import plus fixtures (see the registry in
+[loadLanguage](src/languages/index.ts#sym:fn:loadLanguage)).
 
 ## Staleness — opt-in, never a treadmill
 
@@ -133,9 +135,10 @@ Delete it: `check` passes/fails identically; `update` regenerates it
 losslessly. A repo that never runs `update` loses nothing but staleness
 detection and rename certainty.
 
-One accepted trade-off: entries are per-target, so re-stamping a target
-clears staleness for *all* docs that reference it — which is why stale
-output lists every referencing doc for review.
+One accepted trade-off: entries are per-target
+([sumKey](src/sumfile.ts#sym:fn:sumKey) is deliberately kind-independent),
+so re-stamping a target clears staleness for *all* docs that reference it —
+which is why stale output lists every referencing doc for review.
 
 ## Honest limits
 

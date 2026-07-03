@@ -1,3 +1,4 @@
+src/check.ts#GLOB_OPTIONS  ast:sha256:ebd35aa435b78a09a5a8b008157f339d428910604eea7e29342ba855b6c6f55f  2026-07-03
 src/check.ts#check  ast:sha256:882abb97e6079dc58412b995a04427f1cff15028c061eea809500a7093dabf1d  2026-07-03
 src/checksum.ts#hashDefinition  ast:sha256:fcb5896ec31513c65f93844e6117f6b617267bd33df0d248778ad526fa754a40  2026-07-03
 src/extract.ts#extractRefs  ast:sha256:23ea4167110279fd104c5a8f1555b93ee2ca3f46f57c27919daed4ab59678d6c  2026-07-03
@@ -6,4 +7,5 @@ src/init.ts#init  ast:sha256:87335b9003ddc58d2b2112736e0ea25a20698826c9cabe4e2b2
 src/languages/index.ts#loadLanguage  ast:sha256:ea2052f22429457d0706dc604b3fe2ee6c874379debb5942b7aa9e8503536516  2026-07-03
 src/resolve.ts#Resolver  ast:sha256:59d80419562bccccbcecae835f3eb871706afb594ee60186addd03da4d485f53  2026-07-03
 src/sumfile.ts#parseSumFile  ast:sha256:786ad2617e1bf0483c11d571ad03d2347a974dfc6e590cb5cbe1805e56cef34a  2026-07-03
+src/sumfile.ts#sumKey  ast:sha256:4a7c670f54ca3e7ee00d72792b84e423b8f47b67c4ae3a08c6b0ff9c869615a5  2026-07-03
 src/update.ts#update  ast:sha256:72f1583e2efa6c921008c8bb4d607d1627581bb1676e3c953820f7d2e9a9a3f0  2026-07-03
