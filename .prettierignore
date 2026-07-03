@@ -1,0 +1,9 @@
+# Markdown is hand-authored; the AGENTS.md managed block must stay
+# byte-identical to what `symtether init` writes.
+*.md
+dist/
+coverage/
+grammars/
+node_modules/
+test/fixtures/
+package-lock.json

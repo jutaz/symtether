@@ -1,0 +1,219 @@
+import Ajv from 'ajv';
+import { readFileSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, expect, it } from 'vitest';
+import { check } from '../src/check.js';
+import { fix } from '../src/fix.js';
+import { toJson } from '../src/report.js';
+import { update } from '../src/update.js';
+import { UsageError } from '../src/types.js';
+import { setupFixture } from './helpers.js';
+
+const SCHEMA_PATH = path.join(
+  path.dirname(path.dirname(fileURLToPath(import.meta.url))),
+  'schemas',
+  'check-output.schema.json',
+);
+
+/**
+ * The reformat-vs-change edge (§9.1): identical token stream, different
+ * layout. Note: no added trailing commas — those are new tokens and *should*
+ * change the hash.
+ */
+const REFORMATTED = `export class ApiClient {
+  fetchData(
+    url: string
+  ): Promise<string> {
+    return Promise.resolve(
+      url
+    );
+  }
+
+  fetchAgentData(id: string): Promise<string> {
+    return Promise.resolve(id);
+  }
+
+  render(): void {}
+}
+`;
+
+describe('update + check --strict', () => {
+  it('strict without a sum file is a usage error', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      await expect(check({ cwd: fixture.dir, strict: true })).rejects.toThrow(
+        UsageError,
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('update stamps resolvable refs, skips broken, dedups targets', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const result = await update({ cwd: fixture.dir });
+      expect(result.skippedBroken).toBeGreaterThan(0);
+      const sum = await readFile(
+        path.join(fixture.dir, 'symtether.sum'),
+        'utf8',
+      );
+      expect(sum).toContain('src/client.ts#ApiClient.fetchData');
+      expect(sum).toContain('src/client.ts#fn:parseConfig');
+      expect(sum).toMatch(/src\/deploy\.sh#main\s+lex:sha256:/);
+      // Canonical and compat refs to the same target share one entry (§9.1).
+      const entries = sum
+        .trim()
+        .split('\n')
+        .filter((l) => l.includes('#ApiClient.fetchData'));
+      expect(entries).toHaveLength(1);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('freshly stamped repo has zero stale refs under strict', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      await update({ cwd: fixture.dir });
+      const report = await check({ cwd: fixture.dir, strict: true });
+      expect(report.summary.stale).toBe(0);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('reformatting never triggers staleness (normalized hash)', async () => {
+    const fixture = await setupFixture('basic');
+    const clientPath = path.join(fixture.dir, 'src', 'client.ts');
+    try {
+      await update({ cwd: fixture.dir });
+      const original = await readFile(clientPath, 'utf8');
+      // Reformat the whole class body without changing any tokens.
+      const reformatted = original.replace(
+        /export class ApiClient \{[\s\S]*?\n\}/,
+        REFORMATTED.trimEnd(),
+      );
+      expect(reformatted).not.toBe(original);
+      await writeFile(clientPath, reformatted);
+
+      const report = await check({ cwd: fixture.dir, strict: true });
+      const fetchData = report.results.find(
+        (r) => r.ref.fragment === 'sym:ApiClient.fetchData',
+      );
+      expect(fetchData?.status).toBe('ok');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('an implementation change marks the ref stale and lists referencing docs', async () => {
+    const fixture = await setupFixture('basic');
+    const clientPath = path.join(fixture.dir, 'src', 'client.ts');
+    try {
+      await update({ cwd: fixture.dir });
+      const original = await readFile(clientPath, 'utf8');
+      await writeFile(
+        clientPath,
+        original.replace(
+          'return Promise.resolve(url);',
+          'return Promise.reject(new Error(url));',
+        ),
+      );
+
+      const report = await check({ cwd: fixture.dir, strict: true });
+      const stale = report.results.filter((r) => r.status === 'stale');
+      expect(stale.length).toBeGreaterThan(0);
+      expect(stale[0]!.message).toContain('docs/guide.md');
+      expect(stale[0]!.message).toContain('symtether update');
+      // Broken refs stay broken; stale only replaces ok.
+      expect(report.summary.broken).toBe(3);
+
+      // Stale output must still satisfy the stable JSON contract.
+      const schema = JSON.parse(readFileSync(SCHEMA_PATH, 'utf8'));
+      const ajv = new Ajv({ strict: false });
+      const validate = ajv.compile(schema);
+      const output = JSON.parse(toJson(report));
+      expect(validate(output), JSON.stringify(validate.errors)).toBe(true);
+      const staleJson = output.results.find(
+        (r: { status: string }) => r.status === 'stale',
+      );
+      expect(staleJson.fix).toContain('symtether update');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('re-running update clears staleness', async () => {
+    const fixture = await setupFixture('basic');
+    const clientPath = path.join(fixture.dir, 'src', 'client.ts');
+    try {
+      await update({ cwd: fixture.dir });
+      const original = await readFile(clientPath, 'utf8');
+      await writeFile(
+        clientPath,
+        original.replace(
+          'return Promise.resolve(url);',
+          'return url as never;',
+        ),
+      );
+      await update({ cwd: fixture.dir });
+      const report = await check({ cwd: fixture.dir, strict: true });
+      expect(report.summary.stale).toBe(0);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('scoped update leaves out-of-scope stamps untouched', async () => {
+    const fixture = await setupFixture('basic');
+    const clientPath = path.join(fixture.dir, 'src', 'client.ts');
+    try {
+      await update({ cwd: fixture.dir });
+      const original = await readFile(clientPath, 'utf8');
+      await writeFile(
+        clientPath,
+        original.replace(
+          'return Promise.resolve(url);',
+          'return url as never;',
+        ),
+      );
+      // Stamp only tasks.py — client.ts staleness must survive.
+      await update({ cwd: fixture.dir, targets: ['src/tasks.py'] });
+      const report = await check({ cwd: fixture.dir, strict: true });
+      expect(report.summary.stale).toBeGreaterThan(0);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
+describe('hash-verified renames in fix', () => {
+  it('detects a rename by identical content hash, beating edit distance', async () => {
+    const fixture = await setupFixture('basic');
+    const clientPath = path.join(fixture.dir, 'src', 'client.ts');
+    try {
+      await update({ cwd: fixture.dir });
+      const original = await readFile(clientPath, 'utf8');
+      // Rename fetchData -> retrieveRemotePayload: edit distance is huge,
+      // heuristics would never touch it; the hash identifies it exactly.
+      await writeFile(
+        clientPath,
+        original.replaceAll('fetchData', 'retrieveRemotePayload'),
+      );
+
+      const report = await fix({ cwd: fixture.dir });
+      const verified = report.edits.filter((e) =>
+        e.reason.includes('content-verified'),
+      );
+      expect(verified.length).toBeGreaterThan(0);
+      expect(verified[0]!.newUrl).toContain(
+        'sym:ApiClient.retrieveRemotePayload',
+      );
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});

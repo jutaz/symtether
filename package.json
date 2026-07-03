@@ -1,0 +1,78 @@
+{
+  "name": "symtether",
+  "version": "0.2.0",
+  "description": "Stateless linter for symbol references in markdown — referential integrity for the docs AI agents treat as executable context.",
+  "keywords": [
+    "markdown",
+    "linter",
+    "documentation",
+    "agents",
+    "agents-md",
+    "tree-sitter",
+    "ci",
+    "link-checker"
+  ],
+  "homepage": "https://github.com/jutaz/symtether#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jutaz/symtether"
+  },
+  "bugs": "https://github.com/jutaz/symtether/issues",
+  "license": "MIT",
+  "author": "Justas Brazauskas",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "symtether": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "grammars",
+    "schemas",
+    "SPEC.md",
+    "!dist/**/*.test.js",
+    "!dist/**/*.map"
+  ],
+  "scripts": {
+    "build": "tsc && node scripts/copy-grammars.mjs",
+    "test": "npm run build && vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "npm run build && vitest run --coverage",
+    "lint": "eslint src/ && prettier --check .",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build && npm run lint && vitest run"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^14.0.0",
+    "globby": "^16.2.0",
+    "picocolors": "^1.1.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0",
+    "web-tree-sitter": "^0.26.10"
+  },
+  "devDependencies": {
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^24.2.0",
+    "ajv": "^8.17.1",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.6.2",
+    "tree-sitter-javascript": "^0.25.0",
+    "tree-sitter-python": "^0.25.0",
+    "tree-sitter-typescript": "^0.23.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vitest": "^3.2.6"
+  }
+}

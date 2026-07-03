@@ -1,0 +1,110 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { Language, Parser, Query } from 'web-tree-sitter';
+
+/**
+ * Grammar registry: file extension -> lazily-loaded tree-sitter language
+ * plus its tags query. Grammars are WASM files bundled in `grammars/`;
+ * languages are data, matching logic lives in the resolver (§6).
+ */
+
+const GRAMMAR_DIR = path.join(
+  path.dirname(path.dirname(fileURLToPath(import.meta.url))),
+  '..',
+  'grammars',
+);
+
+interface GrammarSpec {
+  /** Grammar/wasm basename in grammars/. */
+  grammar: string;
+  /**
+   * tags.scm basenames to concatenate. The TS grammar's own tags query only
+   * covers TS-specific nodes and is meant to extend the JS one — same
+   * layering GitHub code navigation uses.
+   */
+  tags: string[];
+}
+
+const SPECS: Record<string, GrammarSpec> = {
+  '.ts': { grammar: 'typescript', tags: ['javascript', 'typescript'] },
+  '.mts': { grammar: 'typescript', tags: ['javascript', 'typescript'] },
+  '.cts': { grammar: 'typescript', tags: ['javascript', 'typescript'] },
+  '.tsx': { grammar: 'tsx', tags: ['javascript', 'tsx'] },
+  '.js': { grammar: 'javascript', tags: ['javascript'] },
+  '.mjs': { grammar: 'javascript', tags: ['javascript'] },
+  '.cjs': { grammar: 'javascript', tags: ['javascript'] },
+  '.jsx': { grammar: 'javascript', tags: ['javascript'] },
+  '.py': { grammar: 'python', tags: ['python'] },
+};
+
+/**
+ * Maps tags.scm capture kinds (`@definition.<kind>`) to the closed set of
+ * `#sym:` kind disambiguators (SPEC §5.1). Kinds absent from the table
+ * never satisfy an explicit `<kind>` filter.
+ */
+const KIND_MAP: Record<string, string[]> = {
+  fn: ['function', 'method'],
+  class: ['class'],
+  type: ['interface', 'type', 'enum', 'module'],
+  const: ['constant'],
+};
+
+export function kindSatisfies(
+  refKind: string,
+  definitionKind: string,
+): boolean {
+  return KIND_MAP[refKind]?.includes(definitionKind) ?? false;
+}
+
+export interface LoadedLanguage {
+  language: Language;
+  tagsQuery: Query;
+  newParser(): Parser;
+}
+
+let parserInitialized: Promise<void> | null = null;
+const cache = new Map<string, Promise<LoadedLanguage | null>>();
+
+/** Load the grammar for a file extension, or `null` when unsupported (tier 2). */
+export function loadLanguage(ext: string): Promise<LoadedLanguage | null> {
+  const key = ext.toLowerCase();
+  let loaded = cache.get(key);
+  if (!loaded) {
+    loaded = load(SPECS[key]);
+    cache.set(key, loaded);
+  }
+  return loaded;
+}
+
+export function isSupportedExtension(ext: string): boolean {
+  return ext.toLowerCase() in SPECS;
+}
+
+async function load(
+  spec: GrammarSpec | undefined,
+): Promise<LoadedLanguage | null> {
+  if (!spec) return null;
+  parserInitialized ??= Parser.init();
+  await parserInitialized;
+
+  const language = await Language.load(
+    path.join(GRAMMAR_DIR, `${spec.grammar}.wasm`),
+  );
+  const tagsSources = await Promise.all(
+    spec.tags.map((t) =>
+      readFile(path.join(GRAMMAR_DIR, `${t}.tags.scm`), 'utf8'),
+    ),
+  );
+  const tagsQuery = new Query(language, tagsSources.join('\n'));
+
+  return {
+    language,
+    tagsQuery,
+    newParser() {
+      const parser = new Parser();
+      parser.setLanguage(language);
+      return parser;
+    },
+  };
+}
