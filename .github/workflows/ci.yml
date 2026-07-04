@@ -19,7 +19,11 @@ jobs:
   test:
     name: Test (node ${{ matrix.node-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
+    # 20 minutes: Windows runners are 2-3x slower for our subprocess
+    # tests (cold Node startup + WASM instantiation per invocation),
+    # and macOS runners occasionally spike on cache misses. 10 was
+    # tight; 20 is comfortable without hiding a genuine hang.
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -49,7 +53,7 @@ jobs:
   dogfood:
     name: Dogfood (symtether checks its own docs)
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
