@@ -1,0 +1,34 @@
+# Cloudflare Workers Assets serves this file at the dist root.
+# Syntax matches Cloudflare Pages `_headers`
+# (developers.cloudflare.com/workers/static-assets/headers/).
+#
+# Compression (gzip/brotli) is applied automatically at the edge for text
+# assets, so this file only controls caching. VitePress fingerprints every
+# file it emits under /assets/, which makes them safe to cache immutably.
+
+# Hashed build output: content-addressed, safe to cache for a year.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# VitePress plugin output (per-page markdown + llms indexes). Not
+# fingerprinted; revalidate hourly so agents pick up fresh content.
+/*.md
+  Cache-Control: public, max-age=3600, must-revalidate
+/llms.txt
+  Cache-Control: public, max-age=3600, must-revalidate
+/llms-full.txt
+  Cache-Control: public, max-age=3600, must-revalidate
+
+# Static images/fonts served from /public. Fingerprint via query string
+# only, so keep the window short enough to redeploy without waiting.
+/*.svg
+  Cache-Control: public, max-age=86400, must-revalidate
+/favicon.svg
+  Cache-Control: public, max-age=86400, must-revalidate
+
+# HTML entry points: revalidate every request so a new deploy is picked up
+# immediately, but let CDN caches serve during backend hiccups.
+/
+  Cache-Control: public, max-age=0, must-revalidate
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate

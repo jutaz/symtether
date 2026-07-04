@@ -128,6 +128,14 @@ export default defineConfig({
     ['link', { rel: 'canonical', href: SITE }],
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     ['meta', { name: 'theme-color', content: '#0B0E13' }],
+    // Preconnect to Google Fonts origins so the CSS + WOFF2 handshakes
+    // start alongside the HTML request, not after the CSS parser sees the
+    // @font-face rule. crossorigin is required for gstatic (font files).
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    [
+      'link',
+      { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
+    ],
     // Open Graph / Twitter: link previews in Slack, X, Discord, etc.
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'symtether' }],
@@ -192,19 +200,31 @@ export default defineConfig({
       { text: 'npm', link: 'https://www.npmjs.com/package/symtether' },
     ],
     sidebar: [
-      // 'Home' also opts the landing page into og-image generation, because
-      // the plugin only renders cards for pages present in the sidebar.
+      // Grouped so vitepress-plugin-llms emits a named '### Docs' section
+      // in llms.txt instead of a single '### Other' bucket. 'Home' also
+      // opts the landing page into og-image generation, because the
+      // plugin only renders cards for pages present in the sidebar.
       { text: 'Home', link: '/' },
-      { text: 'Guide', link: '/guide' },
-      { text: 'Adding a language', link: '/adding-a-language' },
-      { text: 'The #sym: syntax (SPEC v1)', link: '/spec/' },
+      {
+        text: 'Docs',
+        items: [
+          { text: 'Guide', link: '/guide' },
+          { text: 'Adding a language', link: '/adding-a-language' },
+          { text: 'The #sym: syntax (SPEC v1)', link: '/spec/' },
+        ],
+      },
     ],
     socialLinks: [{ icon: 'github', link: GITHUB }],
     outline: { level: [2, 3] },
     search: { provider: 'local' },
     footer: {
+      // Machine-friendly index for LLMs / agents. Emitted by
+      // vitepress-plugin-llms; linking it visibly makes it discoverable
+      // from every page, not only crawlable from the root.
       message:
-        'Refs on this site are verified by symtether itself at build time.',
+        'Refs on this site are verified by symtether itself at build time. ' +
+        'LLM-friendly index: <a href="/llms.txt">/llms.txt</a> · ' +
+        '<a href="/llms-full.txt">/llms-full.txt</a>.',
       license: 'MIT',
     },
   },
