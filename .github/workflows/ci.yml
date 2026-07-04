@@ -15,7 +15,10 @@ concurrency:
 
 jobs:
   test:
-    name: Test (node ${{ matrix.node-version }}, ${{ matrix.os }})
+    # Matrix leg name. Individual legs are not required by branch
+    # protection; the `Test` summary job below rolls them up so we can
+    # add or drop matrix legs without touching .github/rulesets.
+    name: test-matrix (node ${{ matrix.node-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     # 20 minutes: Windows runners are 2-3x slower for our subprocess
     # tests (cold Node startup + WASM instantiation per invocation),
@@ -56,7 +59,10 @@ jobs:
       - run: npx vitest run
 
   dogfood:
-    name: Dogfood (${{ matrix.os }})
+    # See `test` for why this is a matrix-leg name, not the required
+    # check. The `Dogfood` summary job below is what branch protection
+    # gates on.
+    name: dogfood-matrix (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
@@ -76,6 +82,42 @@ jobs:
       - run: npm run build
       - run: node dist/cli.js check --strict --exclude 'test/fixtures/**'
       - run: node dist/cli.js update --check --exclude 'test/fixtures/**'
+
+  # Summary jobs. Branch protection requires these instead of the
+  # individual matrix legs, so we can grow or shrink the matrix without
+  # editing .github/rulesets/main-protection.json.
+  #
+  # `if: always()` runs the summary even when a matrix leg fails or is
+  # cancelled; the step then inspects `needs.<job>.result` and exits
+  # non-zero unless every leg succeeded. `result` is one of success,
+  # failure, cancelled, or skipped; only `success` counts.
+  test-summary:
+    name: Test
+    if: always()
+    needs: [test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Verify all test matrix legs succeeded
+        run: |
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "::error::test matrix result: ${{ needs.test.result }}"
+            exit 1
+          fi
+
+  dogfood-summary:
+    name: Dogfood
+    if: always()
+    needs: [dogfood]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Verify all dogfood matrix legs succeeded
+        run: |
+          if [ "${{ needs.dogfood.result }}" != "success" ]; then
+            echo "::error::dogfood matrix result: ${{ needs.dogfood.result }}"
+            exit 1
+          fi
 
   site:
     name: Site builds (refs verified)
