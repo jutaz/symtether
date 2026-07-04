@@ -132,6 +132,57 @@ import { check } from 'symtether';
 const report = await check({ cwd: '/path/to/repo' });
 ```
 
+## GitHub Action
+
+You can run symtether in CI without copying a workflow file. Reference
+this repo as a reusable GitHub Action. It runs the published CLI through
+`npx`, so there is nothing to build or maintain, and the tool version
+matches the release you reference.
+
+```yaml
+# .github/workflows/symtether.yml in YOUR repo
+name: symtether
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jutaz/symtether@v1        # or @v1.2.3 to pin a release
+        with:
+          command: check
+          strict: true                   # also fail on stale stamped refs
+          exclude: |
+            test/fixtures/**
+```
+
+The action builds the CLI flags from these inputs:
+
+- `command`. The subcommand to run: `check` (default), `fix`, `init`, or `update`.
+- `strict`. Staleness gate for `check`. Use `''` (off, default), `true` to
+  fail on stale refs (`--strict`), or `warn` to report only (`--strict=warn`).
+- `globs`. Files to check, one per line. When empty, symtether finds files
+  from the repo root and honors `.gitignore` ([GLOB_OPTIONS](src/check.ts#sym:const:GLOB_OPTIONS)).
+- `exclude`. Globs to exclude, one per line (e.g. `test/fixtures/**`).
+  Each line becomes a `--exclude` flag.
+- `json`. Set to `true` to emit stable JSON
+  ([schemas/check-output.schema.json](schemas/check-output.schema.json))
+  for another action to read. The default is `false`.
+- `working-directory`. The directory to run in, relative to the repo root.
+  The default is the repo root.
+- `args`. Raw extra flags for anything not covered above (e.g. `--write`).
+
+Version pinning. The action pins the tool version to the git ref you
+reference. It reads its own `package.json` at that ref and runs
+`npx symtether@<that version>`. So `@v1.2.3` runs symtether 1.2.3, and
+`@v1` runs whatever the moving `v1` tag points at. If your repo depends
+on `symtether` itself, `npx` prefers your local copy, and the pinned
+version no longer applies.
+
+If you would rather own the workflow file, run `npx symtether init --ci`.
+It writes `.github/workflows/symtether.yml` into your repo. That file uses
+the same action.
+
 ## The syntax
 
 Full spec: [SPEC.md](SPEC.md). The short version:

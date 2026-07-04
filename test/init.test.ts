@@ -161,7 +161,7 @@ describe('init', () => {
         path.join(fixture.dir, '.github', 'workflows', 'symtether.yml'),
         'utf8',
       );
-      expect(content).toContain('npx symtether check');
+      expect(content).toContain('uses: jutaz/symtether@v1');
     } finally {
       await fixture.cleanup();
     }

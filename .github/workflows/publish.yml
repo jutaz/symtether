@@ -113,3 +113,45 @@ jobs:
       - run: ./node_modules/.bin/publint
       - run: ./node_modules/.bin/attw --pack .
       - run: npm publish --provenance --access public
+
+  major-tag:
+    name: Move v<major> tag
+    # Move the floating major tag (v1) only after `npm publish` has put
+    # symtether@X.Y.Z on the registry. The reusable action in action.yml
+    # runs `npx symtether@$VERSION`, where $VERSION comes from this repo's
+    # package.json at the pinned ref. So `uses: jutaz/symtether@v1` works
+    # only once that npm version exists. If v1 moved before publish (as it
+    # would in release-on-version-bump.yml), @v1 would point at a commit
+    # whose npm version is not live yet.
+    #
+    # Why this is a separate job from `publish`:
+    #   - `publish` keeps its contents:read and id-token:write. Its
+    #     permissions do not grow to cover tags.
+    #   - `major-tag` has contents:write but no id-token and no npm secret
+    #     access. It can only move one git ref.
+    #   - Fork PRs never trigger this workflow (it runs on release: published
+    #     and workflow_dispatch only), so the extra permission is never
+    #     exposed to untrusted code.
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 1
+      - name: Move major tag to this release
+        run: |
+          # Major only (no v1.2 minor tags), to keep the set of moving tags
+          # small. Consumers who want exact versions pin vX.Y.Z.
+          #
+          # If the repo has tag-protection rules enabled, the v* pattern must
+          # allow force-pushes from GITHUB_TOKEN with contents:write. If the
+          # rule blocks the push, this job fails on purpose, so you notice a
+          # stale v1.
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          MAJOR="${NEW_VERSION%%.*}"
+          git tag -f "v$MAJOR" "$GITHUB_SHA"
+          git push -f origin "v$MAJOR"
+          echo "Moved v$MAJOR → v$NEW_VERSION ($GITHUB_SHA)" >> "$GITHUB_STEP_SUMMARY"

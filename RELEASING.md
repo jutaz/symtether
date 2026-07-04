@@ -92,6 +92,29 @@ npm view symtether                    # shows the new version
 npm view symtether time.<version>     # timestamp of publish
 ```
 
+## Major version tag (`v1`)
+
+`uses: jutaz/symtether@v1` resolves because `publish.yml` moves a
+floating `v1` tag to the commit of every published release, but only
+after `npm publish` succeeds. The reusable action runs
+`npx symtether@$VERSION`, where `$VERSION` comes from this repo's
+`package.json` at the pinned ref. So `@v1` works only once that npm
+version is live. That is why the major-tag job lives in `publish.yml`,
+after the publish step, and not in `release-on-version-bump.yml`, which
+runs before the human approval gate.
+
+Only the major tag moves. There are no `v1.2` minor tags. Consumers who
+want exact versions pin `@vX.Y.Z`.
+
+If `v1` falls out of sync (e.g. publish completed but the `major-tag`
+job failed, usually because a tag-protection rule blocked
+`git push -f`):
+
+```sh
+git tag -f v1 vX.Y.Z
+git push -f origin v1
+```
+
 ## When things go wrong
 
 **Publish job stuck on "Waiting for approval":** by design.
