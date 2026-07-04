@@ -108,6 +108,20 @@ div[class*='language-sh'] pre {
   border-radius: var(--radius-xs);
 }
 
+/* Brand button contrast. VitePress defaults pair `--vp-c-brand-3` (our
+   --green-600, #1FA347) with white text — ~4.15:1, which fails WCAG AA
+   for normal-size text. Pair the brighter --green-500 with the dark-green
+   accent-contrast ink (#06210F) instead, which the design system already
+   defines for on-accent text. Ratio is >10:1 in both modes. */
+:root {
+  --vp-button-brand-bg: var(--green-500);
+  --vp-button-brand-text: var(--accent-contrast);
+  --vp-button-brand-hover-bg: var(--green-400);
+  --vp-button-brand-hover-text: var(--accent-contrast);
+  --vp-button-brand-active-bg: var(--green-600);
+  --vp-button-brand-active-text: var(--accent-contrast);
+}
+
 /* Feature cards on the landing. Technical borders, no soft fills. */
 .VPFeature {
   border: 1px solid var(--vp-c-divider);
