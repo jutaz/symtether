@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { copyFile, readFile, writeFile } from 'node:fs/promises';
 import { globby } from 'globby';
 import path from 'node:path';
@@ -15,6 +16,46 @@ const repoRoot = path.resolve(
   '..',
 );
 const GITHUB = 'https://github.com/jutaz/symtether';
+
+/**
+ * Deep links pin to the ref being built, never a branch. Line anchors
+ * computed against `main` would drift as soon as the next commit shifts
+ * lines in the target file — the exact rot this tool exists to catch.
+ *
+ * Resolution order:
+ * 1. an exact tag (release builds link to blob/v0.2.0/… — as immutable
+ *    as a SHA, and the URL says which release the docs describe)
+ * 2. the commit SHA (Workers Builds sets WORKERS_CI_COMMIT_SHA; GitHub
+ *    Actions sets GITHUB_SHA; local builds ask git)
+ * 3. `main` (no git at all, e.g. a tarball build)
+ */
+function buildRef(): string {
+  const git = (...args: string[]): string | null => {
+    try {
+      return execFileSync('git', args, {
+        cwd: repoRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+      }).trim();
+    } catch {
+      return null;
+    }
+  };
+
+  // CI tag builds: GitHub Actions exposes the tag name directly.
+  if (process.env.GITHUB_REF_TYPE === 'tag' && process.env.GITHUB_REF_NAME) {
+    return process.env.GITHUB_REF_NAME;
+  }
+  // Workers Builds / local: HEAD may sit exactly on a tag.
+  const tag = git('describe', '--exact-match', '--tags', 'HEAD');
+  if (tag) return tag;
+
+  const sha = process.env.WORKERS_CI_COMMIT_SHA ?? process.env.GITHUB_SHA;
+  if (sha) return sha;
+  return git('rev-parse', 'HEAD') ?? 'main';
+}
+
+const COMMIT = buildRef();
 
 /**
  * Pre-resolve all #sym: refs in the source markdown files and build an
@@ -54,7 +95,7 @@ async function buildRefRewrites(): Promise<Map<string, string>> {
         continue;
       }
       const anchor = resolution.matchLine ? `#L${resolution.matchLine}` : '';
-      rewrites.set(href, `${GITHUB}/blob/main/${ref.targetPath}${anchor}`);
+      rewrites.set(href, `${GITHUB}/blob/${COMMIT}/${ref.targetPath}${anchor}`);
     }
   }
 
@@ -71,7 +112,7 @@ const refRewrites = await buildRefRewrites();
 export default defineConfig({
   title: 'symtether',
   description:
-    'Stateless linter for symbol references in markdown — referential integrity for the docs AI agents treat as executable context.',
+    'Stateless linter that checks symbol references in markdown still point at real code. Built for AGENTS.md and the docs coding agents read as instructions.',
   cleanUrls: true,
   srcExclude: [],
 

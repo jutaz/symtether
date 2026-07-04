@@ -12,11 +12,12 @@ No install needed:
 npx symtether check
 ```
 
-Exit codes: `0` all refs pass · `1` broken refs (or stale under `--strict`) ·
-`2` usage or runtime error.
+Exit codes: `0` all refs pass · `1` broken refs (stale under `--strict`, or
+an outdated sum file under `update --check`) · `2` usage or runtime error.
 
-Default scope is every `**/*.md` in the repo; exclusions come straight from
-your `.gitignore` ([GLOB_OPTIONS](/src/check.ts#sym:const:GLOB_OPTIONS)).
+Default scope is every `**/*.md` in the repo. Exclusions come from your
+`.gitignore`, plus `node_modules`, which is always skipped
+([GLOB_OPTIONS](/src/check.ts#sym:const:GLOB_OPTIONS)).
 
 ## Commands
 

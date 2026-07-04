@@ -17,7 +17,7 @@ features:
   - title: Nothing to set up
     details: npx symtether check works on an unmodified repo. Exclusions come from your .gitignore.
   - title: Checked against the AST
-    details: Eighteen languages resolve through tree-sitter (TS, JS, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash). Everything else falls back to lexical search, and every ref reports which tier it resolved at.
+    details: Eighteen languages resolve through tree-sitter (TS, TSX, JS, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash). Everything else falls back to lexical search, and every ref reports which tier it resolved at.
   - title: Built for agents
     details: symtether init adds a short managed section to AGENTS.md so coding agents read, write, and repair refs as part of normal work.
   - title: Staleness detection when you want it

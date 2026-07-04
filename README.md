@@ -53,8 +53,8 @@ green
 ```
 
 There is no config file and no lockfile. The markdown links are the only
-state; exclusions come from your `.gitignore`
-([GLOB_OPTIONS](src/check.ts#sym:const:GLOB_OPTIONS)).
+state; exclusions come from your `.gitignore`, plus `node_modules`, which
+is always skipped ([GLOB_OPTIONS](src/check.ts#sym:const:GLOB_OPTIONS)).
 
 ## Usage
 
@@ -72,7 +72,8 @@ npx symtether check --strict     # also fail when stamped targets changed
 npx symtether check --strict=warn  # …or just report staleness
 ```
 
-Exit codes: `0` all refs pass · `1` broken refs (or stale under `--strict`) · `2` usage or runtime error.
+Exit codes: `0` all refs pass · `1` broken refs (stale under `--strict`, or
+an outdated sum file under `update --check`) · `2` usage or runtime error.
 
 Or as a library — the CLI is a thin shell over
 [check](src/check.ts#sym:fn:check), [fix](src/fix.ts#sym:fn:fix),

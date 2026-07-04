@@ -1,7 +1,7 @@
 {
   "name": "symtether",
   "version": "0.2.0",
-  "description": "Stateless linter for symbol references in markdown — referential integrity for the docs AI agents treat as executable context.",
+  "description": "Stateless linter that checks symbol references in markdown still point at real code. Built for AGENTS.md and the docs coding agents read as instructions.",
   "keywords": [
     "markdown",
     "linter",
@@ -12,7 +12,7 @@
     "ci",
     "link-checker"
   ],
-  "homepage": "https://github.com/jutaz/symtether#readme",
+  "homepage": "https://symtether.dev",
   "repository": {
     "type": "git",
     "url": "https://github.com/jutaz/symtether"
