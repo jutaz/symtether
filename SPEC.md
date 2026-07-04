@@ -1,9 +1,9 @@
-# The `#sym:` reference syntax — SPEC v1
+# The `#sym:` reference syntax (SPEC v1)
 
-A `#sym:` reference is a standard relative markdown link whose fragment names
-a symbol inside the target source file. It renders and clicks like any other
-link on GitHub; symtether upgrades the convention into a guarantee by
-verifying each reference against the code.
+A `#sym:` reference is a standard relative markdown link whose fragment
+names a symbol inside the target source file. It renders and clicks like
+any other link on GitHub, and symtether verifies each reference against
+the code.
 
 ## Canonical form
 
@@ -12,17 +12,17 @@ verifying each reference against the code.
 [link text](<relative-path>#sym:<kind>:<dotpath>)
 ```
 
-- `<relative-path>` — a standard markdown relative path to a source file,
+- `<relative-path>` is a standard markdown relative path to a source file,
   resolved **relative to the markdown file's own directory** (identical to
   GitHub rendering semantics). Paths beginning with `/` resolve from the
-  repository root. Repo root = nearest ancestor containing `.git`, else the
-  working directory.
-- `<dotpath>` — one or more identifiers joined by `.`, e.g. `parseConfig`,
-  `ApiClient.fetchData`, `ns.Widget.render`. Identifier charset:
-  `[A-Za-z0-9_$]+` per segment. Case-sensitive exact match per segment.
-- `<kind>` — optional disambiguator from a **closed set**: `fn`, `class`,
-  `type`, `const`. (Reserved for future versions: `region`.) Unknown kinds
-  are a lint error, not ignored.
+  repository root. The repo root is the nearest ancestor containing
+  `.git`, or the working directory when there is none.
+- `<dotpath>` is one or more identifiers joined by `.`, e.g.
+  `ApiClient.fetchData`. Each segment must match `[A-Za-z0-9_$]+` and is
+  compared case-sensitively.
+- `<kind>` is an optional disambiguator from a **closed set**: `fn`,
+  `class`, `type`, `const`. (`region` is reserved for future versions.)
+  An unknown kind is a lint error, not ignored.
 
 Examples:
 
@@ -44,11 +44,11 @@ not a language-exact qualified name.
   a method `fetchData` nested in class `ApiClient`, even if `ApiClient` is
   itself inside a namespace.
 - If `<kind>` is present, the matched definition's kind must also map to it.
-- **Exactly one match = pass. Zero matches = broken. Two or more matches =
-  ambiguous**, an error instructing the author to qualify further (add a
-  parent segment or a kind).
+- **Exactly one match passes. Zero matches is broken. Two or more matches
+  is ambiguous**, an error instructing the author to qualify further by
+  adding a parent segment or a kind.
 
-## Compatibility (lenient) forms — read-accepted, never written
+## Compatibility (lenient) forms, read-accepted and never written
 
 On links whose target path resolves to a non-markdown source file, these
 fragments are accepted with identical semantics and reported with a `compat`
@@ -73,6 +73,6 @@ multiple symbols per link, wildcards, regex.
 - **Ignored:** links inside fenced code blocks and inline code spans, image
   links (`![]()`), autolinks, external URLs (any scheme), `mailto:`, and
   pure-fragment links (`#heading`).
-- Escape hatch: `<!-- symtether-disable-next-line -->` suppresses checking
-  for refs on the following line; `<!-- symtether-disable -->` /
-  `<!-- symtether-enable -->` for blocks.
+- `<!-- symtether-disable-next-line -->` suppresses checking for refs on
+  the following line. `<!-- symtether-disable -->` and
+  `<!-- symtether-enable -->` suppress and restore checking for a block.
