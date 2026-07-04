@@ -3,6 +3,7 @@ import { copyFile, readFile, writeFile } from 'node:fs/promises';
 import { globby } from 'globby';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildEndGenerateOpenGraphImages } from '@nolebase/vitepress-plugin-og-image/vitepress';
 import { defineConfig } from 'vitepress';
 import llmstxt from 'vitepress-plugin-llms';
 // The site build dogfoods the library itself (Law 9): every #sym: ref in the
@@ -136,7 +137,7 @@ export default defineConfig({
     ],
     ['meta', { property: 'og:description', content: DESCRIPTION }],
     ['meta', { property: 'og:url', content: SITE }],
-    ['meta', { name: 'twitter:card', content: 'summary' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
     [
       'meta',
       {
@@ -185,6 +186,9 @@ export default defineConfig({
       { text: 'npm', link: 'https://www.npmjs.com/package/symtether' },
     ],
     sidebar: [
+      // 'Home' also opts the landing page into og-image generation — the
+      // plugin only renders cards for pages present in the sidebar.
+      { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide' },
       { text: 'The #sym: syntax (SPEC v1)', link: '/spec/' },
     ],
@@ -230,5 +234,11 @@ export default defineConfig({
       path.join(repoRoot, 'SPEC.md'),
       path.join(siteConfig.outDir, 'spec.md'),
     );
+    // Social cards: renders docs/public/og-template.svg per page (satori/
+    // resvg WASM — no native deps) and rewrites og:image/twitter:image.
+    await buildEndGenerateOpenGraphImages({
+      baseUrl: SITE,
+      category: { byPathPrefix: [{ prefix: '/', text: 'symtether' }] },
+    })(siteConfig);
   },
 });

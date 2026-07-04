@@ -68,6 +68,7 @@
     "web-tree-sitter": "^0.26.10"
   },
   "devDependencies": {
+    "@nolebase/vitepress-plugin-og-image": "^2.18.2",
     "@tree-sitter-grammars/tree-sitter-kotlin": "^1.1.0",
     "@tree-sitter-grammars/tree-sitter-lua": "^0.4.1",
     "@types/mdast": "^4.0.4",
