@@ -10,8 +10,8 @@ the resolver's behavior.
 
 ## Layout
 
-- [extract.ts](src/extract.ts#sym:fn:extractRefs). markdown to `Ref[]`.
-- [resolve.ts](src/resolve.ts#sym:class:Resolver). `Ref` to `Resolution`, in three tiers: ast, lexical, file-only.
+- [extract.ts](src/extract.ts#sym:fn:extractRefs). markdown to [`Ref`](src/types.ts#sym:type:Ref)`[]`.
+- [resolve.ts](src/resolve.ts#sym:class:Resolver). [`Ref`](src/types.ts#sym:type:Ref) to [`Resolution`](src/types.ts#sym:type:Resolution), in three tiers: ast, lexical, file-only.
 - [languages/](src/languages/index.ts#sym:fn:loadLanguage). Grammar registry. Languages are data, matching logic lives in the resolver.
 - [check.ts](src/check.ts#sym:fn:check), [fix.ts](src/fix.ts#sym:fn:fix), [init.ts](src/init.ts#sym:fn:init), [update.ts](src/update.ts#sym:fn:update). The four commands, also the library API.
 - [checksum.ts](src/checksum.ts#sym:fn:hashDefinition). Normalized, name-independent AST hashes.
