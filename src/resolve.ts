@@ -35,7 +35,7 @@ export class Resolver {
       return broken(
         ref,
         'file-only',
-        'target is a directory, not a file — point the ref at the source file that defines the symbol',
+        'target is a directory, not a file. Point the ref at the source file that defines the symbol',
       );
     }
     if (!fileStat?.isFile()) {
@@ -51,7 +51,7 @@ export class Resolver {
         ref,
         status: 'broken',
         tier: tierFor(ref),
-        message: `file found but casing differs: doc says "${ref.targetPath}", disk says "${caseMismatch}" — this breaks on case-sensitive filesystems`,
+        message: `file found but casing differs: doc says "${ref.targetPath}", disk says "${caseMismatch}", and this breaks on case-sensitive filesystems`,
         candidates: [],
         diskPath: caseMismatch,
       };
@@ -126,7 +126,7 @@ export class Resolver {
     }
 
     // A file that failed to parse may be missing definitions the query
-    // would otherwise find — say so instead of a misleading "not found"
+    // would otherwise find. Say so instead of a misleading "not found"
     // (Law 8: an agent needs the real cause to act).
     if (extracted.hasParseErrors) {
       return broken(
@@ -176,8 +176,8 @@ export class Resolver {
         candidates: [],
         // Hash every matching line, not just the first. A lexical stamp
         // can't know which line is "the definition" in an unknown language;
-        // what it can attest is "the set of lines mentioning this symbol" —
-        // exactly the lines an agent following the ref would grep to.
+        // what it can attest is "the set of lines mentioning this symbol".
+        // Exactly the lines an agent following the ref would grep to.
         hash: hashLexicalLine(matchedLines.join('\n')),
       };
     }
@@ -200,7 +200,7 @@ export class Resolver {
         this.realRepoRoot(),
       ]);
       const onDisk = path.relative(realRoot, realAbs).split(path.sep).join('/');
-      // Only a pure case difference is an error — a symlink legitimately
+      // Only a pure case difference is an error. A symlink legitimately
       // resolves to a different path and must not be flagged.
       if (
         onDisk !== written &&
@@ -283,9 +283,9 @@ export class Resolver {
       }
 
       // The upstream query and a receiver-aware extra can capture the same
-      // definition node; keep only the receiver-aware one — it produces the
-      // richer chain (Server.Start), and the plain one would pollute
-      // matching with a duplicate short chain.
+      // definition node. Keep only the receiver-aware one, because it
+      // produces the richer chain (Server.Start), and the plain one would
+      // pollute matching with a duplicate short chain.
       const byRange = new Map<string, RawDef>();
       for (const d of raw) {
         const key = `${d.start}:${d.end}:${d.name}`;

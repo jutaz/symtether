@@ -62,7 +62,7 @@ export async function fix(options: FixOptions = {}): Promise<FixReport> {
 
       if (resolution.status === 'broken' && ref.syntaxError) {
         // Malformed refs can't be auto-repaired, but silence would read as
-        // "nothing wrong here" — surface them with the cause.
+        // "nothing wrong here". Surface them with the cause.
         skipped.push({
           resolution,
           reason: `cannot auto-fix: ${ref.syntaxError}`,
@@ -114,7 +114,7 @@ async function proposeFix(
 ): Promise<Proposal> {
   const fragment = `#${ref.fragment}`;
 
-  // Case 0 — wrong casing: the resolver already found the on-disk path;
+  // Case 0, wrong casing. The resolver already found the on-disk path;
   // rewriting to it is zero-guess.
   if (resolution.diskPath) {
     return {
@@ -128,8 +128,8 @@ async function proposeFix(
     };
   }
 
-  // Case 1 — moved file: target path is gone, but exactly one file in the
-  // repo has the same basename and still contains the symbol (§7.2).
+  // Case 1, moved file. The target path is gone, but exactly one file in
+  // the repo has the same basename and still contains the symbol (§7.2).
   if (resolution.message === 'file not found') {
     const basename = path.basename(ref.targetPath);
     let matchesPromise = basenameMatches.get(basename);
@@ -170,9 +170,10 @@ async function proposeFix(
     };
   }
 
-  // Case 2a — hash-verified rename (§9.2), the near-certain path: the old
+  // Case 2a, hash-verified rename (§9.2), the near-certain path. The old
   // symbol's stamped hash matches exactly one definition in the same file
-  // under a new name. Content-identity beats string-similarity guessing.
+  // under a new name. Content identity is more reliable than
+  // string-similarity guessing.
   if (sumEntries) {
     const stamped = sumEntries.get(sumKey(ref.targetPath, ref.dotpath));
     if (stamped) {
@@ -194,7 +195,7 @@ async function proposeFix(
     }
   }
 
-  // Case 2b — heuristic rename: single close candidate in the same file.
+  // Case 2b, heuristic rename. Single close candidate in the same file.
   const wanted = ref.dotpath[ref.dotpath.length - 1] ?? '';
   const close = resolution.candidates.filter(
     (c) =>
@@ -231,7 +232,7 @@ function relativeUrl(ref: Ref, newRepoRelPath: string): string {
  * Replace old link URLs with new ones, scoped to the recorded line so an
  * identical URL elsewhere in the doc is left alone. split/join instead of
  * String.replace: replacement strings must never interpret `$&`/`$$`
- * patterns — `$` is legal in symbol names (SPEC §5.1) — and identical URLs
+ * patterns. `$` is legal in symbol names (SPEC §5.1), and identical URLs
  * repeated on one line must all be rewritten.
  */
 export function applyEdits(content: string, edits: FixEdit[]): string {

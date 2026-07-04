@@ -84,9 +84,9 @@ Examples:
         : (opts.strict as string | undefined);
     if (strictMode && strictMode !== 'fail' && strictMode !== 'warn') {
       // Commander's optional-value options consume the next positional, so
-      // `--strict docs/x.md` lands here — point at the correct spelling.
+      // `--strict docs/x.md` lands here. Point at the correct spelling.
       const hint = /[/*.]/.test(strictMode)
-        ? ` — to pass globs, put them before the flag or use --strict=fail|warn`
+        ? `. To pass globs, put them before the flag or use --strict=fail|warn`
         : '';
       throw new UsageError(
         `invalid --strict mode "${strictMode}" (fail|warn)${hint}`,
@@ -124,9 +124,9 @@ program
     'after',
     `
 Repairs, in order of confidence:
-  1. content-verified renames — near-certain, needs symtether.sum
-  2. moved files — symbol found in exactly one other file
-  3. renamed symbols — single close candidate in the same file
+  1. content-verified renames (near-certain, needs symtether.sum)
+  2. moved files (symbol found in exactly one other file)
+  3. renamed symbols (single close candidate in the same file)
 Everything else is reported with candidates and left untouched.
 
 Examples:
@@ -156,7 +156,7 @@ Examples:
     if (report.edits.length === 0 && report.skipped.length === 0) {
       console.log('nothing to fix');
     } else if (!opts.write && report.edits.length > 0) {
-      console.log(pc.dim('\ndry-run — pass --write to apply'));
+      console.log(pc.dim('\ndry-run, pass --write to apply'));
     }
     process.exitCode = report.skipped.length > 0 ? EXIT_BROKEN : EXIT_OK;
   });
@@ -251,7 +251,7 @@ try {
   if (code === 'commander.helpDisplayed' || code === 'commander.version') {
     process.exit(EXIT_OK);
   }
-  // Commander already printed its own usage error to stderr — don't repeat it.
+  // Commander already printed its own usage error to stderr. Don't repeat it.
   if (!code?.startsWith('commander.')) {
     console.error(pc.red(err instanceof Error ? err.message : String(err)));
   }

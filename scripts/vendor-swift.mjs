@@ -1,6 +1,7 @@
 // Re-vendors the Swift grammar into vendor/grammars/. Needs Docker: the
 // tree-sitter CLI compiles WASM through an emscripten image. Regular builds
-// never run this — copy-grammars.mjs picks up the committed artifacts.
+// never run this, because copy-grammars.mjs picks up the committed
+// artifacts.
 import { execFileSync } from 'node:child_process';
 import { copyFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';

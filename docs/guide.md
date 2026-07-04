@@ -100,8 +100,8 @@ installs a short managed block into `AGENTS.md`. Re-running it updates
 the block in place, and it does not duplicate the block or touch
 anything outside the markers. The block tells agents to resolve refs
 by grepping, to run `check` and `fix` after renaming symbols, and to
-prefer `#sym:` refs over line numbers when writing docs. CI catches
-what agents miss:
+prefer `#sym:` refs over line numbers when writing docs. To catch
+what agents miss, add the CI workflow.
 
 ```console
 npx symtether init --ci

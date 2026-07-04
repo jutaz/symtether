@@ -1,6 +1,6 @@
 /* ============================================================
-   symtether · TYPOGRAPHY TOKENS
-   Inter (UI/display) + JetBrains Mono (code, and the #sym: prefix).
+   symtether. TYPOGRAPHY TOKENS.
+   Inter (UI/display) and JetBrains Mono (code, and the #sym: prefix).
    ============================================================ */
 
 :root {
@@ -27,8 +27,8 @@
   --fs-body:    16px;
   --fs-sm:      14px;
   --fs-xs:      13px;
-  --fs-2xs:     12px;  /* badges / eyebrows — floor */
-  --fs-code:    14px;  /* inline + block code default */
+  --fs-2xs:     12px;  /* badges and eyebrows, floor */
+  --fs-code:    14px;  /* inline and block code default */
 
   /* ---- Line heights ---- */
   --lh-tight:   1.05; /* @kind other */  /* display */

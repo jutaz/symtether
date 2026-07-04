@@ -9,15 +9,15 @@
  * invocation. It also lets us keep source-map-linked stack traces and
  * a legal-comments sidecar without shipping the whole tsc-emitted tree.
  *
- * What stays external — everything in `dependencies`:
- * - Runtime deps (commander, globby, remark, unified, picocolors, …)
- *   resolve from the installed `node_modules` at runtime, exactly like
+ * What stays external is everything in `dependencies`:
+ * - Runtime deps (commander, globby, remark, unified, picocolors, and so
+ *   on) resolve from the installed `node_modules` at runtime, exactly like
  *   `dist/index.js` (the library entry) already does. This keeps the
  *   `dependencies` block in package.json meaningful and avoids shipping
  *   a second inlined copy of every runtime dep inside `dist/cli.js`.
  * - `web-tree-sitter` in particular uses `import.meta.url` to locate its
- *   sibling `.wasm`; bundling would need file-loader gymnastics anyway.
- * - Node builtins — never bundle these.
+ *   sibling `.wasm`, and bundling would need file-loader gymnastics anyway.
+ * - Node builtins. Never bundle these.
  *
  * The externals list is derived from `package.json.dependencies` so it
  * stays in sync automatically; adding a runtime dep is enough, no edit
@@ -38,11 +38,9 @@ const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
 // Derive runtime externals from package.json so the list can't drift.
 // Match both bare specifiers (`commander`) and deep subpath imports
-// (`unist-util-visit/do`) with the `pkg/*` companion entry — esbuild's
-// external matcher treats them as separate patterns.
-const pkg = JSON.parse(
-  await readFile(path.join(ROOT, 'package.json'), 'utf8'),
-);
+// (`unist-util-visit/do`) with the `pkg/*` companion entry, because
+// esbuild's external matcher treats them as separate patterns.
+const pkg = JSON.parse(await readFile(path.join(ROOT, 'package.json'), 'utf8'));
 const runtimeDeps = Object.keys(pkg.dependencies ?? {});
 const external = runtimeDeps.flatMap((name) => [name, `${name}/*`]);
 

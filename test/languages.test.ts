@@ -109,14 +109,14 @@ describe('tier-1 language coverage', () => {
       status: 'ok',
       tier: 'lexical',
     });
-    // Broken refs still fail at tier 2 — lexical is honest coverage.
+    // Broken refs still fail at tier 2. Lexical is honest coverage.
     const broken = find('sym:checkoutCart');
     expect(broken.status).toBe('broken');
     expect(broken.tier).toBe('lexical');
   });
 
   it('suffix-matches receiver methods per SPEC §5.2 (Go Server.Start)', () => {
-    // Server.Start matches a method with receiver *Server — the language-
+    // Server.Start matches a method with receiver *Server. The language-
     // agnostic dotpath form, not Go's own syntax.
     expect(find('sym:Server.Start').status).toBe('ok');
   });
@@ -156,7 +156,7 @@ describe('language registry invariants', () => {
     }
     const mapped = new Set(Object.values(KIND_MAP).flat());
     // Every emitted kind must be reachable through at least one <kind>
-    // filter — otherwise refs like #sym:const:X silently can't match
+    // filter, otherwise refs like #sym:const:X silently can't match
     // definitions a grammar legitimately produces.
     for (const kind of emitted) {
       expect(

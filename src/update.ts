@@ -38,8 +38,8 @@ export interface UpdateResult {
 /**
  * Write/refresh sum-file entries (design doc §7.5, §9).
  *
- * Named `update`, not `link`, deliberately: it stamps *review*, it does not
- * create bindings — bindings don't exist as a concept in symtether. The sum
+ * Named `update`, not `link`, deliberately. It stamps *review*, and does
+ * not create bindings. Bindings don't exist as a concept in symtether. The sum
  * file is derived and regenerable: entries come only from refs that exist in
  * docs right now; entries for targets no docs reference anymore are pruned.
  */
@@ -90,7 +90,7 @@ export async function update(
       } else {
         if (resolution.status === 'broken') skippedBroken++;
         // Broken or unverifiable refs never get a fresh stamp, but a scoped
-        // run must not silently discard existing stamps either — the sum
+        // run must not silently discard existing stamps either. The sum
         // file is a shadow; only a full-scope run prunes.
         const prev = previous.get(key);
         if (prev && !inScope) next.set(key, prev);
@@ -104,17 +104,17 @@ export async function update(
   }
 
   if (options.check) {
-    // Compare keys + hashes only — the date column is informational (§9.1)
+    // Compare keys and hashes only. The date column is informational (§9.1)
     // and must never fail CI by itself.
     const changed: string[] = [];
     for (const [key, entry] of next) {
       const prev = previous.get(key);
-      if (!prev) changed.push(`${key} (missing — not stamped)`);
+      if (!prev) changed.push(`${key} (missing, not stamped)`);
       else if (prev.hash !== entry.hash) changed.push(`${key} (hash differs)`);
     }
     for (const key of previous.keys()) {
       if (!next.has(key))
-        changed.push(`${key} (orphaned — no doc references it)`);
+        changed.push(`${key} (orphaned, no doc references it)`);
     }
     changed.sort();
     return {
@@ -132,7 +132,7 @@ export async function update(
   return { written: next.size, pruned, skippedBroken, file: SUM_FILE };
 }
 
-/** `src/foo` matches `src/foo.ts`? No — only exact paths or directory prefixes. */
+/** `src/foo` matches `src/foo.ts`? No. Only exact paths or directory prefixes. */
 function pathInScope(targetPath: string, scope: string): boolean {
   const clean = scope.replace(/\/+$/, '');
   return targetPath === clean || targetPath.startsWith(`${clean}/`);

@@ -39,7 +39,7 @@ describe('check on the basic fixture', () => {
       'sym:withRetry',
       'sym:type:AgentSkill',
       // Regression: const declarations and namespace nesting are invisible
-      // to the upstream tags.scm — covered by our supplementary queries.
+      // to the upstream tags.scm. Covered by our supplementary queries.
       'sym:const:MAX_RETRIES',
       'sym:helpers.formatUrl',
       'sym:fn:countdown',
@@ -99,7 +99,7 @@ describe('check on the basic fixture', () => {
 
   it('reports the matched definition line for tier-1 ok results', () => {
     const r = find('sym:ApiClient.fetchData');
-    // fetchData is defined on line 2 of the fixture's client.ts — consumers
+    // fetchData is defined on line 2 of the fixture's client.ts. Consumers
     // (like the site generator) use this for GitHub #L deep links.
     expect(r.matchLine).toBe(2);
     expect(find('sym:main').matchLine).toBeUndefined(); // lexical: no line
@@ -114,7 +114,7 @@ describe('check on the basic fixture', () => {
 
   it('summarizes correctly', () => {
     expect(report.summary.refs).toBe(report.results.length);
-    // Derive from results — the fixture evolves; the invariant is that the
+    // Derive from results. The fixture evolves; the invariant is that the
     // summary agrees with the per-ref statuses.
     const broken = report.results.filter((r) => r.status === 'broken').length;
     expect(report.summary.broken).toBe(broken);
@@ -185,7 +185,7 @@ describe('check on the basic fixture', () => {
     const fixture = await setupFixture('basic');
     try {
       const { writeFile } = await import('node:fs/promises');
-      // .zsh has no grammar — stays tier 2 (unlike .sh, which is tier 1).
+      // .zsh has no grammar, so it stays tier 2 (unlike .sh, which is tier 1).
       await writeFile(
         path.join(fixture.dir, 'src', 'inject.zsh'),
         '#!/bin/zsh\n$inject() { echo hi; }\n',
@@ -380,7 +380,7 @@ describe('check: resolution outcome corners', () => {
     try {
       const { writeFile } = await import('node:fs/promises');
       // render exists on both ApiClient and Widget; both are methods, so
-      // #sym:fn:render is still ambiguous — and "add a kind" would be
+      // #sym:fn:render is still ambiguous, so "add a kind" would be
       // useless advice.
       await writeFile(
         path.join(fixture.dir, 'docs', 'amb.md'),

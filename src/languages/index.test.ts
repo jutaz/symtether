@@ -11,8 +11,8 @@ import { findGrammarDir } from './index.js';
  *   - the walk succeeds regardless of how deep under `dist/` we start
  *     (per-file tsc output vs. single-file bundle);
  *   - an intermediate `package.json` that isn't ours (no `grammars/`
- *     sibling) doesn't confuse the lookup — this is the monorepo /
- *     pnpm-workspace case;
+ *     sibling) doesn't confuse the lookup. This is the monorepo /
+ *     pnpm-workspace case.
  *   - a missing `grammars/` sibling throws a clear packaging-bug error
  *     rather than silently returning a wrong path.
  */

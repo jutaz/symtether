@@ -23,7 +23,7 @@ export function toPosix(p: string): string {
 /**
  * Resolve a link target written in a markdown doc to a repo-relative posix
  * path. Relative targets resolve from the doc's own directory; `/`-prefixed
- * targets resolve from the repo root — both matching GitHub rendering
+ * targets resolve from the repo root. Both match GitHub rendering
  * semantics (SPEC §5.1).
  *
  * Returns `null` when the target escapes the repo root (path traversal).

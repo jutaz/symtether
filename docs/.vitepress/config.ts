@@ -21,14 +21,15 @@ const GITHUB = 'https://github.com/jutaz/symtether';
 /**
  * Deep links pin to the ref being built, never a branch. Line anchors
  * computed against `main` would drift as soon as the next commit shifts
- * lines in the target file — the exact rot this tool exists to catch.
+ * lines in the target file, which is the exact breakage this tool exists
+ * to catch.
  *
  * Resolution order:
- * 1. an exact tag (release builds link to blob/v0.2.0/… — as immutable
- *    as a SHA, and the URL says which release the docs describe)
- * 2. the commit SHA (Workers Builds sets WORKERS_CI_COMMIT_SHA; GitHub
- *    Actions sets GITHUB_SHA; local builds ask git)
- * 3. `main` (no git at all, e.g. a tarball build)
+ * 1. an exact tag (release builds link to blob/v0.2.0/..., as immutable
+ *    as a SHA, and the URL says which release the docs describe),
+ * 2. the commit SHA (Workers Builds sets WORKERS_CI_COMMIT_SHA, GitHub
+ *    Actions sets GITHUB_SHA, and local builds ask git),
+ * 3. `main` (no git at all, e.g. a tarball build).
  */
 function buildRef(): string {
   const git = (...args: string[]): string | null => {
@@ -69,9 +70,10 @@ async function buildRefRewrites(): Promise<Map<string, string>> {
   const rewrites = new Map<string, string>();
   const failures: string[] = [];
 
-  // Every markdown file that can render on the site, discovered — never
-  // hardcoded, so a new docs page with a broken ref fails the build instead
-  // of shipping unverified. SPEC.md is @include'd into docs/spec/index.md.
+  // Every markdown file that can render on the site is discovered rather
+  // than hardcoded, so a new docs page with a broken ref fails the build
+  // instead of shipping unverified. SPEC.md is @include'd into
+  // docs/spec/index.md.
   const sources = [
     'SPEC.md',
     ...(await globby('docs/**/*.md', { cwd: repoRoot })).sort(),
@@ -87,12 +89,12 @@ async function buildRefRewrites(): Promise<Map<string, string>> {
       const href = ref.fragment
         ? `${ref.rawTarget}#${ref.fragment}`
         : ref.rawTarget;
-      // Keyed by raw href as written. `src/x.ts#…` and `/src/x.ts#…` are
-      // distinct keys that resolve to the same rewrite — harmless.
+      // Keyed by raw href as written. `src/x.ts#...` and `/src/x.ts#...` are
+      // distinct keys that resolve to the same rewrite, which is harmless.
       if (rewrites.has(href)) continue;
       const resolution = await resolver.resolve(ref);
       if (resolution.status === 'broken') {
-        failures.push(`${doc}:${ref.line} ${href} — ${resolution.message}`);
+        failures.push(`${doc}:${ref.line} ${href}: ${resolution.message}`);
         continue;
       }
       const anchor = resolution.matchLine ? `#L${resolution.matchLine}` : '';
@@ -102,7 +104,7 @@ async function buildRefRewrites(): Promise<Map<string, string>> {
 
   if (failures.length > 0) {
     throw new Error(
-      `site build aborted — broken #sym: refs:\n  ${failures.join('\n  ')}`,
+      `site build aborted, broken #sym: refs:\n  ${failures.join('\n  ')}`,
     );
   }
   return rewrites;
@@ -133,7 +135,7 @@ export default defineConfig({
       'meta',
       {
         property: 'og:title',
-        content: 'symtether — docs that point at real code',
+        content: 'symtether: docs that point at real code',
       },
     ],
     ['meta', { property: 'og:description', content: DESCRIPTION }],
@@ -143,7 +145,7 @@ export default defineConfig({
       'meta',
       {
         name: 'twitter:title',
-        content: 'symtether — docs that point at real code',
+        content: 'symtether: docs that point at real code',
       },
     ],
     ['meta', { name: 'twitter:description', content: DESCRIPTION }],
@@ -169,7 +171,7 @@ export default defineConfig({
   vite: {
     plugins: [
       // Generates /llms.txt (index) and /llms-full.txt (all pages inlined)
-      // plus per-page .md routes — the llmstxt.org convention.
+      // plus per-page .md routes, following the llmstxt.org convention.
       llmstxt({
         domain: 'https://symtether.dev',
         description:
@@ -188,8 +190,8 @@ export default defineConfig({
       { text: 'npm', link: 'https://www.npmjs.com/package/symtether' },
     ],
     sidebar: [
-      // 'Home' also opts the landing page into og-image generation — the
-      // plugin only renders cards for pages present in the sidebar.
+      // 'Home' also opts the landing page into og-image generation, because
+      // the plugin only renders cards for pages present in the sidebar.
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide' },
       { text: 'Adding a language', link: '/adding-a-language' },
@@ -232,13 +234,13 @@ export default defineConfig({
   async buildEnd(siteConfig) {
     // Root-level /spec.md alias (§13): the plugin already emits per-page
     // .md routes, but the spec URL is baked into third-party AGENTS.md
-    // files — keep the stable short path serving the file verbatim.
+    // files, so we keep the stable short path serving the file verbatim.
     await copyFile(
       path.join(repoRoot, 'SPEC.md'),
       path.join(siteConfig.outDir, 'spec.md'),
     );
-    // Social cards: renders docs/public/og-template.svg per page (satori/
-    // resvg WASM — no native deps) and rewrites og:image/twitter:image.
+    // Social cards: renders docs/public/og-template.svg per page (satori
+    // and resvg WASM, no native deps) and rewrites og:image/twitter:image.
     await buildEndGenerateOpenGraphImages({
       baseUrl: SITE,
       category: { byPathPrefix: [{ prefix: '/', text: 'symtether' }] },

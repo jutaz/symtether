@@ -1,7 +1,7 @@
 /* ============================================================
-   symtether · VitePress theme entry
+   symtether. VitePress theme entry.
    Import order matches the design system source's styles.css
-   (fonts → colors → typography → spacing → shadow → base), then
+   (fonts, colors, typography, spacing, shadow, base), then
    the VitePress adapter, then site-specific overrides.
    ============================================================ */
 
@@ -10,8 +10,8 @@
 @import './tokens/typography.css';
 @import './tokens/spacing.css';
 @import './tokens/shadow.css';
-/* base.css sets body {} defaults that would fight VitePress; skip it
-   deliberately — VitePress owns page chrome. Re-add if we ship a
+/* base.css sets body {} defaults that would fight VitePress. Skip it
+   deliberately, because VitePress owns page chrome. Re-add if we ship a
    standalone marketing route. */
 @import './theme-adapter.css';
 
@@ -30,7 +30,7 @@
 /* Shiki emits dual themes (`--shiki-light` and `--shiki-dark` per token)
    and the default rule under `html.dark` switches to the dark values. We
    force the code-block surface dark in light mode too, so the tokens have
-   to switch with it — otherwise comments render in their light-theme
+   to switch with it. Otherwise comments render in their light-theme
    greys against the dark ink and disappear. */
 :root:not(.dark) .vp-doc [class*='language-'] .shiki span {
   color: var(--shiki-dark, inherit) !important;
@@ -41,7 +41,7 @@
 }
 
 /* ------------------------------------------------------------
-   Hero — the Wordmark component (slotted via home-hero-info-before)
+   Hero. The Wordmark component (slotted via home-hero-info-before)
    is the primary mark and sits in place of the default H1 name.
    ------------------------------------------------------------ */
 
@@ -61,7 +61,7 @@
 }
 
 /* Neutralize the default brand-gradient hero name treatment if any
-   VitePress version turns it on — the wordmark carries the color. */
+   VitePress version turns it on, because the wordmark carries the color. */
 .VPHero .clip {
   background: none !important;
   -webkit-background-clip: initial !important;
@@ -87,13 +87,13 @@
   letter-spacing: var(--ls-mono);
 }
 
-/* Disable ligatures inside any code — the #sym: prefix must render as
-   distinct glyphs, never as a joined form. */
+/* Disable ligatures inside any code, because the #sym: prefix must render
+   as distinct glyphs, never as a joined form. */
 :where(code, .shiki span) {
   font-feature-settings: 'liga' 0;
 }
 
-/* Terminal transcripts (```console) — dark inset regardless of mode. */
+/* Terminal transcripts (```console). Dark inset regardless of mode. */
 div[class*='language-console'] pre,
 div[class*='language-bash'] pre,
 div[class*='language-sh'] pre {
@@ -101,14 +101,14 @@ div[class*='language-sh'] pre {
   color: var(--fg-100);
 }
 
-/* Focus ring — blue signal from the design system's --focus-ring token. */
+/* Focus ring. Blue signal from the design system's --focus-ring token. */
 :focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
   border-radius: var(--radius-xs);
 }
 
-/* Feature cards on the landing — technical borders, no soft fills. */
+/* Feature cards on the landing. Technical borders, no soft fills. */
 .VPFeature {
   border: 1px solid var(--vp-c-divider);
   border-radius: var(--radius-lg);

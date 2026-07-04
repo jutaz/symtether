@@ -1,8 +1,9 @@
 // Copies tree-sitter WASM grammars and their tags.scm queries out of the
 // grammar dev-dependencies into grammars/, which ships with the npm package.
-// Grammar packages are devDependencies on purpose: their `install` scripts
-// run node-gyp for the *native* bindings, which we never use — the published
-// package carries only the prebuilt WASM (no native compilation, ever).
+// Grammar packages are devDependencies on purpose, because their `install`
+// scripts run node-gyp for the *native* bindings, which we never use. The
+// published package carries only the prebuilt WASM (no native compilation,
+// ever).
 import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -19,7 +20,7 @@ const pkgDir = (name) => path.dirname(require.resolve(`${name}/package.json`));
 // tags.scm misses (const/let/var, TS namespaces, Python class attributes).
 const grammars = [
   // The resolver concatenates javascript.tags.scm with typescript.tags.scm
-  // at load time, so the JS extras must appear only in the JS file —
+  // at load time, so the JS extras must appear only in the JS file, because
   // duplicated patterns would produce duplicate matches and skew hashes.
   [
     'tree-sitter-typescript',
@@ -44,7 +45,7 @@ const grammars = [
   ['tree-sitter-c', 'tree-sitter-c.wasm', 'c', ['c']],
   ['tree-sitter-cpp', 'tree-sitter-cpp.wasm', 'cpp', ['cpp']],
   ['tree-sitter-c-sharp', 'tree-sitter-c_sharp.wasm', 'c_sharp', ['c_sharp']],
-  // Kotlin and Bash ship no upstream tags.scm — our extras ARE the query.
+  // Kotlin and Bash ship no upstream tags.scm, so our extras ARE the query.
   [
     '@tree-sitter-grammars/tree-sitter-kotlin',
     'tree-sitter-kotlin.wasm',
@@ -66,7 +67,7 @@ const grammars = [
 // under vendor/grammars/ (see the README there).
 // [basename, extra basenames, replaceUpstreamTags]
 // Swift's upstream tags.scm captures whole classes for member definitions,
-// which breaks containment-based chain building — our query replaces it.
+// which breaks containment-based chain building, so our query replaces it.
 const vendored = [['swift', ['swift'], true]];
 
 await mkdir(outDir, { recursive: true });

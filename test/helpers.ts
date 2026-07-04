@@ -11,7 +11,7 @@ const FIXTURES = path.join(
 /**
  * Copy a fixture to a temp dir and mark it as a repo root with an empty
  * `.git`. Isolates tests from symtether's own repo (fixtures have no `.git`
- * of their own — it can't be committed) and lets `fix --write` mutate freely.
+ * of their own, because it can't be committed) and lets `fix --write` mutate freely.
  */
 export async function setupFixture(name: string): Promise<{
   dir: string;

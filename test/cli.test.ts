@@ -12,7 +12,7 @@ const CLI = path.join(
   'cli.js',
 );
 
-/** Run the built CLI; never throws — returns exit code + output. */
+/** Run the built CLI; never throws. Returns exit code + output. */
 async function run(
   args: string[],
   cwd: string,
@@ -94,7 +94,7 @@ describe('cli exit codes', () => {
     const fixture = await setupFixture('basic');
     try {
       const { readFile, writeFile } = await import('node:fs/promises');
-      // A doc with ONLY the soon-to-be-stale ref — guide.md's intentionally
+      // A doc with ONLY the soon-to-be-stale ref. guide.md's intentionally
       // broken refs would exit 1 regardless of strict mode.
       await writeFile(
         path.join(fixture.dir, 'docs', 'stale-only.md'),

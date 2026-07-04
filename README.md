@@ -29,10 +29,11 @@
 
 Your `AGENTS.md` says *"follow the pattern in `fetchData`."* Three sprints
 later someone renames `fetchData` and nothing fails. The doc still reads
-fine, and everyone who follows the pointer finds out the hard way that the
-code is gone.
+fine, and everyone who follows the pointer spends time hunting for code
+that is gone.
 
-Broken URLs 404. Broken code references don't:
+Broken URLs return 404. Broken code references do not. A link checker
+verifies the file, and nothing verifies the symbol inside it.
 
 ```markdown
 <!-- The file exists, so every link checker passes this, -->
@@ -40,12 +41,11 @@ Broken URLs 404. Broken code references don't:
 Follow the fetch pattern in [fetchData](src/api/client.ts#L42).
 ```
 
-A link checker verifies the file. Nothing verifies the symbol inside it.
-The `#L42` makes things worse, because after the file shifts it points at
-whatever code moved into line 42.
+The `#L42` fragment is worse than a bare file link, because after the file
+shifts it points at whatever code moved into line 42.
 
 **symtether** fixes this. The reference names the symbol, and the tool
-checks it against the code itself:
+checks it against the code itself.
 
 ```markdown
 Follow the fetch pattern in [ApiClient.fetchData](src/api/client.ts#sym:ApiClient.fetchData).
@@ -54,7 +54,8 @@ Follow the fetch pattern in [ApiClient.fetchData](src/api/client.ts#sym:ApiClien
 This is still a plain markdown link, so it renders and clicks on GitHub.
 But now `symtether check` can resolve it against the AST and fail CI when
 the symbol moves or disappears. `symtether fix` repairs the common cases
-automatically. Think eslint, but for the code references in your markdown.
+automatically. symtether is a linter for the code references in your
+markdown.
 
 ## 30 seconds
 
@@ -71,7 +72,7 @@ $ npx symtether check && echo green
 green
 ```
 
-A rename that used to rot silently now fails CI, and the fix is one
+A rename that used to pass unnoticed now fails CI, and the fix is one
 command away. There is no config file. The markdown links are the
 only source of truth. symtether can also write an optional
 `symtether.sum` file if you turn on staleness detection, and that file
@@ -80,23 +81,23 @@ time. It is never a source of truth. Exclusions come from your
 `.gitignore`, and `node_modules` is always skipped
 ([GLOB_OPTIONS](src/check.ts#sym:const:GLOB_OPTIONS)).
 
-## Why this matters more with agents
+## Why agents make this worse
 
 Coding agents read `AGENTS.md`, `CLAUDE.md`, and skill files as
 instructions. The most useful instruction in these files is a pointer to
 existing code, e.g., "follow the pattern in `fetchData`". An agent pointed
 at a deleted symbol searches for it, guesses, and then imitates whatever it
-finds instead. Agents also cause the rot, because every refactor an agent
-lands can break the pointers the next session depends on.
+finds instead. Agents also cause the breakage, because every refactor an
+agent lands can break the pointers the next session depends on.
 
 The `#sym:` convention helps even before the tool is installed. An agent
 reading `src/client.ts#sym:ApiClient.fetchData` has the file path and an
-exact string to grep. That beats a bare file link, where the agent reads
-hundreds of lines hoping to spot the pattern, and it beats a line link,
-where the agent reads the wrong lines after the file shifts. symtether
-makes the convention enforceable. `check` in CI catches what agents and
-humans break, `fix` repairs it, and `init` installs a short managed block
-that teaches agents to keep refs working themselves.
+exact string to grep. With a bare file link the agent has to read hundreds
+of lines hoping to spot the pattern, and with a line link the agent reads
+the wrong lines after the file shifts. symtether makes the convention
+enforceable. `check` in CI catches what agents and humans break, `fix`
+repairs it, and `init` installs a short managed block that tells agents
+to keep refs working themselves.
 
 ## Usage
 
@@ -217,10 +218,10 @@ symtether differs in three ways:
 - the optional `symtether.sum` file holds derived checksums that you
   can delete and regenerate at any time, and no other index is
   maintained,
-- checking fails only when a ref is actually broken, and staleness
-  detection stays opt-in.
+- checking fails only when a ref is broken, and staleness detection
+  stays opt-in.
 
-Drift's guarantees without Drift's ceremony.
+You get the same guarantees as Drift without the lockfile step.
 
 ## License
 

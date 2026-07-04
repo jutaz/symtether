@@ -2,7 +2,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 /**
- * `symtether.sum` — the optional derived-state layer (design doc §9).
+ * `symtether.sum`. The optional derived-state layer (design doc §9).
  *
  * Governing law: the sum file is a shadow, never a source of truth. Markdown
  * links are the sole declaration; this file stores only derived hashes about
@@ -18,7 +18,7 @@ import path from 'node:path';
 export const SUM_FILE = 'symtether.sum';
 
 export interface SumEntry {
-  /** `path#dotpath` or `path#kind:dotpath` — fragment without `sym:`. */
+  /** `path#dotpath` or `path#kind:dotpath`. Fragment without `sym:`. */
   target: string;
   /** `ast:sha256:<16hex>` or `lex:sha256:<16hex>`. */
   hash: string;
@@ -32,7 +32,7 @@ export function parseSumFile(content: string): Map<string, SumEntry> {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) continue;
     // Parse from the right: the last two fields are hash and date, the rest
-    // is the target — which may legally contain spaces (paths do).
+    // is the target, which may legally contain spaces (paths do).
     const fields = trimmed.split(/\s+/);
     if (fields.length < 3) continue; // tolerate junk; derived data is regenerable
     const date = fields[fields.length - 1]!;
@@ -50,7 +50,7 @@ export function parseSumFile(content: string): Map<string, SumEntry> {
 
 /**
  * Fixed two-space separators, no column alignment: aligned columns would
- * mean one long new entry rewrites every line — exactly the merge-conflict
+ * mean one long new entry rewrites every line. Exactly the merge-conflict
  * amplification §9.1's line-oriented design exists to avoid.
  */
 export function formatSumFile(entries: Iterable<SumEntry>): string {
@@ -85,7 +85,7 @@ export async function writeSumFile(
 
 /**
  * Canonical sum-file key for a ref: `path#dotpath`. The written kind is
- * deliberately NOT part of the key — `#sym:fn:parse`, `#sym:parse`, and the
+ * deliberately NOT part of the key. `#sym:fn:parse`, `#sym:parse`, and the
  * compat form `#parse` all denote the same resolved symbol, and §9.1
  * requires one entry per unique target. Kind stays on the Ref for
  * resolve-time disambiguation only.

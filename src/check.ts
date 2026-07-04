@@ -11,7 +11,7 @@ import { UsageError } from './types.js';
 
 /**
  * Glob options shared by every repo scan. Exclusions come from the repo's
- * own `.gitignore` files — we assume nothing about project layout beyond
+ * own `.gitignore` files. We assume nothing about project layout beyond
  * what git already knows (Law 2: zero config). `node_modules` is the one
  * hardcoded exclude: repos without a `.gitignore` must still be safe to
  * check, and third-party package docs are never ours to lint.
@@ -77,7 +77,7 @@ export async function loadDocs(
 
 /**
  * Check all symbol refs in the repo's markdown files.
- * Library entry point — the CLI is a thin shell around this.
+ * Library entry point. The CLI is a thin shell around this.
  */
 export async function check(options: CheckOptions = {}): Promise<CheckReport> {
   const repoRoot = findRepoRoot(options.cwd ?? process.cwd());
@@ -111,7 +111,7 @@ export async function check(options: CheckOptions = {}): Promise<CheckReport> {
  * Strict mode (§9.2): recompute hashes and mark refs whose target's
  * implementation changed since the last `update` stamp. Broken stays broken;
  * only ok refs can become stale. Targets missing from the sum file are left
- * ok — staleness is opt-in per target, established by stamping.
+ * ok. Staleness is opt-in per target, established by stamping.
  *
  * Accepted trade-off (§9.3): entries are per-target, so one re-stamp clears
  * staleness for every doc referencing that target. Mitigation: all
@@ -124,7 +124,7 @@ async function applyStrict(
   const entries = await readSumFile(repoRoot);
   if (entries === null) {
     throw new UsageError(
-      `--strict requires ${'symtether.sum'} — run \`symtether update\` first`,
+      `--strict requires ${'symtether.sum'}. Run \`symtether update\` first`,
     );
   }
 

@@ -48,7 +48,7 @@ export function findGrammarDir(startDir: string): string {
       throw new Error(
         `symtether: could not locate grammars/ directory by walking up from ${startDir}. ` +
           `Expected <pkgroot>/grammars/ as a sibling of <pkgroot>/package.json. ` +
-          `This is a packaging bug — verify the installed package includes the grammars/ folder.`,
+          `This is a packaging bug. Verify the installed package includes the grammars/ folder.`,
       );
     }
     dir = parent;
@@ -69,7 +69,7 @@ interface GrammarSpec {
   grammar: string;
   /**
    * tags.scm basenames to concatenate. The TS grammar's own tags query only
-   * covers TS-specific nodes and is meant to extend the JS one — same
+   * covers TS-specific nodes and is meant to extend the JS one. Same
    * layering GitHub code navigation uses.
    */
   tags: string[];
@@ -116,8 +116,8 @@ const SPECS: Record<string, GrammarSpec> = {
  * Capture kinds absent from a row never satisfy that `<kind>` filter.
  *
  * Exported as the single source of truth: the kind-mapping appendix in
- * docs/guide.md is asserted against this table by test/languages.test.ts —
- * change one and the test forces you to change the other.
+ * docs/guide.md is asserted against this table by test/languages.test.ts.
+ * Change one and the test forces you to change the other.
  */
 export const KIND_MAP: Readonly<Record<SymbolKind, readonly string[]>> = {
   fn: ['function', 'method', 'macro'],

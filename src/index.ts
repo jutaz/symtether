@@ -1,5 +1,5 @@
 /**
- * symtether library entry — `import { check } from 'symtether'`.
+ * symtether library entry. `import { check } from 'symtether'`.
  * The CLI is a thin shell over these exports (§7).
  */
 export { check } from './check.js';

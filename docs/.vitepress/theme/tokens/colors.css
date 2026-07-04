@@ -1,12 +1,12 @@
 /* ============================================================
-   symtether · COLOR TOKENS
-   Dark-first. Terminal foundation + signal-state accents.
-   Base scale → semantic aliases → status/tier semantics.
+   symtether. COLOR TOKENS.
+   Dark-first. Terminal foundation and signal-state accents.
+   Base scale, then semantic aliases, then status/tier semantics.
    ============================================================ */
 
 :root {
   /* ---- Neutrals (warm-neutral terminal ink) ---- */
-  --ink-950: #0B0E13;   /* deepest — terminal black (refined from #101010) */
+  --ink-950: #0B0E13;   /* deepest, terminal black (refined from #101010) */
   --ink-900: #10141B;   /* app background */
   --ink-850: #151A22;   /* raised background */
   --ink-800: #1A202B;   /* card surface */
@@ -23,9 +23,9 @@
 
   /* ---- Signal Green (brand primary = pass / active) ---- */
   --green-600: #1FA347; /* pressed */
-  --green-500: #2FD85F; /* primary — CTAs, pass state */
+  --green-500: #2FD85F; /* primary, for CTAs and pass state */
   --green-400: #57E784; /* bright text/icon on dark */
-  --green-neon: #2EEF0A;/* raw brand neon — reserve for glow / logo only */
+  --green-neon: #2EEF0A;/* raw brand neon, reserve for glow or logo only */
   --green-glow: rgba(47, 216, 95, 0.34);
   --green-tint: rgba(47, 216, 95, 0.12); /* faint fill */
 
@@ -96,14 +96,14 @@
   --syn-keyword: #C792EA;
   --syn-string:  var(--green-400);
   --syn-number:  var(--amber-400);
-  --syn-symbol:  var(--green-neon);  /* the #sym: reference — the hero token */
+  --syn-symbol:  var(--green-neon);  /* the #sym: reference, the hero token */
   --syn-punct:   var(--slate-400);
   --syn-func:    var(--blue-400);
 }
 
 /* ============================================================
    LIGHT THEME  ([data-theme="light"])
-   Secondary surface — docs / GitHub-rendered markdown.
+   Secondary surface, for docs and GitHub-rendered markdown.
    ============================================================ */
 [data-theme="light"] {
   --bg-base:         #FFFFFF;

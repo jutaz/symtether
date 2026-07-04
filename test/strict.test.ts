@@ -19,7 +19,7 @@ const SCHEMA_PATH = path.join(
 
 /**
  * The reformat-vs-change edge (§9.1): identical token stream, different
- * layout. Note: no added trailing commas — those are new tokens and *should*
+ * layout. Note: no added trailing commas, because those are new tokens and *should*
  * change the hash.
  */
 const REFORMATTED = `export class ApiClient {
@@ -129,7 +129,7 @@ describe('update + check --strict', () => {
       expect(stale.length).toBeGreaterThan(0);
       expect(stale[0]!.message).toContain('docs/guide.md');
       expect(stale[0]!.message).toContain('symtether update');
-      // Broken refs stay broken; stale only replaces ok — strict never
+      // Broken refs stay broken; stale only replaces ok. Strict never
       // changes the broken count, whatever the fixture's current total is.
       const broken = report.results.filter((r) => r.status === 'broken').length;
       expect(report.summary.broken).toBe(broken);
@@ -181,8 +181,8 @@ describe('update + check --strict', () => {
         tasksPath,
         original.replace('return task', 'return None'),
       );
-      // `src/task` is a prefix of `src/tasks.py` but not a path boundary —
-      // it must NOT re-stamp tasks.py, so staleness must survive.
+      // `src/task` is a prefix of `src/tasks.py` but not a path boundary.
+      // It must NOT re-stamp tasks.py, so staleness must survive.
       await update({ cwd: fixture.dir, targets: ['src/task'] });
       const report = await check({ cwd: fixture.dir, strict: true });
       expect(report.summary.stale).toBeGreaterThan(0);
@@ -202,7 +202,7 @@ describe('update + check --strict', () => {
       await update({ cwd: fixture.dir });
       const original = await readFile(clientPath, 'utf8');
       // Break withRetry (delete it), then run a scoped update elsewhere:
-      // the old stamp must survive — the sum file is a shadow, and only a
+      // the old stamp must survive. The sum file is a shadow, and only a
       // full-scope update prunes.
       await writeFile(
         clientPath,
@@ -235,7 +235,7 @@ describe('update + check --strict', () => {
           'return url as never;',
         ),
       );
-      // Stamp only tasks.py — client.ts staleness must survive.
+      // Stamp only tasks.py, so client.ts staleness must survive.
       await update({ cwd: fixture.dir, targets: ['src/tasks.py'] });
       const report = await check({ cwd: fixture.dir, strict: true });
       expect(report.summary.stale).toBeGreaterThan(0);
@@ -275,7 +275,7 @@ describe('update edge cases', () => {
     const zsh = path.join(fixture.dir, 'src', 'deploy.zsh');
     try {
       await update({ cwd: fixture.dir });
-      // The lexical hash covers the lines that mention the symbol — change
+      // The lexical hash covers the lines that mention the symbol. Change
       // one of those (not an unrelated line) to trigger tier-2 staleness.
       const original = await readFile(zsh, 'utf8');
       await writeFile(zsh, original.replace('main "$@"', 'main "$@" --now'));
@@ -357,7 +357,7 @@ describe('update --check (CI mode)', () => {
     const sumPath = path.join(fixture.dir, 'symtether.sum');
     try {
       await update({ cwd: fixture.dir });
-      // Date column is informational (§9.1) — rewriting it must not fail CI.
+      // Date column is informational (§9.1). Rewriting it must not fail CI.
       const dated = (await readFile(sumPath, 'utf8')).replace(
         /\d{4}-\d{2}-\d{2}/g,
         '1999-01-01',
@@ -410,7 +410,7 @@ describe('hash-verified renames in fix', () => {
     try {
       await update({ cwd: fixture.dir });
       // A compat-form ref written after stamping; the stamp key came from
-      // the canonical #sym:fn:parseConfig ref — same key either way.
+      // the canonical #sym:fn:parseConfig ref. Same key either way.
       await writeFile(docPath, '[cfg](../src/client.ts#parseConfig)\n');
       const original = await readFile(clientPath, 'utf8');
       await writeFile(

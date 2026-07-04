@@ -34,7 +34,7 @@ export function toJson(report: CheckReport): string {
 }
 
 /**
- * Human output — designed for CI logs read by humans *and* agents (Law 8):
+ * Human output. Designed for CI logs read by humans *and* agents (Law 8):
  * every failure carries location, cause, candidates, and the fix command.
  */
 export function toHuman(report: CheckReport, quiet = false): string {

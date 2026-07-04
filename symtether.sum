@@ -3,10 +3,10 @@ src/check.ts#check  ast:sha256:6ab5b117f282c03acaa8bcc7eb408215b144fe24c39fb2910
 src/checksum.ts#hashDefinition  ast:sha256:fcb5896ec31513c65f93844e6117f6b617267bd33df0d248778ad526fa754a40  2026-07-04
 src/extract.ts#extractRefs  ast:sha256:23ea4167110279fd104c5a8f1555b93ee2ca3f46f57c27919daed4ab59678d6c  2026-07-04
 src/fix.ts#fix  ast:sha256:fe38e815fd5dd70aa2835568e7dfb7254472dec482c127daf414e53284cf646b  2026-07-04
-src/init.ts#init  ast:sha256:87335b9003ddc58d2b2112736e0ea25a20698826c9cabe4e2b239b685729b5e0  2026-07-04
+src/init.ts#init  ast:sha256:e22c779d7561de2b5ec7d8c5763c7dbe6e39649ef082c0cc2addafa900b43061  2026-07-04
 src/languages/index.ts#KIND_MAP  ast:sha256:3edcdccb6aae2b799743ca1a04ecf34aeaa56d720f1097e3129fe8cb0c39b346  2026-07-04
 src/languages/index.ts#loadLanguage  ast:sha256:ea2052f22429457d0706dc604b3fe2ee6c874379debb5942b7aa9e8503536516  2026-07-04
-src/resolve.ts#Resolver  ast:sha256:4798de2a87cfbb3536639774e0a03ff37b9e72964b52a3d728c43da818320d6d  2026-07-04
+src/resolve.ts#Resolver  ast:sha256:35edf61c76a89a02da9fcc600a578d970a6e920c4975fd6047cc167762284671  2026-07-04
 src/sumfile.ts#parseSumFile  ast:sha256:786ad2617e1bf0483c11d571ad03d2347a974dfc6e590cb5cbe1805e56cef34a  2026-07-04
 src/sumfile.ts#sumKey  ast:sha256:4a7c670f54ca3e7ee00d72792b84e423b8f47b67c4ae3a08c6b0ff9c869615a5  2026-07-04
-src/update.ts#update  ast:sha256:1bc599df2d39b9dd9751843d7ec1b427c2e1c811d8b42d69a5b5a5de155225c5  2026-07-04
+src/update.ts#update  ast:sha256:abb205f355cc1ade561561e40260ee7c767a5d76e0cdd3e8b3a4a6a1007956a3  2026-07-04

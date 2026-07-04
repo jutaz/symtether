@@ -102,7 +102,7 @@ jobs:
           registry-url: https://registry.npmjs.org
       - run: npm ci --ignore-scripts
       # .npmrc sets ignore-scripts=true repo-wide, which also suppresses
-      # prepublishOnly — build and test explicitly before publishing.
+      # prepublishOnly, so we build and test explicitly before publishing.
       - run: npm run build
       - run: npm run lint
       - run: npx vitest run

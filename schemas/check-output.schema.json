@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://symtether.dev/schemas/check-output.schema.json",
   "title": "symtether check --json output",
-  "description": "Stable contract (v1) — agents and CI parse this. Additive changes only within a version.",
+  "description": "Stable contract (v1). Agents and CI parse this. Additive changes only within a version.",
   "type": "object",
   "required": ["version", "summary", "results"],
   "properties": {

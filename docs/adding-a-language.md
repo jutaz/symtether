@@ -26,7 +26,7 @@ the design laws in AGENTS.md). You have two options.
   `vendored` list in `scripts/copy-grammars.mjs`. Swift takes this
   route because upstream publishes no WASM. The vendor script builds
   the grammar in Docker and commits the artifact.
-- **Skip the language.** Tier 2 already catches most doc rot.
+- **Skip the language.** Tier 2 already catches most breakage in docs.
 
 ## 1. Add the grammar as a dev-dependency
 
@@ -34,7 +34,6 @@ Grammars go in `devDependencies`, never in `dependencies`. Their
 `install` scripts run `node-gyp` to build native bindings that this
 project never uses, and running that step on Cloudflare Workers Builds
 breaks the build. The `.npmrc` sets `ignore-scripts=true` so the
-The `.npmrc` sets `ignore-scripts=true` so the
 native step is skipped. The published symtether package then ships
 only the WASM, which is why the grammar can be a dev-dependency.
 [copy-grammars.mjs](https://github.com/jutaz/symtether/blob/main/scripts/copy-grammars.mjs)

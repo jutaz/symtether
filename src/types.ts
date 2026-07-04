@@ -75,7 +75,7 @@ export interface Resolution {
   hash?: string;
   /**
    * 1-based line of the matched definition in the target file (tier-1 ok
-   * results only) — lets consumers deep-link, e.g. GitHub `#L<n>` anchors.
+   * results only). Lets consumers deep-link, e.g. GitHub `#L<n>` anchors.
    */
   matchLine?: number;
   /**
@@ -117,5 +117,5 @@ export interface CheckOptions {
   strict?: boolean;
 }
 
-/** Invalid invocation (missing prerequisites, bad flags) — CLI exit code 2. */
+/** Invalid invocation (missing prerequisites, bad flags). CLI exit code 2. */
 export class UsageError extends Error {}

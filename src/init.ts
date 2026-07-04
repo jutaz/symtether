@@ -10,8 +10,8 @@ const BEGIN =
 const END = '<!-- symtether:end -->';
 
 /**
- * The stale-handling line, included only in sum-file repos (§10): it closes
- * the agent review loop — stale means "re-judge the prose, then stamp".
+ * The stale-handling line, included only in sum-file repos (§10). It closes
+ * the agent review loop. Stale means "re-judge the prose, then stamp".
  */
 const STALE_LINE =
   '- On stale refs: re-read the doc prose against the current code; fix the doc or run `npx symtether update <target>`.';
@@ -81,7 +81,7 @@ export async function init(options: InitOptions = {}): Promise<InitResult> {
   let block = managedBlock(existsSync(path.join(repoRoot, SUM_FILE)));
 
   const existing = await readFile(target, 'utf8').catch(() => null);
-  // Match the file's own line-ending convention — inserting LF into a CRLF
+  // Match the file's own line-ending convention. Inserting LF into a CRLF
   // file leaves mixed endings and noisy diffs.
   if (existing !== null && /\r\n/.test(existing)) {
     block = block.replace(/\n/g, '\r\n');
@@ -102,7 +102,7 @@ export async function init(options: InitOptions = {}): Promise<InitResult> {
       const tail = existing.slice(endIdx + END.length);
       if (tail.includes('<!-- symtether:begin')) {
         throw new UsageError(
-          `${fileName} contains multiple symtether blocks — remove the extras, then re-run init`,
+          `${fileName} contains multiple symtether blocks. Remove the extras, then re-run init`,
         );
       }
       next = existing.slice(0, beginIdx) + block + tail;

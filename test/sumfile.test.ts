@@ -65,7 +65,7 @@ describe('sumfile format', () => {
 
   it('formats fixed two-space separators, no alignment (snapshot)', () => {
     // No column alignment on purpose: aligned columns would rewrite every
-    // line whenever a longer entry lands, amplifying merge conflicts — the
+    // line whenever a longer entry lands, amplifying merge conflicts. The
     // opposite of §9.1's intent.
     const out = formatSumFile([
       {
@@ -107,7 +107,7 @@ describe('sumfile format', () => {
 
 describe('update output snapshot', () => {
   beforeEach(() => {
-    // Fake only Date — faking the full timer set stalls async fs/wasm work.
+    // Fake only Date, because faking the full timer set stalls async fs/wasm work.
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-07-03T12:00:00Z'));
   });

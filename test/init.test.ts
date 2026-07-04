@@ -141,7 +141,7 @@ describe('init', () => {
       await writeFile(agentsPath, '# Rules\r\n\r\nUse tabs.\r\n');
       await init({ cwd: fixture.dir });
       const content = await readFile(agentsPath, 'utf8');
-      // No bare-LF lines — every newline in the file is CRLF.
+      // No bare-LF lines. Every newline in the file is CRLF.
       expect(content.replace(/\r\n/g, '')).not.toContain('\n');
       expect(content).toContain('symtether:begin');
       // Still idempotent under CRLF.

@@ -7,11 +7,11 @@ import { resolveTarget } from './repo.js';
 import type { Ref, SymbolKind } from './types.js';
 import { SYMBOL_KINDS } from './types.js';
 
-/** Markdown targets carry heading anchors, not symbol refs — never ours (SPEC §5.3). */
+/** Markdown targets carry heading anchors, not symbol refs. Never ours (SPEC §5.3). */
 const MARKDOWN_EXTS = new Set(['.md', '.mdx', '.markdown', '.mdown']);
 const IDENT = /^[A-Za-z0-9_$]+$/;
 const HAS_SCHEME = /^[a-z][a-z0-9+.-]*:/i;
-/** GitHub line anchors (`#L10`, `#L10-L20`) — permanently out of scope (SPEC §5.4). */
+/** GitHub line anchors (`#L10`, `#L10-L20`) are permanently out of scope (SPEC §5.4). */
 const LINE_ANCHOR = /^L\d+(?:-L\d+)?$/;
 
 const parser = unified().use(remarkParse);
@@ -59,14 +59,14 @@ function buildRef(
   const fragment = hash === -1 ? '' : url.slice(hash + 1);
   if (!rawTarget) return null;
 
-  // Normalize Windows separators before any path operation — authored-on-
+  // Normalize Windows separators before any path operation. Authored-on-
   // Windows docs write `src\a.ts`, and POSIX path functions would otherwise
   // treat the whole thing as one segment (§11: normalize to `/` everywhere).
   // Drive-letter absolutes (`C:\...`) never reach here: `C:` matches the
   // scheme test above, so they're ignored like any other external URL.
   const decodedTarget = tryDecode(rawTarget).replace(/\\/g, '/');
   // Directory-ish targets (`.`, `..`, trailing slash) can never contain a
-  // symbol — skip them; they're navigation links, not code refs.
+  // symbol. Skip them; they're navigation links, not code refs.
   const lastSegment = path.posix.basename(decodedTarget);
   if (
     lastSegment === '.' ||
@@ -138,7 +138,7 @@ function parseSymFragment(base: Ref, body: string): Ref {
 }
 
 /**
- * Anchored directive form: the whole comment must be the directive — a
+ * Anchored directive form: the whole comment must be the directive. A
  * prose comment that merely *mentions* "symtether-disable" must never
  * suppress checking.
  */

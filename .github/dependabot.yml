@@ -31,8 +31,8 @@ updates:
     allow:
       - dependency-type: development
     groups:
-      # Group tree-sitter grammar bumps into one PR — the WASM changes
-      # every so often but reviewing 18 separate PRs is noise.
+      # Group tree-sitter grammar bumps into one PR, because the WASM
+      # changes every so often but reviewing 18 separate PRs is noise.
       tree-sitter-grammars:
         patterns:
           - 'tree-sitter-*'
