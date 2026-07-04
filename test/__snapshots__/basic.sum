@@ -5,6 +5,11 @@ src/Cache.cs#_capacity  ast:sha256:218d27f16a3cb4abcfaba211656f5a618bf0c13655930
 src/Engine.java#Engine.rev  ast:sha256:1c13c50864f669fee0df697b9de1ad51a7ec2589712b53c35f647475c903a49d  2026-07-03
 src/Engine.java#Listener  ast:sha256:9185f7ceb8c0598ddf4e4601c3c6d065b2a407bbc7079b8c575476b9fe9a9d61  2026-07-03
 src/Engine.java#MAX_RPM  ast:sha256:255a23da02301203e28fb35c78a881e0fa5dd6b8b44c890a45a29fa5c0e9e05b  2026-07-03
+src/NetworkService.swift#Cancellable  ast:sha256:7f092d4ce28bebdae9d9b792e2c7d48bf75b17dd0ec847037050b5ef3105db00  2026-07-03
+src/NetworkService.swift#Endpoint  ast:sha256:bb71de6c531cea71ab1faecdfab77237c26846075832ebd0b8026bf15a4937f9  2026-07-03
+src/NetworkService.swift#NetworkService.request  ast:sha256:9307db17f4f954d86f2ce5fe44a1a23e385b071bd32042294494b9f96c5ce6c7  2026-07-03
+src/NetworkService.swift#defaultTimeout  ast:sha256:d4775e3684309550e61563dcc356d7eb190a292fb614b8052c7422a3c28e4831  2026-07-03
+src/NetworkService.swift#makeService  ast:sha256:b1c057c5c15d95d3719e0df3bf73f471cc49a23e6c47c1b756d46bf84e542c37  2026-07-03
 src/Repository.kt#ConnectionPool  ast:sha256:37d6f566b7dee54e878a1046a38b0f09a49c2bb383d9060d467e8e1e7aa99589  2026-07-03
 src/Repository.kt#ConnectionPool.acquire  ast:sha256:07304b48696a07cec38e848236b7a3bef1d4078fe1b75ebd97a6e563c7db5708  2026-07-03
 src/Repository.kt#MAX_RESULTS  ast:sha256:55cb05dde32ae06a34210bbd2d5439bd2342dc243f82e536e5d5b7a275931fa1  2026-07-03

@@ -106,7 +106,7 @@ couldn't fully verify is never silently passed (see
 
 | Tier | When | Meaning |
 |---|---|---|
-| `ast` | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash | Symbol verified against the parsed AST |
+| `ast` | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash | Symbol verified against the parsed AST |
 | `lexical` | any other text file | Word-boundary match for the symbol name |
 | `file-only` | fragment not checkable | Path existence only, reported as a warning |
 

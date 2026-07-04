@@ -49,6 +49,7 @@
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
+    "vendor:swift": "node scripts/vendor-swift.mjs",
     "prepublishOnly": "npm run build && npm run lint && vitest run"
   },
   "engines": {
@@ -89,6 +90,7 @@
     "tree-sitter-ruby": "^0.23.1",
     "tree-sitter-rust": "^0.24.0",
     "tree-sitter-scala": "^0.24.0",
+    "tree-sitter-swift": "^0.7.1",
     "tree-sitter-typescript": "^0.23.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4",

@@ -57,6 +57,9 @@ the resolver's behavior.
   resolver already layers the JS query under the TS one.
 - Grammar packages are devDependencies only; the published package ships
   prebuilt WASM copied at build time by `scripts/copy-grammars.mjs`.
+  Swift's WASM is compiled by us and committed under `vendor/grammars/`
+  (upstream publishes none) — re-vendor with `npm run vendor:swift`
+  (needs Docker); regular builds never do.
 - Every failure message must give an agent enough to act: doc + line, cause,
   candidates, and the fix command.
 - Fixture-test every edge case you touch; keep `--json` output stable against

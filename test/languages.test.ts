@@ -81,6 +81,11 @@ describe('tier-1 language coverage', () => {
     ['lua method', 'sym:Scheduler.add'],
     ['lua constructor', 'sym:fn:new'],
     ['lua local function', 'sym:fn:default_clock'],
+    ['swift class method', 'sym:NetworkService.request'],
+    ['swift free function', 'sym:fn:makeService'],
+    ['swift struct', 'sym:class:Endpoint'],
+    ['swift protocol', 'sym:type:Cancellable'],
+    ['swift top-level let', 'sym:const:defaultTimeout'],
   ])('resolves %s at tier 1', (_language, fragment) => {
     expect(find(fragment)).toMatchObject({ status: 'ok', tier: 'ast' });
   });

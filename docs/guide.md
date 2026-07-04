@@ -49,16 +49,16 @@ couldn't fully verify is never silently passed
 
 | Tier | When | Meaning |
 |---|---|---|
-| `ast` | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash | Symbol verified against the parsed AST |
+| `ast` | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash | Symbol verified against the parsed AST |
 | `lexical` | any other text file | Word-boundary match for the symbol name |
 | `file-only` | fragment not checkable | Path existence only, reported as a warning |
 
 More tier-1 languages land on request — each is roughly a grammar import
 plus fixtures ([loadLanguage](/src/languages/index.ts#sym:fn:loadLanguage)).
-The constraint is a prebuilt WASM grammar on npm: Swift and Dart currently
-publish none (Swift's must be compiled from source with emscripten), so
-they resolve at tier 2 until that changes — which still catches renames
-and deletions, just without nesting-chain awareness.
+The prerequisite is a WASM build of the grammar: most ship prebuilt on npm;
+Swift's doesn't, so we compile and vendor it ourselves. Dart currently has
+neither, so it resolves at tier 2 — which still catches renames and
+deletions, just without nesting-chain awareness.
 
 ### Kind mapping
 

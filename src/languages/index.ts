@@ -59,6 +59,7 @@ const SPECS: Record<string, GrammarSpec> = {
   '.ex': { grammar: 'elixir', tags: ['elixir'] },
   '.exs': { grammar: 'elixir', tags: ['elixir'] },
   '.lua': { grammar: 'lua', tags: ['lua'] },
+  '.swift': { grammar: 'swift', tags: ['swift'] },
 };
 
 /**

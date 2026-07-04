@@ -87,6 +87,14 @@ Lua:
 - [constructor](../src/scheduler.lua#sym:fn:new)
 - [local helper](../src/scheduler.lua#sym:fn:default_clock)
 
+Swift:
+
+- [request method](../src/NetworkService.swift#sym:NetworkService.request)
+- [factory](../src/NetworkService.swift#sym:fn:makeService)
+- [endpoint struct](../src/NetworkService.swift#sym:class:Endpoint)
+- [cancellable protocol](../src/NetworkService.swift#sym:type:Cancellable)
+- [timeout](../src/NetworkService.swift#sym:const:defaultTimeout)
+
 Dart (no grammar — resolves at tier 2, lexical):
 
 - [add item](../src/models.dart#sym:CartModel.addItem)

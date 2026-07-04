@@ -62,6 +62,13 @@ const grammars = [
   ],
 ];
 
+// Grammars whose WASM upstream doesn't publish; we compile and commit them
+// under vendor/grammars/ (see the README there).
+// [basename, extra basenames, replaceUpstreamTags]
+// Swift's upstream tags.scm captures whole classes for member definitions,
+// which breaks containment-based chain building — our query replaces it.
+const vendored = [['swift', ['swift'], true]];
+
 await mkdir(outDir, { recursive: true });
 
 for (const [pkg, wasm, out, extras] of grammars) {
@@ -82,4 +89,26 @@ for (const [pkg, wasm, out, extras] of grammars) {
   );
 }
 
-console.log(`Copied ${grammars.length} grammars to grammars/`);
+for (const [name, extras, replaceUpstream] of vendored) {
+  const vendorDir = path.join(root, 'vendor', 'grammars');
+  await copyFile(
+    path.join(vendorDir, `${name}.wasm`),
+    path.join(outDir, `${name}.wasm`),
+  );
+  const upstream = replaceUpstream
+    ? ''
+    : await readFile(path.join(vendorDir, `${name}.tags.scm`), 'utf8');
+  const extraSources = await Promise.all(
+    extras.map((e) =>
+      readFile(path.join(root, 'queries', `${e}.extra.scm`), 'utf8'),
+    ),
+  );
+  await writeFile(
+    path.join(outDir, `${name}.tags.scm`),
+    [upstream, ...extraSources].join('\n'),
+  );
+}
+
+console.log(
+  `Copied ${grammars.length + vendored.length} grammars to grammars/`,
+);
