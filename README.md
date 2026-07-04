@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/jutaz/symtether/main/docs/public/wordmark-dark.svg" alt="#sym:tether" width="420">
+  <a href="https://symtether.dev"><img src="https://symtether.dev/wordmark-dark.svg" alt="#sym:tether" width="420"></a>
 </p>
 
 <p align="center"><em>Tethered Docs. Real Code. Zero Hallucinations.</em></p>
