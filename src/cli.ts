@@ -249,11 +249,22 @@ try {
   // commander throws on --help/--version with exitOverride; those are fine.
   const code = (err as { code?: string }).code;
   if (code === 'commander.helpDisplayed' || code === 'commander.version') {
-    process.exit(EXIT_OK);
+    process.exitCode = EXIT_OK;
+  } else {
+    // Commander already printed its own usage error to stderr. Don't repeat it.
+    if (!code?.startsWith('commander.')) {
+      console.error(pc.red(err instanceof Error ? err.message : String(err)));
+    }
+    process.exitCode = EXIT_ERROR;
   }
-  // Commander already printed its own usage error to stderr. Don't repeat it.
-  if (!code?.startsWith('commander.')) {
-    console.error(pc.red(err instanceof Error ? err.message : String(err)));
-  }
-  process.exit(EXIT_ERROR);
 }
+
+// Use process.exitCode + natural loop drain instead of process.exit().
+// process.exit() terminates the libuv event loop synchronously, which
+// on Windows can trigger an assertion (src\win\async.c:94,
+// UV_HANDLE_CLOSING) when an async handle is still in the closing
+// state. Setting exitCode lets pending work complete and Node exits
+// with the requested code after the loop naturally drains. This
+// specifically hit us on `check --strict` without a sum file, where
+// applyStrict throws while grammar-load Promises are still in flight.
+// See https://nodejs.org/api/process.html#processexitcode_1
