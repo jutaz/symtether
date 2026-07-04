@@ -181,7 +181,7 @@ export default defineConfig({
   },
 
   themeConfig: {
-    logo: { src: '/logo-mark.svg', width: 24, height: 24, alt: 'symtether' },
+    logo: { src: '/logo-mark.svg', width: 38, height: 24, alt: 'symtether' },
     nav: [
       { text: 'Guide', link: '/guide' },
       { text: 'Spec', link: '/spec/' },

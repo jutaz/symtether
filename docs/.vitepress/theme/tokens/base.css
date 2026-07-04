@@ -1,0 +1,55 @@
+/* ============================================================
+   symtether · BASE
+   Minimal element defaults built on the tokens. Consumers get a
+   sane dark-first canvas; components/cards may override locally.
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  letter-spacing: var(--ls-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-heading);
+  letter-spacing: var(--ls-heading);
+  margin: 0;
+  color: var(--text-primary);
+}
+
+code, kbd, pre, samp {
+  font-family: var(--font-mono);
+  font-size: var(--fs-code);
+  font-feature-settings: "liga" 0;
+}
+
+a { color: var(--text-link); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+::selection { background: var(--green-tint); color: var(--fg-100); }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-xs);
+}
+
+/* Utility: the symbolic reference prefix, brand's calling card. */
+.sym-prefix {
+  font-family: var(--font-mono);
+  font-weight: var(--fw-bold);
+  color: var(--green-neon);
+  letter-spacing: var(--ls-mono);
+}

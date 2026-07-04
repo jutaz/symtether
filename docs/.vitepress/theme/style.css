@@ -1,97 +1,23 @@
 /* ============================================================
-   symtether · VitePress theme override
-   Maps our design tokens onto VitePress's CSS variables.
-   Dark-first: the light overrides mirror the base palette so
-   docs pages stay legible on white, but terminals + code stay
-   dark even under [data-theme="light"] (design law).
+   symtether · VitePress theme entry
+   Import order matches the design system source's styles.css
+   (fonts → colors → typography → spacing → shadow → base), then
+   the VitePress adapter, then site-specific overrides.
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
-@import './tokens.css';
+@import './tokens/fonts.css';
+@import './tokens/colors.css';
+@import './tokens/typography.css';
+@import './tokens/spacing.css';
+@import './tokens/shadow.css';
+/* base.css sets body {} defaults that would fight VitePress; skip it
+   deliberately — VitePress owns page chrome. Re-add if we ship a
+   standalone marketing route. */
+@import './theme-adapter.css';
 
-/* ------------------------------------------------------------
-   Brand palette → VitePress "brand" scale.
-   VitePress uses -1 (headings), -2 (interactive text), -3 (fill),
-   -softer, -soft, -mute for accent surfaces. We collapse them to
-   the green signal ramp so accent chrome (nav underline, hero
-   button, focus ring) speaks the same language as pass state.
-   ------------------------------------------------------------ */
-:root {
-  --vp-c-brand-1: var(--green-500);
-  --vp-c-brand-2: var(--green-400);
-  --vp-c-brand-3: var(--green-600);
-  --vp-c-brand-soft: var(--green-tint);
-  --vp-c-brand-softer: rgba(47, 216, 95, 0.08);
-  --vp-c-brand-softest: rgba(47, 216, 95, 0.04);
-
-  /* Sponsor/tip callouts also inherit the ramp — keeps callouts on-brand. */
-  --vp-c-tip-1: var(--green-500);
-  --vp-c-tip-2: var(--green-400);
-  --vp-c-tip-3: var(--green-600);
-  --vp-c-tip-soft: var(--green-tint);
-
-  /* Warning maps to amber (design system: stale/file-only). */
-  --vp-c-warning-1: var(--amber-500);
-  --vp-c-warning-2: var(--amber-400);
-  --vp-c-warning-3: var(--amber-600);
-  --vp-c-warning-soft: var(--amber-tint);
-
-  /* Danger maps to red (broken). */
-  --vp-c-danger-1: var(--red-500);
-  --vp-c-danger-2: var(--red-400);
-  --vp-c-danger-3: var(--red-600);
-  --vp-c-danger-soft: var(--red-tint);
-
-  /* Text link accent → active blue. */
-  --vp-c-brand-lighter: var(--blue-400);
-
-  /* Type stacks. */
-  --vp-font-family-base: var(--font-sans);
-  --vp-font-family-mono: var(--font-mono);
-}
-
-/* ------------------------------------------------------------
-   Dark surface — the default. Warm-neutral terminal ink.
-   ------------------------------------------------------------ */
-.dark {
-  --vp-c-bg: var(--ink-900);
-  --vp-c-bg-alt: var(--ink-950);
-  --vp-c-bg-elv: var(--ink-800);
-  --vp-c-bg-soft: var(--ink-850);
-
-  --vp-c-divider: var(--ink-700);
-  --vp-c-gutter: var(--ink-950);
-
-  --vp-c-text-1: var(--fg-100);
-  --vp-c-text-2: var(--fg-300);
-  --vp-c-text-3: var(--slate-400);
-
-  --vp-code-block-bg: var(--ink-950);
-  --vp-code-block-color: var(--fg-100);
-}
-
-/* Light surface — kept accessible; code + terminals stay dark. */
-:root:not(.dark) {
-  --vp-c-bg: #ffffff;
-  --vp-c-bg-alt: #f6f8fa;
-  --vp-c-bg-elv: #ffffff;
-  --vp-c-bg-soft: #f0f2f5;
-
-  --vp-c-divider: #e6e9ef;
-  --vp-c-gutter: #f0f2f5;
-
-  --vp-c-text-1: #10141b;
-  --vp-c-text-2: #4a5162;
-  --vp-c-text-3: #6e7686;
-
-  /* Code blocks stay dark on light UI (design law). */
-  --vp-code-block-bg: var(--ink-950);
-  --vp-code-block-color: var(--fg-100);
-
-  /* Inline `code` in prose reads on the light card, not the terminal ink. */
-  --vp-code-bg: var(--ink-800);
-  --vp-code-color: var(--fg-100);
-}
+/* ============================================================
+   Site-specific overrides (only what the adapter can't own)
+   ============================================================ */
 
 /* VitePress excludes headings from the `--vp-code-color` rule so inline
    code inside an H1..H6 inherits the heading color. In light mode that
@@ -146,26 +72,23 @@
 /* Wordmark sits where the H1 would; inherit responsive hero sizing. */
 .VPHero .wordmark {
   display: block;
-  font-size: clamp(40px, 6vw, 64px);
-  line-height: 1;
-  margin-bottom: 16px;
+  font-size: clamp(40px, 6vw, var(--fs-display));
+  line-height: var(--lh-tight);
+  margin-bottom: var(--space-4);
 }
 
 .VPHero .text {
-  letter-spacing: -0.02em;
-  font-weight: 700;
+  letter-spacing: var(--ls-heading);
+  font-weight: var(--fw-bold);
   color: var(--vp-c-text-1);
 }
 .VPHero .tagline {
   color: var(--vp-c-text-2);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--ls-mono);
 }
 
-/* ------------------------------------------------------------
-   The #sym: calling card — inline code that contains a #sym: run
-   gets the neon glyph treatment. Applied broadly enough to cover
-   both inline `code` and code-block spans emitted by Shiki.
-   ------------------------------------------------------------ */
+/* Disable ligatures inside any code — the #sym: prefix must render as
+   distinct glyphs, never as a joined form. */
 :where(code, .shiki span) {
   font-feature-settings: 'liga' 0;
 }
@@ -178,24 +101,20 @@ div[class*='language-sh'] pre {
   color: var(--fg-100);
 }
 
-/* ------------------------------------------------------------
-   Focus ring — blue signal, 2px, matches design system.
-   ------------------------------------------------------------ */
+/* Focus ring — blue signal from the design system's --focus-ring token. */
 :focus-visible {
-  outline: 2px solid var(--blue-500);
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-xs);
 }
 
-/* ------------------------------------------------------------
-   Feature cards on the landing — technical borders, no soft fills.
-   ------------------------------------------------------------ */
+/* Feature cards on the landing — technical borders, no soft fills. */
 .VPFeature {
   border: 1px solid var(--vp-c-divider);
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   transition:
-    border-color 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
-    transform 180ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    border-color var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
 }
 .VPFeature:hover {
   border-color: var(--green-500);

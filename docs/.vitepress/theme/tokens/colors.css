@@ -1,0 +1,140 @@
+/* ============================================================
+   symtether · COLOR TOKENS
+   Dark-first. Terminal foundation + signal-state accents.
+   Base scale → semantic aliases → status/tier semantics.
+   ============================================================ */
+
+:root {
+  /* ---- Neutrals (warm-neutral terminal ink) ---- */
+  --ink-950: #0B0E13;   /* deepest — terminal black (refined from #101010) */
+  --ink-900: #10141B;   /* app background */
+  --ink-850: #151A22;   /* raised background */
+  --ink-800: #1A202B;   /* card surface */
+  --ink-700: #232B38;   /* elevated surface / subtle border */
+  --ink-600: #2E3745;   /* default border */
+  --ink-500: #3A4453;   /* strong border / hairline on light ink */
+
+  --slate-600: #4A5162; /* muted-er */
+  --slate-500: #60677A; /* Slate Gray (brand neutral) */
+  --slate-400: #8B94A7; /* secondary text */
+  --fg-300:    #B7BECC; /* tertiary text / captions */
+  --fg-100:    #E8ECF3; /* primary text on dark */
+  --white:     #FFFFFF;
+
+  /* ---- Signal Green (brand primary = pass / active) ---- */
+  --green-600: #1FA347; /* pressed */
+  --green-500: #2FD85F; /* primary — CTAs, pass state */
+  --green-400: #57E784; /* bright text/icon on dark */
+  --green-neon: #2EEF0A;/* raw brand neon — reserve for glow / logo only */
+  --green-glow: rgba(47, 216, 95, 0.34);
+  --green-tint: rgba(47, 216, 95, 0.12); /* faint fill */
+
+  /* ---- Active Blue (links / lexical tier / interactive) ---- */
+  --blue-600: #0888C2;
+  --blue-500: #0AAEF0;  /* brand active blue */
+  --blue-400: #38C0F5;
+  --blue-glow: rgba(10, 174, 240, 0.30);
+  --blue-tint: rgba(10, 174, 240, 0.12);
+
+  /* ---- Broken / Fail (red) ---- */
+  --red-600: #D8433F;
+  --red-500: #FF5C57;
+  --red-400: #FF807C;
+  --red-tint: rgba(255, 92, 87, 0.13);
+
+  /* ---- Warning / Stale / File-only (amber) ---- */
+  --amber-600: #D2902A;
+  --amber-500: #F5B23D;
+  --amber-400: #F9C868;
+  --amber-tint: rgba(245, 178, 61, 0.13);
+
+  /* ============================================================
+     SEMANTIC ALIASES  (use these in components, not raw scale)
+     ============================================================ */
+  --bg-base:         var(--ink-900);
+  --bg-terminal:     var(--ink-950);
+  --bg-raised:       var(--ink-850);
+  --surface-card:    var(--ink-800);
+  --surface-elevated:var(--ink-700);
+  --surface-inset:   var(--ink-950);
+
+  --border-subtle:   var(--ink-700);
+  --border-default:  var(--ink-600);
+  --border-strong:   var(--ink-500);
+
+  --text-primary:    var(--fg-100);
+  --text-secondary:  var(--slate-400);
+  --text-muted:      var(--slate-500);
+  --text-inverse:    #06210F;   /* dark text on green fills */
+  --text-link:       var(--blue-400);
+
+  --accent:          var(--green-500);
+  --accent-hover:    var(--green-400);
+  --accent-press:    var(--green-600);
+  --accent-contrast: #06210F;   /* text/icon sitting on --accent */
+
+  /* ---- Status semantics (the product's core vocabulary) ---- */
+  --status-pass:     var(--green-500);   /* refs resolve · green build */
+  --status-broken:   var(--red-500);     /* symbol not found · fail CI */
+  --status-stale:    var(--amber-500);   /* content changed · --strict */
+  --status-warn:     var(--amber-500);   /* file-only / advisory */
+  --status-active:   var(--blue-500);    /* running / interactive */
+
+  --status-pass-tint:   var(--green-tint);
+  --status-broken-tint: var(--red-tint);
+  --status-stale-tint:  var(--amber-tint);
+  --status-active-tint: var(--blue-tint);
+
+  /* ---- Resolution tiers (ast / lexical / file-only) ---- */
+  --tier-ast:        var(--green-500);   /* verified against AST */
+  --tier-lexical:    var(--blue-500);    /* word-boundary match */
+  --tier-file-only:  var(--amber-500);   /* path existence only */
+
+  /* ---- Syntax-highlight roles (for CodeBlock / Terminal) ---- */
+  --syn-plain:   var(--fg-100);
+  --syn-comment: var(--slate-500);
+  --syn-keyword: #C792EA;
+  --syn-string:  var(--green-400);
+  --syn-number:  var(--amber-400);
+  --syn-symbol:  var(--green-neon);  /* the #sym: reference — the hero token */
+  --syn-punct:   var(--slate-400);
+  --syn-func:    var(--blue-400);
+}
+
+/* ============================================================
+   LIGHT THEME  ([data-theme="light"])
+   Secondary surface — docs / GitHub-rendered markdown.
+   ============================================================ */
+[data-theme="light"] {
+  --bg-base:         #FFFFFF;
+  --bg-terminal:     #0B0E13;   /* terminals stay dark even in light UI */
+  --bg-raised:       #F6F8FA;
+  --surface-card:    #FFFFFF;
+  --surface-elevated:#F6F8FA;
+  --surface-inset:   #F0F2F5;
+
+  --border-subtle:   #E6E9EF;
+  --border-default:  #D5DAE2;
+  --border-strong:   #BEC5D0;
+
+  --text-primary:    #10141B;
+  --text-secondary:  #4A5162;
+  --text-muted:      #6E7686;
+  --text-inverse:    #06210F;
+  --text-link:       var(--blue-600);
+
+  --accent:          var(--green-600);
+  --accent-hover:    var(--green-500);
+  --accent-press:    #17843A;
+  --accent-contrast: #FFFFFF;
+
+  --status-pass:     var(--green-600);
+  --status-broken:   var(--red-600);
+  --status-stale:    var(--amber-600);
+  --status-warn:     var(--amber-600);
+  --status-active:   var(--blue-600);
+
+  --tier-ast:        var(--green-600);
+  --tier-lexical:    var(--blue-600);
+  --tier-file-only:  var(--amber-600);
+}

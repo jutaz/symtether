@@ -1,0 +1,9 @@
+/* ============================================================
+   symtether · FONTS
+   Inter + JetBrains Mono via Google Fonts.
+   NOTE: served from Google Fonts CDN. If you need fully offline
+   webfont binaries, drop .woff2 files in assets/fonts/ and
+   replace this @import with matching @font-face rules.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');

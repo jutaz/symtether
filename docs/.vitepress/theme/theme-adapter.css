@@ -1,0 +1,123 @@
+/* ============================================================
+   symtether · design-system → VitePress adapter
+   The vendored tokens/ files are a bit-for-bit copy of the design
+   system source of truth. Two adaptations are needed to make them
+   drive VitePress:
+
+   1. Light-mode selector. The source uses [data-theme="light"];
+      VitePress toggles .dark on <html>. Re-declare the light-mode
+      remap under :root:not(.dark) so the switch fires correctly.
+
+   2. VitePress own tokens. VitePress reads --vp-c-brand-*, --vp-c-bg,
+      etc. Map ours onto theirs.
+
+   Do not edit tokens/*.css. Update this file when the mapping
+   diverges from the source.
+   ============================================================ */
+
+/* ---- (1) Light-mode remap under VitePress's `.dark` toggle -------- */
+:root:not(.dark) {
+  --bg-base: #ffffff;
+  --bg-terminal: #0b0e13; /* terminals stay dark even in light UI */
+  --bg-raised: #f6f8fa;
+  --surface-card: #ffffff;
+  --surface-elevated: #f6f8fa;
+  --surface-inset: #f0f2f5;
+
+  --border-subtle: #e6e9ef;
+  --border-default: #d5dae2;
+  --border-strong: #becfd0;
+
+  --text-primary: #10141b;
+  --text-secondary: #4a5162;
+  --text-muted: #6e7686;
+  --text-inverse: #06210f;
+  --text-link: var(--blue-600);
+
+  --accent: var(--green-600);
+  --accent-hover: var(--green-500);
+  --accent-press: #17843a;
+  --accent-contrast: #ffffff;
+
+  --status-pass: var(--green-600);
+  --status-broken: var(--red-600);
+  --status-stale: var(--amber-600);
+  --status-warn: var(--amber-600);
+  --status-active: var(--blue-600);
+
+  --tier-ast: var(--green-600);
+  --tier-lexical: var(--blue-600);
+  --tier-file-only: var(--amber-600);
+}
+
+/* ---- (2) Map design-system tokens → VitePress CSS variables ----- */
+:root {
+  /* Brand ramp → green signal (VitePress uses -1 headings, -2 text,
+     -3 fill, -soft/-softer for accent surfaces). */
+  --vp-c-brand-1: var(--green-500);
+  --vp-c-brand-2: var(--green-400);
+  --vp-c-brand-3: var(--green-600);
+  --vp-c-brand-soft: var(--green-tint);
+  --vp-c-brand-softer: rgba(47, 216, 95, 0.08);
+  --vp-c-brand-softest: rgba(47, 216, 95, 0.04);
+
+  --vp-c-tip-1: var(--green-500);
+  --vp-c-tip-2: var(--green-400);
+  --vp-c-tip-3: var(--green-600);
+  --vp-c-tip-soft: var(--green-tint);
+
+  --vp-c-warning-1: var(--amber-500);
+  --vp-c-warning-2: var(--amber-400);
+  --vp-c-warning-3: var(--amber-600);
+  --vp-c-warning-soft: var(--amber-tint);
+
+  --vp-c-danger-1: var(--red-500);
+  --vp-c-danger-2: var(--red-400);
+  --vp-c-danger-3: var(--red-600);
+  --vp-c-danger-soft: var(--red-tint);
+
+  --vp-c-brand-lighter: var(--blue-400);
+
+  --vp-font-family-base: var(--font-sans);
+  --vp-font-family-mono: var(--font-mono);
+}
+
+/* Dark surface (VitePress's default). */
+.dark {
+  --vp-c-bg: var(--ink-900);
+  --vp-c-bg-alt: var(--ink-950);
+  --vp-c-bg-elv: var(--ink-800);
+  --vp-c-bg-soft: var(--ink-850);
+
+  --vp-c-divider: var(--ink-700);
+  --vp-c-gutter: var(--ink-950);
+
+  --vp-c-text-1: var(--fg-100);
+  --vp-c-text-2: var(--fg-300);
+  --vp-c-text-3: var(--slate-400);
+
+  --vp-code-block-bg: var(--ink-950);
+  --vp-code-block-color: var(--fg-100);
+}
+
+/* Light surface. Code + terminals stay dark (design law). */
+:root:not(.dark) {
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #f6f8fa;
+  --vp-c-bg-elv: #ffffff;
+  --vp-c-bg-soft: #f0f2f5;
+
+  --vp-c-divider: #e6e9ef;
+  --vp-c-gutter: #f0f2f5;
+
+  --vp-c-text-1: #10141b;
+  --vp-c-text-2: #4a5162;
+  --vp-c-text-3: #6e7686;
+
+  --vp-code-block-bg: var(--ink-950);
+  --vp-code-block-color: var(--fg-100);
+
+  /* Inline `code` in prose stays on the dark chip. */
+  --vp-code-bg: var(--ink-800);
+  --vp-code-color: var(--fg-100);
+}

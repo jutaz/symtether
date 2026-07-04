@@ -7,3 +7,7 @@ grammars/
 node_modules/
 test/fixtures/
 package-lock.json
+
+# Vendored verbatim from the symtether design system source of truth.
+# Do not reformat — it would drift from upstream.
+docs/.vitepress/theme/tokens/

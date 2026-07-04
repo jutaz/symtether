@@ -1,0 +1,46 @@
+/* ============================================================
+   symtether · TYPOGRAPHY TOKENS
+   Inter (UI/display) + JetBrains Mono (code, and the #sym: prefix).
+   ============================================================ */
+
+:root {
+  /* ---- Families ---- */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'SFMono-Regular',
+               Menlo, Consolas, 'Liberation Mono', monospace;
+  --font-display: var(--font-sans);
+
+  /* ---- Weights ---- */
+  --fw-regular: 400; /* @kind other */
+  --fw-medium:  500; /* @kind other */
+  --fw-semibold:600; /* @kind other */
+  --fw-bold:    700; /* @kind other */
+  --fw-extra:   800; /* @kind other */
+
+  /* ---- Type scale (px, 1.250 major-third-ish, tuned) ---- */
+  --fs-display: 64px;  /* hero wordmark / landing H1 */
+  --fs-h1:      44px;
+  --fs-h2:      32px;
+  --fs-h3:      24px;
+  --fs-h4:      20px;
+  --fs-lg:      18px;
+  --fs-body:    16px;
+  --fs-sm:      14px;
+  --fs-xs:      13px;
+  --fs-2xs:     12px;  /* badges / eyebrows — floor */
+  --fs-code:    14px;  /* inline + block code default */
+
+  /* ---- Line heights ---- */
+  --lh-tight:   1.05; /* @kind other */  /* display */
+  --lh-heading: 1.15; /* @kind other */
+  --lh-snug:    1.35; /* @kind other */
+  --lh-body:    1.6; /* @kind other */
+  --lh-code:    1.55; /* @kind other */
+
+  /* ---- Letter spacing ---- */
+  --ls-display: -0.03em; /* @kind other */  /* tighten large Inter */
+  --ls-heading: -0.02em; /* @kind other */
+  --ls-body:    0; /* @kind other */
+  --ls-mono:    -0.01em; /* @kind other */
+  --ls-eyebrow: 0.14em; /* @kind other */   /* uppercase labels / eyebrows */
+}

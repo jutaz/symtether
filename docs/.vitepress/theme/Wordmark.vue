@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // The #sym:tether logotype rendered as live text so it sits inside the
 // hero <h1> semantically. Design system: # and : neon, sym foreground,
-// tether muted — JetBrains Mono 800 with tight tracking.
+// tether muted — JetBrains Mono 800 with tight tracking. Glow uses the
+// system's --glow-text-green token so it stays in sync with the source.
 </script>
 
 <template>
@@ -14,18 +15,17 @@
 <style scoped>
 .wordmark {
   font-family: var(--font-mono);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  /* Inherit hero H1 sizing — VitePress scales this responsively. */
+  font-weight: var(--fw-extra);
+  letter-spacing: var(--ls-heading);
   font-size: inherit;
-  line-height: 1;
+  line-height: var(--lh-tight);
   white-space: nowrap;
   display: inline-block;
 
-  /* Semantic slots, re-pointed per theme via :global overrides below. */
+  /* Semantic slots — remapped for light mode below. */
   --wm-glow: var(--green-neon);
-  --wm-glow-shadow: 0 0 12px rgba(46, 239, 10, 0.35);
-  --wm-fg: #fff;
+  --wm-glow-shadow: var(--glow-text-green);
+  --wm-fg: var(--white);
   --wm-muted: var(--slate-400);
 }
 .glow {
@@ -41,11 +41,10 @@
 </style>
 
 <style>
-/* Light-mode remap. The raw neon (--green-neon) is reserved for glow on
-   dark surfaces per the design system; on white it fails contrast and
-   reads garish. Drop # and : to --green-600 (the light-theme accent),
-   sym to the dark ink, tether to the light-theme muted slate, and
-   suppress the glow — halos on white read as blur, not signal. */
+/* Light-mode remap. Raw neon is reserved for glow on ink surfaces per
+   the design system; on white it fails contrast. Drop # and : to
+   --green-600 (light-theme accent), sym to ink-900, tether to the
+   light-theme muted slate, glow off (halos on white read as blur). */
 html:not(.dark) .wordmark {
   --wm-glow: var(--green-600);
   --wm-glow-shadow: none;
