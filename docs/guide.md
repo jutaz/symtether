@@ -56,7 +56,8 @@ output. Anything that could not be fully verified shows up as `lexical` or
 | `file-only` | fragment not checkable | Path existence only, reported as a warning |
 
 Adding a tier-1 language is mostly a grammar import plus fixtures
-([loadLanguage](/src/languages/index.ts#sym:fn:loadLanguage)). Open an
+([loadLanguage](/src/languages/index.ts#sym:fn:loadLanguage)). See
+[Adding a language](./adding-a-language.md) for the step-by-step.
 issue if yours is missing. The prerequisite is a WASM build of the
 grammar. Most grammars ship prebuilt on npm. Swift's does not, so we
 compile and vendor it ourselves. Dart has no usable WASM build at all, so

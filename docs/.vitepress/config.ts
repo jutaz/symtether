@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
-import { copyFile, readFile, writeFile } from 'node:fs/promises';
-import { globby } from 'globby';
+import { copyFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { globby } from 'globby';
 import { fileURLToPath } from 'node:url';
 import { buildEndGenerateOpenGraphImages } from '@nolebase/vitepress-plugin-og-image/vitepress';
 import { defineConfig } from 'vitepress';
@@ -192,6 +192,7 @@ export default defineConfig({
       // plugin only renders cards for pages present in the sidebar.
       { text: 'Home', link: '/' },
       { text: 'Guide', link: '/guide' },
+      { text: 'Adding a language', link: '/adding-a-language' },
       { text: 'The #sym: syntax (SPEC v1)', link: '/spec/' },
     ],
     socialLinks: [{ icon: 'github', link: GITHUB }],

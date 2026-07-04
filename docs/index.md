@@ -2,10 +2,7 @@
 layout: home
 title: symtether, a linter that keeps the code references in your docs from rotting
 titleTemplate: false
-description: >-
-  symtether checks the symbol references in your markdown against the code
-  itself and fails CI when they break. Built for AGENTS.md, CLAUDE.md, and
-  every doc your coding agents read as instructions.
+description: Stateless linter that validates #sym: code references in markdown against the AST and fails CI when they break. Built for the humans and agents who read your docs.
 
 hero:
   name: symtether

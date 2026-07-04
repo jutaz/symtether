@@ -7,7 +7,19 @@
 <p align="center">
   <a href="https://github.com/jutaz/symtether/actions/workflows/ci.yml"><img src="https://github.com/jutaz/symtether/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://www.npmjs.com/package/symtether"><img src="https://img.shields.io/npm/v/symtether" alt="npm"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+  <a href="https://www.npmjs.com/package/symtether"><img src="https://img.shields.io/npm/dm/symtether" alt="downloads"></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/node/v/symtether" alt="node"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/npm/l/symtether" alt="license"></a>
+</p>
+
+<p align="center">
+  <a href="https://symtether.dev">Website</a>
+  &nbsp;·&nbsp;
+  <a href="https://symtether.dev/guide">Guide</a>
+  &nbsp;·&nbsp;
+  <a href="https://symtether.dev/spec">Spec</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/jutaz/symtether/discussions">Discussions</a>
 </p>
 
 # symtether
@@ -187,10 +199,11 @@ Other tools attack the same problem from different angles:
 
 | Tool | Mechanism | Difference |
 |---|---|---|
-| [Fiberplane Drift](https://github.com/fiberplane/drift) | Stateful binder. `drift link` writes bindings and AST fingerprints into `drift.lock` | The lockfile is the source of truth, the refs are not clickable markdown, and every intentional change needs re-stamping |
-| [docref](https://github.com/supersterling/docref) | The closest prior art. Markdown `path#Symbol` links, tree-sitter, `.docref.lock` | Also lockfile-first and staleness-first, cargo-only, and not aimed at agents. It invented much of this mechanism first |
+| [Fiberplane Drift](https://github.com/fiberplane/drift) | Stateful binder. `drift link` writes bindings and AST fingerprints into `drift.lock` | The lockfile is the source of truth, and every intentional change needs re-stamping |
+| [docref](https://github.com/supersterling/docref) | Early exploration of markdown `path#Symbol` links plus tree-sitter and `.docref.lock` | Lockfile-first, cargo-only, and never released. Credit for prototyping the direction |
 | [Roam-Code](https://github.com/Cranot/roam-code) | A codebase intelligence platform with a SQLite symbol index | Requires indexing, and doc checking is one feature among hundreds |
-| [AgentLinter](https://github.com/seojoonkim/agentlinter) | Lints AGENTS.md structure, token budget, and stale file refs | File-level only. A repo can run both |
+| [AgentLinter](https://github.com/seojoonkim/agentlinter) | Lints AGENTS.md structure, token budget, and file-level references | Overlaps with symtether's `file-only` tier; symtether adds AST symbol resolution. A repo can run both |
+| [lychee](https://github.com/lycheeverse/lychee), [markdown-link-check](https://github.com/tcort/markdown-link-check) | HTTP/filesystem link checkers | Verify that URLs 200 and files exist. Neither reads the code, so `#L42` and `#sym:` fragments pass as long as the file does. Complementary |
 
 symtether differs in that there is no lockfile or index to maintain,
 ordinary clickable markdown links are the only source of truth, and
