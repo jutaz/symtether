@@ -5,8 +5,6 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  release:
-    types: [published]
 
 permissions:
   contents: read
@@ -77,64 +75,3 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run build:site
-
-  publish:
-    name: Publish to npm
-    if: github.event_name == 'release'
-    needs: [test, dogfood]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    # Environment gate on top of the release-event gate. The npm-publish
-    # environment can carry protection rules (required reviewer, branch
-    # restrictions) that are cheap to add and expensive to bypass. Fork
-    # PRs never reach this job because release events require write
-    # access to the repo.
-    environment: npm-publish
-    # id-token: write is required for OIDC / trusted publishing. npm mints
-    # a short-lived token from GitHub's OIDC provider based on this job's
-    # identity, so no NPM_TOKEN secret is needed. The trusted publisher
-    # link on npmjs.com pins repo, workflow, and environment.
-    permissions:
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 24
-          cache: npm
-          registry-url: https://registry.npmjs.org
-      - run: npm ci --ignore-scripts
-      # .npmrc sets ignore-scripts=true repo-wide, which also suppresses
-      # prepublishOnly, so we build and test explicitly before publishing.
-      - run: npm run build
-      - run: npm run lint
-      - run: npx vitest run
-      # Sanity: package.json must match the tag we are publishing. The
-      # release flow is a bump PR (chore: release vX.Y.Z) that changes
-      # package.json and package-lock.json versions. When the PR merges,
-      # .github/workflows/release-on-version-bump.yml notices the
-      # version bump on main and calls `gh release create vX.Y.Z
-      # --generate-notes`, which creates the tag from main's HEAD. The
-      # release: published event then fires this job, and the tag and
-      # package.json.version are guaranteed to match by construction.
-      # This check is a defense against out-of-band releases (someone
-      # hand-creates a release without a bump PR).
-      - name: Verify package.json version matches release tag
-        run: |
-          pkg_version=$(node -p "require('./package.json').version")
-          tag_version="${GITHUB_REF_NAME#v}"
-          if [ "$pkg_version" != "$tag_version" ]; then
-            echo "::error::package.json version ($pkg_version) does not match release tag ($tag_version). Run 'npm version <bump>' before tagging."
-            exit 1
-          fi
-      # Package sanity gates. publint catches common publish-config bugs
-      # (missing exports, wrong types field). arethetypeswrong verifies
-      # that consumers get the right types across ESM/CJS resolution.
-      # Both are pinned as devDependencies (installed by `npm ci` above)
-      # and invoked directly via `node_modules/.bin`, not through `npx`,
-      # so they cannot pull an unpinned package during the publish job
-      # (which holds the OIDC id-token that publishes to npm).
-      - run: ./node_modules/.bin/publint
-      - run: ./node_modules/.bin/attw --pack .
-      - run: npm publish --provenance --access public
