@@ -1,0 +1,5 @@
+{
+  "$schema": "https://raw.githubusercontent.com/arethetypeswrong/arethetypeswrong.github.io/main/packages/cli/config-schema.json",
+  "ignoreRules": ["cjs-resolves-to-esm", "no-resolution"],
+  "//": "cjs-resolves-to-esm: symtether is intentionally ESM-only (`type: module`), and CJS consumers must use dynamic import. no-resolution: the same design decision surfaces as a node10 resolution failure; we require Node >=20."
+}

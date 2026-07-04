@@ -127,6 +127,10 @@ jobs:
       # Package sanity gates. publint catches common publish-config bugs
       # (missing exports, wrong types field). arethetypeswrong verifies
       # that consumers get the right types across ESM/CJS resolution.
-      - run: npx publint
-      - run: npx --package=@arethetypeswrong/cli attw --pack .
+      # Both are pinned as devDependencies (installed by `npm ci` above)
+      # and invoked directly via `node_modules/.bin`, not through `npx`,
+      # so they cannot pull an unpinned package during the publish job
+      # (which holds the OIDC id-token that publishes to npm).
+      - run: ./node_modules/.bin/publint
+      - run: ./node_modules/.bin/attw --pack .
       - run: npm publish --provenance --access public

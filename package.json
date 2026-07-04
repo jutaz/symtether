@@ -15,7 +15,7 @@
   "homepage": "https://symtether.dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jutaz/symtether"
+    "url": "git+https://github.com/jutaz/symtether.git"
   },
   "bugs": "https://github.com/jutaz/symtether/issues",
   "license": "MIT",
@@ -68,6 +68,7 @@
     "web-tree-sitter": "^0.26.10"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.4",
     "@nolebase/vitepress-plugin-og-image": "^2.18.2",
     "@tree-sitter-grammars/tree-sitter-kotlin": "^1.1.0",
     "@tree-sitter-grammars/tree-sitter-lua": "^0.4.1",
@@ -79,6 +80,7 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.6.2",
+    "publint": "^0.3.21",
     "tree-sitter-bash": "^0.25.1",
     "tree-sitter-c": "^0.24.1",
     "tree-sitter-c-sharp": "^0.23.5",

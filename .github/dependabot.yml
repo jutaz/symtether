@@ -1,0 +1,45 @@
+version: 2
+updates:
+  # Keep GitHub Actions SHAs current. Every `uses:` in .github/workflows
+  # is pinned to a commit SHA (per supply-chain hygiene); dependabot
+  # opens PRs that bump the SHA whenever upstream cuts a new release,
+  # and it updates the trailing `# v4` comment for us so the reviewer
+  # can tell what version the SHA refers to.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore
+
+  # Keep npm devDependencies current. Runtime dependencies (dependencies
+  # in package.json) are the shipping surface and get reviewed more
+  # carefully; devDependencies are build/test tooling and are safer to
+  # auto-bump. We still review each PR, but the cost is much lower.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore
+    allow:
+      - dependency-type: development
+    groups:
+      # Group tree-sitter grammar bumps into one PR — the WASM changes
+      # every so often but reviewing 18 separate PRs is noise.
+      tree-sitter-grammars:
+        patterns:
+          - 'tree-sitter-*'
+          - '@tree-sitter-grammars/*'
+      # Group linting/formatting tooling.
+      lint:
+        patterns:
+          - 'eslint*'
+          - 'prettier*'
+          - 'typescript-eslint'
