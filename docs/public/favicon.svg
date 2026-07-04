@@ -1,13 +1,16 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="symtether">
   <title>symtether</title>
-  <!-- Rounded terminal-ink tile with the #: monogram in signal green. -->
-  <rect width="64" height="64" rx="12" fill="#0B0E13"/>
+  <!-- Terminal-ink tile with a 1px ink-700 stroke and the #: monogram.
+       Geometry matches foundations/_lockup-src.html exactly. -->
+  <rect x="1" y="1" width="62" height="62" rx="14" fill="#0B0E13" stroke="#232B38" stroke-width="2"/>
   <g fill="#2EEF0A">
-    <path d="M13 12 L18 12 L14 52 L9 52 Z"/>
-    <path d="M25 12 L30 12 L26 52 L21 52 Z"/>
-    <rect x="6" y="22" width="28" height="5" rx="1"/>
-    <rect x="4" y="37" width="28" height="5" rx="1"/>
-    <circle cx="46" cy="26" r="4"/>
-    <circle cx="46" cy="42" r="4"/>
+    <rect x="18" y="15" width="5" height="34" rx="1.5"/>
+    <rect x="30" y="15" width="5" height="34" rx="1.5"/>
+    <rect x="12.5" y="23" width="28" height="5" rx="1.5"/>
+    <rect x="12.5" y="34" width="28" height="5" rx="1.5"/>
+  </g>
+  <g fill="#FFFFFF">
+    <rect x="45.5" y="25" width="6" height="6" rx="1.5"/>
+    <rect x="45.5" y="35" width="6" height="6" rx="1.5"/>
   </g>
 </svg>
