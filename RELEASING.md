@@ -26,9 +26,18 @@ Follow [semver](https://semver.org):
 - **MAJOR** (`0.2.0` → `1.0.0`) — breaking changes to the CLI,
   the library, or the `#sym:` spec.
 
-While pre-1.0 (`0.x.y`), the rules relax: a MINOR bump may include
-breaking changes if they cannot be avoided. Any such break must be
-called out in the release notes.
+Any breaking change goes in a MAJOR release. Breaking changes
+include, but are not limited to: CLI flag or subcommand renames,
+removed or reshaped exit codes, changes to the `--json` output
+schema (`schemas/check-output.schema.json`), incompatible changes
+to the `symtether.sum` line format, incompatible changes to the
+`#sym:` spec in SPEC.md, and removed or renamed library exports.
+
+Additive changes are MINOR: new commands or flags with defaults
+that preserve prior behavior, new tier-1 grammar support, new
+fields in `--json` output (consumers must ignore unknown fields),
+and new spec sections that do not invalidate previously-valid
+`#sym:` references.
 
 ## Cutting a release
 
