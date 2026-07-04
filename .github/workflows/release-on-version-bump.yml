@@ -1,0 +1,72 @@
+name: Release on version bump
+
+# When a push to main changes package.json's version field, create a
+# GitHub Release for the new version. The release event then triggers
+# the publish job in ci.yml, which publishes to npm via OIDC.
+#
+# The release is created with `gh release create --generate-notes`,
+# which produces the standard "What's Changed" / "New Contributors"
+# markdown that GitHub's built-in generator emits. See
+# .github/release.yml if we ever want to shape the sections.
+#
+# The typical flow:
+#   1. Open a PR titled `chore: release vX.Y.Z` that bumps
+#      package.json.version and package-lock.json's root version.
+#   2. Merge it.
+#   3. This workflow sees the version bump on main, creates the
+#      release (tag included), and the publish job takes it from there.
+#
+# Idempotence: if the release already exists (e.g. someone re-runs the
+# workflow), the job skips instead of failing.
+
+on:
+  push:
+    branches: [main]
+    paths: [package.json]
+
+permissions:
+  contents: write # to create the release and its tag
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          # fetch-depth: 2 gives us HEAD and HEAD^ so we can compare
+          # package.json.version across the push.
+          fetch-depth: 2
+
+      - id: version
+        name: Detect version bump
+        run: |
+          new_version=$(node -p "require('./package.json').version")
+          old_version=$(git show HEAD^:package.json | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" || echo "")
+          echo "new=$new_version" >> "$GITHUB_OUTPUT"
+          echo "old=$old_version" >> "$GITHUB_OUTPUT"
+          if [ "$new_version" = "$old_version" ]; then
+            echo "No version bump on this push (both are $new_version). Skipping." >> "$GITHUB_STEP_SUMMARY"
+            echo "bumped=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version bumped: $old_version → $new_version" >> "$GITHUB_STEP_SUMMARY"
+            echo "bumped=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        if: steps.version.outputs.bumped == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.version.outputs.new }}
+        run: |
+          # Idempotence: skip if the release already exists. Also skip if
+          # the tag exists without a release (edge case: a previous run
+          # created the tag but failed before creating the release).
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists. Skipping." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --generate-notes \
+            --target "$GITHUB_SHA"

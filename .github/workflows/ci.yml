@@ -80,10 +80,16 @@ jobs:
     needs: [test, dogfood]
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Environment gate: NPM_TOKEN lives in the npm-publish environment, adding
-    # protection rules on top of the release-event gate. Fork PRs never reach
-    # this job (release events require write access).
+    # Environment gate on top of the release-event gate. The npm-publish
+    # environment can carry protection rules (required reviewer, branch
+    # restrictions) that are cheap to add and expensive to bypass. Fork
+    # PRs never reach this job because release events require write
+    # access to the repo.
     environment: npm-publish
+    # id-token: write is required for OIDC / trusted publishing. npm mints
+    # a short-lived token from GitHub's OIDC provider based on this job's
+    # identity, so no NPM_TOKEN secret is needed. The trusted publisher
+    # link on npmjs.com pins repo, workflow, and environment.
     permissions:
       id-token: write
       contents: read
@@ -100,6 +106,27 @@ jobs:
       - run: npm run build
       - run: npm run lint
       - run: npx vitest run
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Sanity: package.json must match the tag we are publishing. The
+      # release flow is a bump PR (chore: release vX.Y.Z) that changes
+      # package.json and package-lock.json versions. When the PR merges,
+      # .github/workflows/release-on-version-bump.yml notices the
+      # version bump on main and calls `gh release create vX.Y.Z
+      # --generate-notes`, which creates the tag from main's HEAD. The
+      # release: published event then fires this job, and the tag and
+      # package.json.version are guaranteed to match by construction.
+      # This check is a defense against out-of-band releases (someone
+      # hand-creates a release without a bump PR).
+      - name: Verify package.json version matches release tag
+        run: |
+          pkg_version=$(node -p "require('./package.json').version")
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [ "$pkg_version" != "$tag_version" ]; then
+            echo "::error::package.json version ($pkg_version) does not match release tag ($tag_version). Run 'npm version <bump>' before tagging."
+            exit 1
+          fi
+      # Package sanity gates. publint catches common publish-config bugs
+      # (missing exports, wrong types field). arethetypeswrong verifies
+      # that consumers get the right types across ESM/CJS resolution.
+      - run: npx publint
+      - run: npx --package=@arethetypeswrong/cli attw --pack .
+      - run: npm publish --provenance --access public
