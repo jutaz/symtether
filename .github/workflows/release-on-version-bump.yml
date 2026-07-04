@@ -1,20 +1,28 @@
 name: Release on version bump
 
 # When a push to main changes package.json's version field, create a
-# GitHub Release for the new version. The release event then triggers
-# the publish job in ci.yml, which publishes to npm via OIDC.
+# GitHub Release for the new version and explicitly dispatch
+# publish.yml, which handles the npm publish via OIDC.
 #
 # The release is created with `gh release create --generate-notes`,
 # which produces the standard "What's Changed" / "New Contributors"
 # markdown that GitHub's built-in generator emits. See
 # .github/release.yml if we ever want to shape the sections.
 #
+# Why we dispatch publish.yml directly instead of letting the release
+# event fire it: GitHub does not trigger workflows in response to
+# events created by GITHUB_TOKEN (docs: 'Triggering a workflow from a
+# workflow'). Since this workflow uses GITHUB_TOKEN to create the
+# release, the resulting release: published event is ignored by the
+# workflow dispatcher. Calling `gh workflow run publish.yml` gets
+# around this without needing a PAT.
+#
 # The typical flow:
 #   1. Open a PR titled `chore: release vX.Y.Z` that bumps
 #      package.json.version and package-lock.json's root version.
 #   2. Merge it.
 #   3. This workflow sees the version bump on main, creates the
-#      release (tag included), and the publish job takes it from there.
+#      release (tag included), then dispatches publish.yml.
 #
 # Idempotence: if the release already exists (e.g. someone re-runs the
 # workflow), the job skips instead of failing.
@@ -26,6 +34,7 @@ on:
 
 permissions:
   contents: write # to create the release and its tag
+  actions: write # to dispatch publish.yml via `gh workflow run`
 
 jobs:
   release:
@@ -53,7 +62,8 @@ jobs:
             echo "bumped=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Create GitHub Release
+      - id: release
+        name: Create GitHub Release
         if: steps.version.outputs.bumped == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -64,9 +74,22 @@ jobs:
           # created the tag but failed before creating the release).
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists. Skipping." >> "$GITHUB_STEP_SUMMARY"
+            echo "created=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           gh release create "$TAG" \
             --title "$TAG" \
             --generate-notes \
             --target "$GITHUB_SHA"
+          echo "created=true" >> "$GITHUB_OUTPUT"
+
+      - name: Dispatch publish.yml
+        if: steps.release.outputs.created == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.version.outputs.new }}
+        run: |
+          gh workflow run publish.yml \
+            --ref main \
+            -f tag="$TAG"
+          echo "Dispatched publish.yml with tag=$TAG" >> "$GITHUB_STEP_SUMMARY"
