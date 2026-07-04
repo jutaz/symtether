@@ -12,13 +12,6 @@ export default defineConfig({
     // that still catches genuine hangs.
     testTimeout: 20000,
     hookTimeout: 20000,
-    // Retry once on failure. Windows CI runners occasionally throw
-    // STATUS_DLL_NOT_FOUND (exit code 0xC0000135 / 3221226505) at
-    // Node process startup during heavy WASM instantiation, which is
-    // outside our control and does not reproduce on a rerun. A single
-    // retry catches these transient failures without masking a real
-    // regression (a real bug fails both attempts).
-    retry: 1,
     coverage: {
       include: ['src/**/*.ts'],
       // cli.ts is exercised end-to-end via subprocess (test/cli.test.ts),
