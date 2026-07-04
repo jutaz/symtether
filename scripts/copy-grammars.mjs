@@ -40,10 +40,10 @@ const grammars = [
   ['tree-sitter-java', 'tree-sitter-java.wasm', 'java', ['java']],
   ['tree-sitter-ruby', 'tree-sitter-ruby.wasm', 'ruby', ['ruby']],
   // Full PHP grammar (not php_only): real .php files embed HTML.
-  ['tree-sitter-php', 'tree-sitter-php.wasm', 'php', []],
-  ['tree-sitter-c', 'tree-sitter-c.wasm', 'c', []],
-  ['tree-sitter-cpp', 'tree-sitter-cpp.wasm', 'cpp', []],
-  ['tree-sitter-c-sharp', 'tree-sitter-c_sharp.wasm', 'c_sharp', []],
+  ['tree-sitter-php', 'tree-sitter-php.wasm', 'php', ['php']],
+  ['tree-sitter-c', 'tree-sitter-c.wasm', 'c', ['c']],
+  ['tree-sitter-cpp', 'tree-sitter-cpp.wasm', 'cpp', ['cpp']],
+  ['tree-sitter-c-sharp', 'tree-sitter-c_sharp.wasm', 'c_sharp', ['c_sharp']],
 ];
 
 await mkdir(outDir, { recursive: true });

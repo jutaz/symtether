@@ -56,6 +56,32 @@ couldn't fully verify is never silently passed
 More tier-1 languages land on request — each is roughly a grammar import
 plus fixtures ([loadLanguage](/src/languages/index.ts#sym:fn:loadLanguage)).
 
+### Kind mapping
+
+The optional `<kind>` disambiguator (`#sym:fn:parse`) filters matches by
+what the definition *is*. The four kinds are deliberately coarse — they
+disambiguate, they don't taxonomize. Each accepts these definition kinds
+from the underlying grammars
+([KIND_MAP](/src/languages/index.ts#sym:const:KIND_MAP)):
+
+| `<kind>` | Accepts | Examples |
+|---|---|---|
+| `fn` | function, method, macro | a Go func, a Python method, a Rust `macro_rules!` |
+| `class` | class, struct | a TS class, a C struct, a C# record |
+| `type` | interface, type, enum, module, class, struct | a TS interface, a Rust enum, a Go type, a C++ namespace |
+| `const` | constant, field | a Go const, a Java field, a Python class attribute |
+
+Two deliberate overlaps: `class` and `type` both accept classes and structs
+(a class *is* a type), and languages disagree about what's a "constant"
+versus a "field" — so `const` accepts both rather than forcing authors to
+know which capture kind a grammar happens to emit. If a kind filter
+eliminates every match, the error names the kinds that *do* exist:
+
+```
+✗ src/server.go#sym:class:NewServer   BROKEN (line 3)
+    file OK; "NewServer" exists but is not a class (found: function)
+```
+
 ## Teaching your agents
 
 ```console

@@ -1,5 +1,7 @@
+src/Cache.cs#Cache.Cache  ast:sha256:fc7eec76bf7d3300d84ba21ca404e48667305dec26b5c172215a2d554759d526  2026-07-03
 src/Cache.cs#Cache.Set  ast:sha256:728e8ef1717f80eb5e2216930a0f112a67786a4aeece32bc84b579ed4f175291  2026-07-03
 src/Cache.cs#IEvictionPolicy  ast:sha256:608321b23a861886a0c3eea8bfd2410a0048451d2c4642a82e616f9294789959  2026-07-03
+src/Cache.cs#_capacity  ast:sha256:218d27f16a3cb4abcfaba211656f5a618bf0c136559304dce94a5e38ab652aa6  2026-07-03
 src/Engine.java#Engine.rev  ast:sha256:1c13c50864f669fee0df697b9de1ad51a7ec2589712b53c35f647475c903a49d  2026-07-03
 src/Engine.java#Listener  ast:sha256:9185f7ceb8c0598ddf4e4601c3c6d065b2a407bbc7079b8c575476b9fe9a9d61  2026-07-03
 src/Engine.java#MAX_RPM  ast:sha256:255a23da02301203e28fb35c78a881e0fa5dd6b8b44c890a45a29fa5c0e9e05b  2026-07-03
@@ -12,10 +14,13 @@ src/client.ts#helpers.formatUrl  ast:sha256:d5d8a3a71664ca9e60711964f5e9be76b2b6
 src/client.ts#parseConfig  ast:sha256:73bb22002b890f9f340792b4cb7c66940430bb34be35cfa32d33489e8c798779  2026-07-03
 src/client.ts#withRetry  ast:sha256:2c341fd579a93e4c7d436647540eacb044218cdb80cde2879f63b48ccaaedc44  2026-07-03
 src/deploy.sh#main  lex:sha256:7322058ab4567f2f783cf8081e308c86967023960ed97cf95a670fea8b577a21  2026-07-03
-src/legacy.c#buffer_append  ast:sha256:5cb9afad537646e11a1e90142814c8e93751341a0dff4ca3804ea6f00c1d408e  2026-07-03
-src/legacy.c#buffer_grow  ast:sha256:663c3b5ae3864baa625430b24d1c3d5772b868662fb58801f282c2b7268ddd10  2026-07-03
+src/legacy.c#buf.len  ast:sha256:a74f5b0efde5fc89b29fb8ee18690d43d89dbc8c089fe74f784b6d07d9639934  2026-07-03
+src/legacy.c#buffer_append  ast:sha256:2e01ee1472141d85167817a6a4c2aa1f225c06cfbc783967adcc86a14beb07ef  2026-07-03
+src/legacy.c#buffer_grow  ast:sha256:f448280f7434f31b7703250091b8c1faeaa8babebb53743992252bdad7c566d1  2026-07-03
 src/matrix.cpp#Matrix.transpose  ast:sha256:114c4fadefb9004fe13f9911f14ad7bee595cfb37b6bee330ddccf67b448873b  2026-07-03
 src/matrix.cpp#identity  ast:sha256:edb8438eaa6556a8adcef7b2d2fc6d2433d513d0f61d1123c55c152f4de00d46  2026-07-03
+src/matrix.cpp#math  ast:sha256:13f717935c385d7e0cf0c1bb5b4901e2889da047a96e26e0e99619d9a9bc207f  2026-07-03
+src/matrix.cpp#math.Matrix.rows  ast:sha256:114c4fadefb9004fe13f9911f14ad7bee595cfb37b6bee330ddccf67b448873b  2026-07-03
 src/parser.rs#MAX_DEPTH  ast:sha256:c222c56ebd7ba1a492a45f54818f9df29fa8ec9777f0c9decf940b2ef8e50f75  2026-07-03
 src/parser.rs#Parser.parse  ast:sha256:90703006d652d9d2d1781fff55fee14a238fd76ff62830c5856fa435576de375  2026-07-03
 src/parser.rs#Token  ast:sha256:37fd204ac096b30a7df4bb5c9a90de5569f7ce364b4e2eea419446b7d8f872d0  2026-07-03

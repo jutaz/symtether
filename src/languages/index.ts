@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Language, Parser, Query } from 'web-tree-sitter';
+import type { SymbolKind } from '../types.js';
 
 /**
  * Grammar registry: file extension -> lazily-loaded tree-sitter language
@@ -52,11 +53,15 @@ const SPECS: Record<string, GrammarSpec> = {
 };
 
 /**
- * Maps tags.scm capture kinds (`@definition.<kind>`) to the closed set of
- * `#sym:` kind disambiguators (SPEC §5.1). Kinds absent from the table
- * never satisfy an explicit `<kind>` filter.
+ * Maps `#sym:` kind disambiguators (SPEC §5.1's closed set) to the
+ * tags.scm capture kinds (`@definition.<kind>`) that satisfy them.
+ * Capture kinds absent from a row never satisfy that `<kind>` filter.
+ *
+ * Exported as the single source of truth: the kind-mapping appendix in
+ * docs/guide.md is asserted against this table by test/languages.test.ts —
+ * change one and the test forces you to change the other.
  */
-const KIND_MAP: Record<string, string[]> = {
+export const KIND_MAP: Readonly<Record<SymbolKind, readonly string[]>> = {
   fn: ['function', 'method', 'macro'],
   class: ['class', 'struct'],
   type: ['interface', 'type', 'enum', 'module', 'class', 'struct'],
@@ -67,7 +72,12 @@ export function kindSatisfies(
   refKind: string,
   definitionKind: string,
 ): boolean {
-  return KIND_MAP[refKind]?.includes(definitionKind) ?? false;
+  return KIND_MAP[refKind as SymbolKind]?.includes(definitionKind) ?? false;
+}
+
+/** Extensions with a bundled grammar, for docs and tooling. */
+export function supportedExtensions(): string[] {
+  return Object.keys(SPECS).sort();
 }
 
 export interface LoadedLanguage {

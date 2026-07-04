@@ -31,16 +31,21 @@ C:
 
 - [append](../src/legacy.c#sym:fn:buffer_append)
 - [static helper](../src/legacy.c#sym:buffer_grow)
+- [struct field](../src/legacy.c#sym:buf.len)
 
 C++:
 
 - [transpose](../src/matrix.cpp#sym:Matrix.transpose)
 - [identity](../src/matrix.cpp#sym:fn:identity)
+- [namespace](../src/matrix.cpp#sym:type:math)
+- [qualified method](../src/matrix.cpp#sym:math.Matrix.rows)
 
 C#:
 
 - [cache set](../src/Cache.cs#sym:Cache.Set)
 - [eviction policy](../src/Cache.cs#sym:type:IEvictionPolicy)
+- [capacity field](../src/Cache.cs#sym:const:_capacity)
+- [constructor](../src/Cache.cs#sym:fn:Cache.Cache)
 
 PHP:
 
