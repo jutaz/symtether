@@ -50,6 +50,15 @@ const SPECS: Record<string, GrammarSpec> = {
   '.hpp': { grammar: 'cpp', tags: ['cpp'] },
   '.hh': { grammar: 'cpp', tags: ['cpp'] },
   '.cs': { grammar: 'c_sharp', tags: ['c_sharp'] },
+  '.kt': { grammar: 'kotlin', tags: ['kotlin'] },
+  '.kts': { grammar: 'kotlin', tags: ['kotlin'] },
+  '.sh': { grammar: 'bash', tags: ['bash'] },
+  '.bash': { grammar: 'bash', tags: ['bash'] },
+  '.scala': { grammar: 'scala', tags: ['scala'] },
+  '.sc': { grammar: 'scala', tags: ['scala'] },
+  '.ex': { grammar: 'elixir', tags: ['elixir'] },
+  '.exs': { grammar: 'elixir', tags: ['elixir'] },
+  '.lua': { grammar: 'lua', tags: ['lua'] },
 };
 
 /**
@@ -63,9 +72,9 @@ const SPECS: Record<string, GrammarSpec> = {
  */
 export const KIND_MAP: Readonly<Record<SymbolKind, readonly string[]>> = {
   fn: ['function', 'method', 'macro'],
-  class: ['class', 'struct'],
-  type: ['interface', 'type', 'enum', 'module', 'class', 'struct'],
-  const: ['constant', 'field'],
+  class: ['class', 'struct', 'object'],
+  type: ['interface', 'type', 'enum', 'module', 'class', 'struct', 'object'],
+  const: ['constant', 'field', 'property', 'variable'],
 };
 
 export function kindSatisfies(

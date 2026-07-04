@@ -17,7 +17,7 @@ features:
   - title: Zero ceremony
     details: npx symtether check works on an unmodified repo. No config, no lockfile, no index — exclusions come straight from your .gitignore.
   - title: Verified against the AST
-    details: Refs resolve through tree-sitter for twelve languages — TS, JS, Python, Go, Rust, Java, Ruby, PHP, C, C++, C# — and degrade loudly, never silently, everywhere else.
+    details: Refs resolve through tree-sitter for seventeen languages — TS, JS, Python, Go, Rust, Java, Kotlin, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash — and degrade loudly, never silently, everywhere else.
   - title: Agent-first
     details: symtether init installs a short managed block into AGENTS.md that teaches coding agents to read, write, and repair refs themselves.
   - title: Staleness is opt-in

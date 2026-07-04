@@ -52,6 +52,41 @@ PHP:
 - [dispatch](../src/router.php#sym:Router.dispatch)
 - [factory](../src/router.php#sym:fn:make_router)
 
+Kotlin:
+
+- [find by id](../src/Repository.kt#sym:Repository.findById)
+- [top-level helper](../src/Repository.kt#sym:fn:topLevelHelper)
+- [max results](../src/Repository.kt#sym:const:MAX_RESULTS)
+- [row mapper](../src/Repository.kt#sym:type:RowMapper)
+- [connection pool](../src/Repository.kt#sym:class:ConnectionPool)
+- [pool acquire](../src/Repository.kt#sym:ConnectionPool.acquire)
+- [status enum](../src/Repository.kt#sym:type:Status)
+
+Bash:
+
+- [packaging](../src/release.sh#sym:fn:package_artifacts)
+- [publish fn-keyword form](../src/release.sh#sym:fn:publish_release)
+- [channel variable](../src/release.sh#sym:const:RELEASE_CHANNEL)
+
+Scala:
+
+- [pipeline run](../src/pipeline.scala#sym:Pipeline.run)
+- [stage class](../src/pipeline.scala#sym:class:Stage)
+- [retryable trait](../src/pipeline.scala#sym:type:Retryable)
+- [event case class](../src/pipeline.scala#sym:class:Event)
+
+Elixir:
+
+- [publish](../src/broker.ex#sym:Broker.publish)
+- [private validate](../src/broker.ex#sym:fn:validate)
+- [nested module fn](../src/broker.ex#sym:Consumer.poll)
+
+Lua:
+
+- [scheduler add](../src/scheduler.lua#sym:Scheduler.add)
+- [constructor](../src/scheduler.lua#sym:fn:new)
+- [local helper](../src/scheduler.lua#sym:fn:default_clock)
+
 Broken (each language reports symbol-level failures):
 
 - [gone go fn](../src/server.go#sym:Restart)

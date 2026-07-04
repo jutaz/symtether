@@ -49,7 +49,7 @@ couldn't fully verify is never silently passed
 
 | Tier | When | Meaning |
 |---|---|---|
-| `ast` | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Ruby, PHP, C, C++, C# | Symbol verified against the parsed AST |
+| `ast` | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash | Symbol verified against the parsed AST |
 | `lexical` | any other text file | Word-boundary match for the symbol name |
 | `file-only` | fragment not checkable | Path existence only, reported as a warning |
 
@@ -67,9 +67,9 @@ from the underlying grammars
 | `<kind>` | Accepts | Examples |
 |---|---|---|
 | `fn` | function, method, macro | a Go func, a Python method, a Rust `macro_rules!` |
-| `class` | class, struct | a TS class, a C struct, a C# record |
-| `type` | interface, type, enum, module, class, struct | a TS interface, a Rust enum, a Go type, a C++ namespace |
-| `const` | constant, field | a Go const, a Java field, a Python class attribute |
+| `class` | class, struct, object | a TS class, a C struct, a Kotlin object, a C# record |
+| `type` | interface, type, enum, module, class, struct, object | a TS interface, a Rust enum, a Go type, a C++ namespace |
+| `const` | constant, field, property, variable | a Go const, a Java field, a Scala val, a Python class attribute |
 
 Two deliberate overlaps: `class` and `type` both accept classes and structs
 (a class *is* a type), and languages disagree about what's a "constant"

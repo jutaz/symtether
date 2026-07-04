@@ -182,13 +182,14 @@ describe('check on the basic fixture', () => {
     const fixture = await setupFixture('basic');
     try {
       const { writeFile } = await import('node:fs/promises');
+      // .zsh has no grammar — stays tier 2 (unlike .sh, which is tier 1).
       await writeFile(
-        path.join(fixture.dir, 'src', 'inject.sh'),
-        '#!/bin/sh\n$inject() { echo hi; }\n',
+        path.join(fixture.dir, 'src', 'inject.zsh'),
+        '#!/bin/zsh\n$inject() { echo hi; }\n',
       );
       await writeFile(
         path.join(fixture.dir, 'docs', 'dollar.md'),
-        '[x](../src/inject.sh#sym:$inject)\n[y](../src/inject.sh#sym:$injectable)\n',
+        '[x](../src/inject.zsh#sym:$inject)\n[y](../src/inject.zsh#sym:$injectable)\n',
       );
       const r = await check({ cwd: fixture.dir, globs: ['docs/dollar.md'] });
       // \b would fail on $inject; lookaround with the spec charset works…

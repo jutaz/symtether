@@ -63,7 +63,7 @@ describe('update + check --strict', () => {
       expect(sum).toContain('src/client.ts#ApiClient.fetchData');
       // Keys are kind-independent (§9.1): #sym:fn:parseConfig → #parseConfig.
       expect(sum).toContain('src/client.ts#parseConfig');
-      expect(sum).toMatch(/src\/deploy\.sh#main\s+lex:sha256:/);
+      expect(sum).toMatch(/src\/deploy\.zsh#main\s+lex:sha256:/);
       // Canonical and compat refs to the same target share one entry (§9.1).
       const entries = sum
         .trim()

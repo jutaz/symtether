@@ -247,10 +247,13 @@ export class Resolver {
         const enclosing = deduped
           .filter((o) => o !== d && o.start <= d.start && o.end >= d.end)
           .sort((a, b) => a.start - b.start || b.end - a.end);
+        // Dotted names split into segments: Elixir's `defmodule Broker.Consumer`
+        // captures one name "Broker.Consumer", but the chain must be
+        // [Broker, Consumer] so `Consumer.poll` suffix-matches (SPEC §5.2).
         const chain = [
-          ...enclosing.map((o) => o.name),
-          ...(d.receiver ? [d.receiver] : []),
-          d.name,
+          ...enclosing.flatMap((o) => o.name.split('.')),
+          ...(d.receiver ? d.receiver.split('.') : []),
+          ...d.name.split('.'),
         ];
         const key = chain.join('.');
         const existing = merged.get(key);

@@ -14,7 +14,7 @@ Valid refs:
 
 Tier 2 (lexical):
 
-- [deploy entry](../src/deploy.sh#sym:main)
+- [deploy entry](../src/deploy.zsh#sym:main)
 
 Broken:
 

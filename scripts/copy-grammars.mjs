@@ -44,6 +44,22 @@ const grammars = [
   ['tree-sitter-c', 'tree-sitter-c.wasm', 'c', ['c']],
   ['tree-sitter-cpp', 'tree-sitter-cpp.wasm', 'cpp', ['cpp']],
   ['tree-sitter-c-sharp', 'tree-sitter-c_sharp.wasm', 'c_sharp', ['c_sharp']],
+  // Kotlin and Bash ship no upstream tags.scm — our extras ARE the query.
+  [
+    '@tree-sitter-grammars/tree-sitter-kotlin',
+    'tree-sitter-kotlin.wasm',
+    'kotlin',
+    ['kotlin'],
+  ],
+  ['tree-sitter-bash', 'tree-sitter-bash.wasm', 'bash', ['bash']],
+  ['tree-sitter-scala', 'tree-sitter-scala.wasm', 'scala', []],
+  ['tree-sitter-elixir', 'tree-sitter-elixir.wasm', 'elixir', []],
+  [
+    '@tree-sitter-grammars/tree-sitter-lua',
+    'tree-sitter-lua.wasm',
+    'lua',
+    ['lua'],
+  ],
 ];
 
 await mkdir(outDir, { recursive: true });
@@ -54,7 +70,7 @@ for (const [pkg, wasm, out, extras] of grammars) {
   const upstream = await readFile(
     path.join(dir, 'queries', 'tags.scm'),
     'utf8',
-  );
+  ).catch(() => ''); // no upstream tags.scm: extras are the whole query
   const extraSources = await Promise.all(
     extras.map((e) =>
       readFile(path.join(root, 'queries', `${e}.extra.scm`), 'utf8'),
