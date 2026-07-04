@@ -1,0 +1,19 @@
+# Force LF line endings for every text file in the repo, on every
+# platform. Without this, git on Windows applies core.autocrlf=true
+# during checkout, rewrites text files to CRLF, and prettier --check
+# then fails the CI lint job on windows-latest.
+#
+# * text=auto tells git this is a text file and normalize on checkin.
+# eol=lf pins the working-tree line ending to LF regardless of the
+# host's core.autocrlf setting.
+*                text=auto eol=lf
+
+# Binary files that must not be touched.
+*.wasm           binary
+*.png            binary
+*.jpg            binary
+*.jpeg           binary
+*.gif            binary
+*.ico            binary
+*.woff           binary
+*.woff2          binary
