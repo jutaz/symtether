@@ -1,0 +1,94 @@
+name: Publish to npm
+
+# Runs when a GitHub Release is published. release-on-version-bump.yml
+# is what creates that release when a version-bump PR lands on main, so
+# this workflow is effectively "on version-bump PR merged." Kept
+# separate from ci.yml so changes to publish policy carry their own
+# CODEOWNERS review, are visible in isolation to security scanners
+# (SLSA, actionlint), and never re-trigger the CI matrix on unrelated
+# edits.
+#
+# What protects us against a fork PR that changes this file to steal
+# the OIDC token, in layers:
+#
+#   1. GitHub does not mint id-token: write for fork PRs. Even if the
+#      workflow requests it, the token comes back read-only.
+#   2. The `npm-publish` environment restricts deployments to the main
+#      branch. A PR branch cannot claim the environment's protections.
+#   3. Environment secrets and reviewer gates are not applied to fork
+#      PR runs by GitHub design.
+#   4. npm's trusted publisher check validates the OIDC `sub` claim
+#      against `repo:jutaz/symtether:environment:npm-publish`. A fork
+#      PR's `sub` will not match, and npm rejects the publish.
+#   5. Required reviewer on the environment forces a human click
+#      before publish even after the token is granted (same-repo
+#      branch scenario).
+#
+# The one remaining threat is a malicious change merged to main, which
+# is a code review problem, not a workflow-layout problem. CODEOWNERS
+# on this file catches that.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: npm-publish
+    # id-token: write is required for OIDC / trusted publishing. npm mints
+    # a short-lived token from GitHub's OIDC provider based on this job's
+    # identity, so no NPM_TOKEN secret is needed. The trusted publisher
+    # link on npmjs.com pins repo, workflow, and environment.
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci --ignore-scripts
+      # .npmrc sets ignore-scripts=true repo-wide, which also suppresses
+      # prepublishOnly, so we build and test explicitly before publishing.
+      # CI on main already validated the build; this is defense in depth
+      # against a corrupted main state between the merge and the release
+      # event (extremely unlikely, but the cost is low).
+      - run: npm run build
+      - run: npm run lint
+      - run: npx vitest run
+      # Sanity: package.json must match the tag we are publishing. The
+      # release flow is a bump PR (chore: release vX.Y.Z) that changes
+      # package.json and package-lock.json versions. When the PR merges,
+      # .github/workflows/release-on-version-bump.yml notices the
+      # version bump on main and calls `gh release create vX.Y.Z
+      # --generate-notes`, which creates the tag from main's HEAD. The
+      # release: published event then fires this job, and the tag and
+      # package.json.version are guaranteed to match by construction.
+      # This check is a defense against out-of-band releases (someone
+      # hand-creates a release without a bump PR).
+      - name: Verify package.json version matches release tag
+        run: |
+          pkg_version=$(node -p "require('./package.json').version")
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [ "$pkg_version" != "$tag_version" ]; then
+            echo "::error::package.json version ($pkg_version) does not match release tag ($tag_version). Run 'npm version <bump>' before tagging."
+            exit 1
+          fi
+      # Package sanity gates. publint catches common publish-config bugs
+      # (missing exports, wrong types field). arethetypeswrong verifies
+      # that consumers get the right types across ESM/CJS resolution.
+      # Both are pinned as devDependencies (installed by `npm ci` above)
+      # and invoked directly via `node_modules/.bin`, not through `npx`,
+      # so they cannot pull an unpinned package during the publish job
+      # (which holds the OIDC id-token that publishes to npm).
+      - run: ./node_modules/.bin/publint
+      - run: ./node_modules/.bin/attw --pack .
+      - run: npm publish --provenance --access public
