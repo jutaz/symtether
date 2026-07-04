@@ -10,7 +10,10 @@ description: >-
 hero:
   name: symtether
   text: Docs that point at real code
-  tagline: symtether checks the symbol references in your markdown against the code itself, and fails CI when they break. There is no config and no lockfile. Plain markdown links are the only state.
+  tagline: Tethered Docs. Real Code. Zero Hallucinations. symtether checks the symbol references in your markdown against the code itself, and fails CI when they break. There is no config and no lockfile. Plain markdown links are the only state.
+  image:
+    src: /wordmark.svg
+    alt: "#sym:tether"
   actions:
     - theme: brand
       text: Get started

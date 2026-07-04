@@ -1,0 +1,24 @@
+<svg width="440" height="80" viewBox="0 0 440 80" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="symtether">
+  <title>symtether</title>
+  <!--
+    #sym:tether logotype. Design system: # and : in neon signal green
+    (the calling-card glow), sym in foreground white, tether in muted slate.
+    Font stack falls back through common OS monospace faces so the mark
+    reads correctly on GitHub (no webfonts) and inside the site (JetBrains
+    Mono via Google Fonts).
+  -->
+  <style>
+    .mono {
+      font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+      font-weight: 700;
+      font-size: 56px;
+      letter-spacing: -0.01em;
+    }
+    .glow  { fill: #2EEF0A; }
+    .fg    { fill: #E8ECF3; }
+    .muted { fill: #8B94A7; }
+  </style>
+  <text x="8" y="58" class="mono">
+    <tspan class="glow">#</tspan><tspan class="fg">sym</tspan><tspan class="glow">:</tspan><tspan class="muted">tether</tspan>
+  </text>
+</svg>

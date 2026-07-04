@@ -1,0 +1,18 @@
+<svg width="520" height="120" viewBox="0 0 520 120" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="symtether">
+  <title>symtether</title>
+  <style>
+    .mono {
+      font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+      font-weight: 700;
+      font-size: 64px;
+      letter-spacing: -0.01em;
+    }
+    .glow  { fill: #2EEF0A; }
+    .fg    { fill: #E8ECF3; }
+    .muted { fill: #8B94A7; }
+  </style>
+  <rect width="520" height="120" rx="16" fill="#0B0E13"/>
+  <text x="32" y="80" class="mono">
+    <tspan class="glow">#</tspan><tspan class="fg">sym</tspan><tspan class="glow">:</tspan><tspan class="muted">tether</tspan>
+  </text>
+</svg>

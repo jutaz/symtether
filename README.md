@@ -1,11 +1,19 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/jutaz/symtether/main/docs/public/wordmark-dark.svg" alt="#sym:tether" width="420">
+</p>
+
+<p align="center"><em>Tethered Docs. Real Code. Zero Hallucinations.</em></p>
+
+<p align="center">
+  <a href="https://github.com/jutaz/symtether/actions/workflows/ci.yml"><img src="https://github.com/jutaz/symtether/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://www.npmjs.com/package/symtether"><img src="https://img.shields.io/npm/v/symtether" alt="npm"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+</p>
+
 # symtether
 
 > Docs that point at real code, and fail CI when they stop.
 > Built for `AGENTS.md` and the other docs coding agents read as instructions.
-
-[![CI](https://github.com/jutaz/symtether/actions/workflows/ci.yml/badge.svg)](https://github.com/jutaz/symtether/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/symtether)](https://www.npmjs.com/package/symtether)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Your `AGENTS.md` says *"follow the pattern in `fetchData`."* Three sprints
 later someone renames `fetchData` and nothing fails. The doc still reads

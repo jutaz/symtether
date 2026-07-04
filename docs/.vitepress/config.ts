@@ -124,7 +124,8 @@ export default defineConfig({
 
   head: [
     ['link', { rel: 'canonical', href: SITE }],
-    ['meta', { name: 'theme-color', content: '#1b1b1f' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    ['meta', { name: 'theme-color', content: '#0B0E13' }],
     // Open Graph / Twitter: link previews in Slack, X, Discord, etc.
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'symtether' }],
@@ -180,6 +181,7 @@ export default defineConfig({
   },
 
   themeConfig: {
+    logo: { src: '/logo-mark.svg', width: 24, height: 24, alt: 'symtether' },
     nav: [
       { text: 'Guide', link: '/guide' },
       { text: 'Spec', link: '/spec/' },
