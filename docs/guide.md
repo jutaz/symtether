@@ -1,8 +1,8 @@
 # Guide
 
-symtether validates *symbol references* in markdown — links that point not
-just at a source file, but at a specific function, class, method, type, or
-constant inside it — and fails CI when one breaks.
+symtether validates `#sym:` references in markdown — links that point at a
+specific function, class, method, type, or constant in a source file — and
+fails CI when one breaks.
 
 ## Install & first run
 
@@ -43,8 +43,9 @@ const report = await check({ cwd: '/path/to/repo' });
 
 ## Resolution tiers
 
-Every ref resolves at exactly one tier, always reported — a ref symtether
-couldn't fully verify is never silently passed
+Every ref resolves at one of three tiers, and the tier is part of the
+output — anything that couldn't be fully verified shows up as `lexical` or
+`file-only` rather than passing quietly
 ([Resolver](/src/resolve.ts#sym:class:Resolver)):
 
 | Tier | When | Meaning |
@@ -53,19 +54,19 @@ couldn't fully verify is never silently passed
 | `lexical` | any other text file | Word-boundary match for the symbol name |
 | `file-only` | fragment not checkable | Path existence only, reported as a warning |
 
-More tier-1 languages land on request — each is roughly a grammar import
-plus fixtures ([loadLanguage](/src/languages/index.ts#sym:fn:loadLanguage)).
-The prerequisite is a WASM build of the grammar: most ship prebuilt on npm;
-Swift's doesn't, so we compile and vendor it ourselves. Dart currently has
-neither, so it resolves at tier 2 — which still catches renames and
-deletions, just without nesting-chain awareness.
+Adding a tier-1 language is mostly a grammar import plus fixtures
+([loadLanguage](/src/languages/index.ts#sym:fn:loadLanguage)); open an
+issue if yours is missing. The prerequisite is a WASM build of the grammar.
+Most ship prebuilt on npm; Swift's doesn't, so we compile and vendor it
+ourselves. Dart currently has neither, so it resolves at tier 2 — renames
+and deletions still get caught, just without nesting-chain awareness.
 
 ### Kind mapping
 
 The optional `<kind>` disambiguator (`#sym:fn:parse`) filters matches by
-what the definition *is*. The four kinds are deliberately coarse — they
-disambiguate, they don't taxonomize. Each accepts these definition kinds
-from the underlying grammars
+what the definition is. The four kinds are deliberately coarse; they exist
+to break ties, not to classify. Each accepts these definition kinds from
+the underlying grammars
 ([KIND_MAP](/src/languages/index.ts#sym:const:KIND_MAP)):
 
 | `<kind>` | Accepts | Examples |
@@ -75,11 +76,11 @@ from the underlying grammars
 | `type` | interface, type, enum, module, class, struct, object | a TS interface, a Rust enum, a Go type, a C++ namespace |
 | `const` | constant, field, property, variable | a Go const, a Java field, a Scala val, a Python class attribute |
 
-Two deliberate overlaps: `class` and `type` both accept classes and structs
-(a class *is* a type), and languages disagree about what's a "constant"
-versus a "field" — so `const` accepts both rather than forcing authors to
-know which capture kind a grammar happens to emit. If a kind filter
-eliminates every match, the error names the kinds that *do* exist:
+The overlaps are intentional. `class` and `type` both accept classes and
+structs, since a class is a type. Languages also disagree about what counts
+as a "constant" versus a "field", so `const` accepts both rather than
+making authors guess which capture kind a grammar emits. If a kind filter
+eliminates every match, the error names the kinds that do exist:
 
 ```
 ✗ src/server.go#sym:class:NewServer   BROKEN (line 3)
@@ -92,41 +93,42 @@ eliminates every match, the error names the kinds that *do* exist:
 npx symtether init
 ```
 
-installs a short managed block into `AGENTS.md` (idempotent — re-running
-updates it in place, never duplicates). The block teaches agents to resolve
-refs by grepping, to run `check`/`fix` after renaming symbols, and to prefer
-`#sym:` refs over line numbers when writing docs. CI is the backstop:
+installs a short managed block into `AGENTS.md`. Re-running it updates the
+block in place without duplicating it or touching anything outside the
+markers. The block tells agents to resolve refs by grepping, to run
+`check`/`fix` after renaming symbols, and to prefer `#sym:` refs over line
+numbers when writing docs. CI is the backstop:
 
 ```console
 npx symtether init --ci
 ```
 
-## Staleness — opt-in, never a treadmill
+## Staleness detection
 
-By default `check` fails only on *broken* refs. To also learn when the
-*implementation behind* a ref changes:
+By default `check` fails only on broken refs. To also find out when the
+implementation behind a ref changes:
 
-1. `npx symtether update` writes `symtether.sum` — normalized content hashes
+1. `npx symtether update` writes `symtether.sum`: a normalized content hash
    ([hashDefinition](/src/checksum.ts#sym:fn:hashDefinition)) for every
-   resolvable ref. Reformatting never changes a hash; renaming doesn't
-   either — hashes are name-independent, which is what makes
-   content-verified rename autofix possible.
+   resolvable ref. Reformatting doesn't change a hash. Renaming doesn't
+   either — hashes are name-independent, which is what lets `fix` detect
+   renames by content.
 2. `npx symtether check --strict` marks refs stale when their target's hash
    no longer matches, and lists every doc referencing the changed target.
    `--strict=warn` reports without failing.
 3. Re-read the prose, fix it or confirm it, then re-stamp with
    `npx symtether update <target>`.
 
-The sum file is a shadow, never a source of truth — think `go.sum`, not
-`package-lock.json`. Delete it: `check` passes/fails identically; `update`
-regenerates it losslessly.
+The sum file works like `go.sum`, not `package-lock.json`: derived
+checksums, not decisions. Delete it and `check` passes or fails exactly as
+before; `update` writes it back.
 
-## Honest limits
+## Limits
 
-- **Referential integrity, not semantic accuracy.** symtether guarantees the
-  pointer resolves; it does not guarantee the prose around it is still true.
-  The `--strict` layer surfaces semantic-drift *candidates*; judging them is
-  delegated to humans and agents.
-- **Lexical presence of a definition, not type resolution.** No import
-  following, no re-export chasing. A symbol re-exported (but not defined) in
-  the linked file is correctly broken — link to the defining file instead.
+- symtether guarantees the pointer resolves. It does not guarantee the
+  prose around the pointer is still true — `--strict` surfaces candidates
+  for that kind of drift, but judging them is up to you or your agents.
+- Resolution checks that a definition exists in the linked file. There is
+  no import following or re-export chasing, so a symbol re-exported (but
+  not defined) in the linked file counts as broken — link to the defining
+  file instead.

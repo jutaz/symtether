@@ -4,7 +4,7 @@ layout: home
 hero:
   name: symtether
   text: eslint for code references in markdown
-  tagline: Stateless, zero-config referential integrity for the docs AI agents treat as executable context. Standard clickable markdown links are the sole source of truth.
+  tagline: A stateless linter that checks the symbol references in your docs still point at real code. No config, and ordinary markdown links are the only state.
   actions:
     - theme: brand
       text: Get started
@@ -14,14 +14,14 @@ hero:
       link: /spec/
 
 features:
-  - title: Zero ceremony
-    details: npx symtether check works on an unmodified repo. No config, no lockfile, no index — exclusions come straight from your .gitignore.
-  - title: Verified against the AST
-    details: Refs resolve through tree-sitter for eighteen languages — TS, JS, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash — and degrade loudly, never silently, everywhere else.
-  - title: Agent-first
-    details: symtether init installs a short managed block into AGENTS.md that teaches coding agents to read, write, and repair refs themselves.
-  - title: Staleness is opt-in
-    details: symtether update stamps content hashes; check --strict flags refs whose implementation changed. No snapshot-test treadmill.
+  - title: Nothing to set up
+    details: npx symtether check works on an unmodified repo. Exclusions come from your .gitignore.
+  - title: Checked against the AST
+    details: Eighteen languages resolve through tree-sitter (TS, JS, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash). Everything else falls back to lexical search, and every ref reports which tier it resolved at.
+  - title: Built for agents
+    details: symtether init adds a short managed section to AGENTS.md so coding agents read, write, and repair refs as part of normal work.
+  - title: Staleness detection when you want it
+    details: symtether update stamps content hashes; check --strict flags refs whose implementation changed since. Skip it entirely and check still works.
 ---
 
 ## 30 seconds
@@ -45,6 +45,6 @@ A `#sym:` ref is a plain markdown link that names a symbol:
 Follow the fetch pattern in [ApiClient.fetchData](src/api/client.ts#sym:ApiClient.fetchData).
 ```
 
-It renders and clicks on GitHub. An agent reading it has a file path *and* an
-exact string to grep — useful even with symtether never installed. The tool
-upgrades the convention into a guarantee.
+It renders and clicks on GitHub, and an agent reading it has both a file
+path and an exact string to grep — which works even where symtether isn't
+installed.

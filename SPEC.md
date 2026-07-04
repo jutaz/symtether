@@ -58,10 +58,10 @@ note:
 - `#Type.method` (bare dotpath)
 
 `symtether fix --canonicalize` rewrites them to `#sym:` form. Fragments on
-links targeting **markdown** files are heading anchors — never treated as
-symbol refs, never validated by symtether.
+links targeting **markdown** files are heading anchors and are never
+treated as symbol refs.
 
-## Out of scope, permanently
+## Out of scope
 
 Line numbers or ranges (`#L10`), query parameters, version/commit pins,
 multiple symbols per link, wildcards, regex.

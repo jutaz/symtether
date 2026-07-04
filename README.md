@@ -1,42 +1,41 @@
 # symtether
 
-> Referential integrity for code references in markdown — especially the docs
-> AI agents treat as executable context.
+> Checks that symbol references in your markdown still point at real code.
+> Built for `AGENTS.md` and the other docs coding agents read as instructions.
 
 [![CI](https://github.com/jutaz/symtether/actions/workflows/ci.yml/badge.svg)](https://github.com/jutaz/symtether/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/symtether)](https://www.npmjs.com/package/symtether)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**symtether** is a stateless, zero-config linter that validates *symbol
-references* in plain markdown — links that point not just at a source file,
-but at a specific function, class, method, type, or constant inside it:
+**symtether** is a stateless, zero-config linter for links that point at a
+specific function, class, method, type, or constant inside a source file:
 
 ```markdown
 Follow the fetch pattern in [ApiClient.fetchData](src/api/client.ts#sym:ApiClient.fetchData).
 ```
 
-`symtether check` resolves every such reference against your actual code
-(tree-sitter ASTs where supported, lexical search everywhere else) and fails
-CI when a reference is broken — the file moved, the symbol was renamed or
-deleted. `symtether fix` repairs the common cases. `symtether init` teaches
-your AI coding agents to read, write, and maintain these references.
+`symtether check` resolves each reference against the code (tree-sitter
+ASTs where supported, lexical search everywhere else) and fails CI when one
+breaks — file moved, symbol renamed or deleted. `symtether fix` repairs the
+common cases. `symtether init` adds a short section to `AGENTS.md` so
+coding agents keep the references working.
 
-Elevator pitch: **eslint for code references in markdown.**
+Think eslint, but for code references in markdown.
 
 ## Why
 
-`AGENTS.md`, `CLAUDE.md`, and skill files are read by coding agents and
-treated as authoritative instructions. Their highest-leverage content is
-pointers to existing code — *"follow the pattern in X."* But those pointers
-rot silently: nothing in a standard toolchain fails when a referenced symbol
-is renamed. An agent pointed at a deleted pattern burns tokens hunting for
-it, or confidently imitates something else. The context file meant to prevent
-bad code becomes a vector for it.
+`AGENTS.md`, `CLAUDE.md`, and skill files get read by coding agents as
+instructions, and the most useful thing you can put in them is a pointer to
+existing code: "follow the pattern in X." Those pointers rot. Nothing in a
+standard toolchain fails when the referenced symbol gets renamed, so an
+agent pointed at a deleted pattern wastes tokens hunting for it and then
+imitates whatever it finds instead.
 
-Even without symtether installed, a `#sym:` ref beats alternatives: an agent
-reading `src/client.ts#sym:ApiClient.fetchData` has a file path *and* an
-exact string to grep. The syntax has standalone value at zero installs; the
-tool upgrades convention into guarantee.
+The `#sym:` convention helps even before you install anything. An agent
+reading `src/client.ts#sym:ApiClient.fetchData` has the file path and an
+exact string to grep, which beats a bare file link (read 400 lines and
+hope) or a line-number link (read the wrong 20 lines after the file
+shifts). symtether is what makes the convention enforceable.
 
 ## 30 seconds
 
@@ -53,8 +52,8 @@ $ npx symtether check && echo green
 green
 ```
 
-No config, no lockfile, no index. Markdown links are the sole source of
-truth; exclusions come straight from your `.gitignore`
+There is no config file and no lockfile. The markdown links are the only
+state; exclusions come from your `.gitignore`
 ([GLOB_OPTIONS](src/check.ts#sym:const:GLOB_OPTIONS)).
 
 ## Usage
@@ -100,8 +99,9 @@ broken; two or more is ambiguous and asks you to qualify.
 
 ## Resolution tiers
 
-Every ref resolves at exactly one tier, always reported — a ref symtether
-couldn't fully verify is never silently passed (see
+Every ref resolves at one of three tiers, and the tier is part of the
+output — anything that couldn't be fully verified shows up as `lexical` or
+`file-only` rather than passing quietly (see
 [Resolver](src/resolve.ts#sym:class:Resolver)):
 
 | Tier | When | Meaning |
@@ -110,49 +110,50 @@ couldn't fully verify is never silently passed (see
 | `lexical` | any other text file | Word-boundary match for the symbol name |
 | `file-only` | fragment not checkable | Path existence only, reported as a warning |
 
-More tier-1 languages land on request — each is roughly a grammar import
-plus fixtures (see the registry in
-[loadLanguage](src/languages/index.ts#sym:fn:loadLanguage)).
+Adding a tier-1 language is mostly a grammar import plus fixtures (see the
+registry in [loadLanguage](src/languages/index.ts#sym:fn:loadLanguage)) —
+open an issue if yours is missing.
 
-## Staleness — opt-in, never a treadmill
+## Staleness detection
 
-By default `check` fails only on *broken* refs. If you want to know when the
-*implementation behind* a ref changes, opt in:
+By default `check` fails only on broken refs. To also find out when the
+implementation behind a ref changes:
 
-1. `npx symtether update` writes `symtether.sum` — normalized content hashes
+1. `npx symtether update` writes `symtether.sum`: a normalized content hash
    ([hashDefinition](src/checksum.ts#sym:fn:hashDefinition)) for every
-   resolvable ref. Reformatting never changes a hash; renaming doesn't
-   either (hashes are name-independent — that's what makes
-   content-verified rename autofix possible).
+   resolvable ref. Reformatting doesn't change a hash. Renaming doesn't
+   either — hashes are name-independent, which is what lets `fix` detect
+   renames by content.
 2. `npx symtether check --strict` marks refs stale when their target's
    hash no longer matches, and lists every doc referencing the changed
    target. `--strict=warn` reports without failing.
 3. Re-read the prose, fix it or confirm it, then re-stamp with
    `npx symtether update <target>`.
 
-The sum file is a shadow, never a source of truth — think `go.sum`, not
-`package-lock.json` ([sumfile.ts](src/sumfile.ts#sym:fn:parseSumFile)).
-Delete it: `check` passes/fails identically; `update` regenerates it
-losslessly. A repo that never runs `update` loses nothing but staleness
-detection and rename certainty.
+The sum file works like `go.sum`, not `package-lock.json`
+([sumfile.ts](src/sumfile.ts#sym:fn:parseSumFile)): it holds derived
+checksums, not decisions. Delete it and `check` passes or fails exactly as
+before; `update` writes it back. A repo that never runs `update` gives up
+staleness detection and content-verified renames, nothing else.
 
 One accepted trade-off: entries are per-target
 ([sumKey](src/sumfile.ts#sym:fn:sumKey) is deliberately kind-independent),
 so re-stamping a target clears staleness for *all* docs that reference it —
 which is why stale output lists every referencing doc for review.
 
-## Honest limits
+## Limits
 
-- **Referential integrity, not semantic accuracy.** symtether guarantees the
-  pointer resolves; it does not guarantee the prose around it is still true.
-- **Lexical presence of a definition, not type resolution.** No import
-  following, no re-export chasing. A symbol re-exported (but not defined) in
-  the linked file is correctly broken — link to the defining file.
+- symtether guarantees the pointer resolves. It does not guarantee the
+  prose around the pointer is still true — `--strict` surfaces candidates
+  for that kind of drift, but judging them is up to you (or your agents).
+- Resolution checks that a definition exists in the linked file. There is
+  no import following or re-export chasing, so a symbol re-exported (but
+  not defined) in the linked file counts as broken — link to the defining
+  file instead.
 
 ## Prior art
 
-The niche is real and forming — these tools approach the same rot from
-different corners, and credit is due:
+Other tools attack the same problem from different angles:
 
 | Tool | Mechanism | Difference |
 |---|---|---|
@@ -161,9 +162,10 @@ different corners, and credit is due:
 | [Roam-Code](https://github.com/Cranot/roam-code) | Codebase-intelligence platform with a SQLite symbol index | Platform-weight; doc checking is one feature among hundreds |
 | [AgentLinter](https://github.com/seojoonkim/agentlinter) | Lints AGENTS.md structure, token budget, stale *file* refs | File-level only — complementary; a repo can run both |
 
-symtether's corner: **stateless · zero-config · standard clickable markdown
-links as the sole source of truth · existence-checking by default ·
-npx-native · agent-first.** Drift's guarantees without Drift's ceremony.
+What symtether does differently: no lockfile or index to maintain, ordinary
+clickable markdown links as the only source of truth, and checking that
+fails only when a ref is actually broken — staleness detection stays
+opt-in. Drift's guarantees without Drift's ceremony.
 
 ## License
 

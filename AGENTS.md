@@ -5,7 +5,6 @@ Instructions for coding agents working in this repository.
 ## Project
 
 symtether is a stateless linter for `#sym:` symbol references in markdown.
-`handoff.md` is the v0.1 design source of truth — when in doubt, defer to it.
 `SPEC.md` is the normative reference syntax spec and must stay in sync with
 the resolver's behavior.
 
@@ -35,9 +34,9 @@ the resolver's behavior.
 
 ## Rules
 
-- Design laws in `handoff.md` §4 are non-negotiable: stateless, zero-config,
-  markdown links as sole source of truth, no native compilation, no repo
-  indexing, spec stays one page.
+- Design laws: stateless, zero-config, markdown links as sole source of
+  truth, no native compilation, no repo indexing, spec stays one page.
+  Do not trade these away for features.
 - Deviation on record: file exclusion uses the repo's `.gitignore` (via
   globby) instead of a hardcoded exclude list — assume nothing about project
   layout beyond what git knows.
@@ -45,11 +44,11 @@ the resolver's behavior.
   no `fn:` prefix) — §9.1 requires one entry per unique target, and
   `#sym:fn:parse` / `#sym:parse` / compat `#parse` are the same target.
 - Deviation on record: sum-file lines use fixed two-space separators, not
-  aligned columns — alignment would rewrite every line when a longer entry
-  lands, amplifying the merge conflicts §9.1 exists to avoid.
-- Deviation on record: hashes are full SHA-256, not §9.1's 16-hex
-  truncation — the only cost is line width in a derived file, and the
-  `sha256:` prefix should mean sha256.
+  aligned columns — alignment would rewrite every line whenever a longer
+  entry lands, which is exactly the merge-conflict amplification the
+  line-oriented format is meant to avoid.
+- Deviation on record: hashes are full SHA-256, not 16-hex truncation —
+  the only cost is line width in a derived file.
 - `queries/*.extra.scm` supplement the upstream tags.scm (const/let/var,
   TS namespaces/type/enum, Python class attributes, JS private methods);
   `copy-grammars.mjs` concatenates them at build time. Never duplicate a
@@ -60,8 +59,8 @@ the resolver's behavior.
   Swift's WASM is compiled by us and committed under `vendor/grammars/`
   (upstream publishes none) — re-vendor with `npm run vendor:swift`
   (needs Docker); regular builds never do.
-- Every failure message must give an agent enough to act: doc + line, cause,
-  candidates, and the fix command.
+- Failure messages must include: doc and line, cause, candidate matches,
+  and the fix command.
 - Fixture-test every edge case you touch; keep `--json` output stable against
   `schemas/check-output.schema.json`.
 

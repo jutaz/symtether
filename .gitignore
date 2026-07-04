@@ -21,3 +21,5 @@ npm-debug.log*
 
 # OS
 .DS_Store
+.wrangler/
+handoff.md

@@ -174,8 +174,8 @@ program
   .addHelpText(
     'after',
     `
-The sum file is derived and regenerable — never a source of truth. Running
-update with no arguments regenerates it completely (stamping every
+The sum file is derived from the code and can always be regenerated.
+Running update with no arguments rebuilds it completely (stamping every
 resolvable ref, pruning entries no doc references anymore). Scoped runs
 (update src/api.ts) re-stamp only that target and leave the rest untouched.
 
@@ -228,8 +228,8 @@ Inserts a short block bounded by markers:
   <!-- symtether:begin v1 (managed by \`symtether init\` — do not edit) -->
   …
   <!-- symtether:end -->
-Idempotent: re-running updates the block in place, never duplicates, and
-never touches content outside the markers.`,
+Idempotent: re-running updates the block in place without duplicating it
+or editing anything outside the markers.`,
   )
   .action(async (opts) => {
     const result = await init({ file: opts.file, ci: Boolean(opts.ci) });

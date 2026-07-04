@@ -62,8 +62,8 @@ export interface InitResult {
 
 /**
  * Insert or update the managed block. Idempotent via the marker comments:
- * re-running updates in place, never duplicates, never touches content
- * outside the markers (§7.3).
+ * re-running updates the block in place without duplicating it or editing
+ * anything outside the markers (§7.3).
  */
 export async function init(options: InitOptions = {}): Promise<InitResult> {
   const repoRoot = findRepoRoot(options.cwd ?? process.cwd());
