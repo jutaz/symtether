@@ -4,7 +4,7 @@
 // requests cannot modify it. Build command: `npm run build:site`.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "symtether-site",
+  "name": "symtether",
   "compatibility_date": "2026-07-01",
   "assets": {
     "directory": "./docs/.vitepress/dist",
