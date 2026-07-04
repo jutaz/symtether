@@ -1,7 +1,7 @@
 {
   "name": "symtether",
   "version": "0.2.0",
-  "description": "Stateless linter that checks symbol references in markdown still point at real code. Built for AGENTS.md and the docs coding agents read as instructions.",
+  "description": "Broken URLs 404. Broken code references don't. #sym: verifies markdown references against the code itself, and fails CI when they break.",
   "keywords": [
     "markdown",
     "linter",

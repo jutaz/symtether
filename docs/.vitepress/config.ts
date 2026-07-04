@@ -114,7 +114,7 @@ const refRewrites = await buildRefRewrites();
 
 const SITE = 'https://symtether.dev';
 const DESCRIPTION =
-  'symtether checks the symbol references in your markdown against the code itself and fails CI when they break. Built for AGENTS.md and the docs coding agents read as instructions.';
+  "Broken URLs 404. Broken code references don't. #sym: verifies markdown references against the code itself, and fails CI when they break.";
 
 export default defineConfig({
   title: 'symtether',
@@ -175,9 +175,11 @@ export default defineConfig({
       llmstxt({
         domain: 'https://symtether.dev',
         description:
-          'Stateless linter for #sym: symbol references in markdown. ' +
-          'Links like [x](path/file.ts#sym:Class.method) point at a symbol ' +
-          'in that file; `npx symtether check` fails CI when a reference is broken.',
+          "Broken URLs 404. Broken code references don't. " +
+          '#sym: verifies markdown references against the code itself, ' +
+          'and fails CI when they break. Links like ' +
+          '`[x](path/file.ts#sym:Class.method)` point at a symbol in that ' +
+          'file; `npx symtether check` fails CI when a reference is broken.',
       }),
     ],
   },

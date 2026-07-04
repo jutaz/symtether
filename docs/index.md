@@ -1,8 +1,8 @@
 ---
 layout: home
-title: symtether, a linter that keeps the code references in your docs from rotting
+title: symtether, docs that point at real code
 titleTemplate: false
-description: Stateless linter that validates #sym: code references in markdown against the AST and fails CI when they break. Built for the humans and agents who read your docs.
+description: "Broken URLs 404. Broken code references don't. #sym: verifies markdown references against the code itself, and fails CI when they break."
 
 hero:
   name: symtether
