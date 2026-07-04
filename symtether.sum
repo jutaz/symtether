@@ -1,3 +1,5 @@
+scripts/copy-grammars.mjs#grammars  ast:sha256:69402bfad71568c6940074d07db0904d207f671cb93c857105e1237d7b90f354  2026-07-04
+scripts/copy-grammars.mjs#vendored  ast:sha256:9b783fad48d18ad4a593d8fe971975eeecbf779b7963a92a32872f0c43fc1017  2026-07-04
 src/check.ts#GLOB_OPTIONS  ast:sha256:ebd35aa435b78a09a5a8b008157f339d428910604eea7e29342ba855b6c6f55f  2026-07-04
 src/check.ts#check  ast:sha256:6ab5b117f282c03acaa8bcc7eb408215b144fe24c39fb2910059ffe0eb3171c5  2026-07-04
 src/checksum.ts#hashDefinition  ast:sha256:fcb5896ec31513c65f93844e6117f6b617267bd33df0d248778ad526fa754a40  2026-07-04
@@ -5,8 +7,11 @@ src/extract.ts#extractRefs  ast:sha256:23ea4167110279fd104c5a8f1555b93ee2ca3f46f
 src/fix.ts#fix  ast:sha256:fe38e815fd5dd70aa2835568e7dfb7254472dec482c127daf414e53284cf646b  2026-07-04
 src/init.ts#init  ast:sha256:e22c779d7561de2b5ec7d8c5763c7dbe6e39649ef082c0cc2addafa900b43061  2026-07-04
 src/languages/index.ts#KIND_MAP  ast:sha256:3edcdccb6aae2b799743ca1a04ecf34aeaa56d720f1097e3129fe8cb0c39b346  2026-07-04
+src/languages/index.ts#SPECS  ast:sha256:f6bd26b92a43ac6af6f53154476042ad6766bb93c44cc6414d4580c63bd9ed26  2026-07-04
 src/languages/index.ts#loadLanguage  ast:sha256:ea2052f22429457d0706dc604b3fe2ee6c874379debb5942b7aa9e8503536516  2026-07-04
 src/resolve.ts#Resolver  ast:sha256:35edf61c76a89a02da9fcc600a578d970a6e920c4975fd6047cc167762284671  2026-07-04
 src/sumfile.ts#parseSumFile  ast:sha256:786ad2617e1bf0483c11d571ad03d2347a974dfc6e590cb5cbe1805e56cef34a  2026-07-04
 src/sumfile.ts#sumKey  ast:sha256:4a7c670f54ca3e7ee00d72792b84e423b8f47b67c4ae3a08c6b0ff9c869615a5  2026-07-04
+src/types.ts#Ref  ast:sha256:8a016d3049d53c86cd26027acf6602b3a6a8917d3dad5f38ac95b899691abe68  2026-07-04
+src/types.ts#Resolution  ast:sha256:56f64a86cb941bc3929f56d141653fa04dc5c258b6b488773f0f07ddd14932ea  2026-07-04
 src/update.ts#update  ast:sha256:abb205f355cc1ade561561e40260ee7c767a5d76e0cdd3e8b3a4a6a1007956a3  2026-07-04

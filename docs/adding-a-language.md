@@ -10,9 +10,9 @@ language is data in the same file, and the resolver has no
 per-language logic. The steps to reach tier 1 are:
 
 1. add a dev-dependency for the grammar,
-2. teach `scripts/copy-grammars.mjs` how to copy the WASM and the tags
-   query,
-3. register the extension in the `SPECS` table,
+2. teach [`scripts/copy-grammars.mjs`](/scripts/copy-grammars.mjs#sym:const:grammars)
+   how to copy the WASM and the tags query,
+3. register the extension in the [`SPECS`](/src/languages/index.ts#sym:const:SPECS) table,
 4. add test fixtures.
 
 ## Prerequisites
@@ -23,9 +23,10 @@ the grammar at install time, and this project does not do that (see
 the design laws in AGENTS.md). You have two options.
 
 - **Vendor the WASM under `vendor/grammars/`** and register it in the
-  `vendored` list in `scripts/copy-grammars.mjs`. Swift takes this
-  route because upstream publishes no WASM. The vendor script builds
-  the grammar in Docker and commits the artifact.
+  [`vendored`](/scripts/copy-grammars.mjs#sym:const:vendored) list in
+  `scripts/copy-grammars.mjs`. Swift takes this route because upstream
+  publishes no WASM. The vendor script builds the grammar in Docker and
+  commits the artifact.
 - **Skip the language.** Tier 2 already catches most breakage in docs.
 
 ## 1. Add the grammar as a dev-dependency
@@ -36,7 +37,7 @@ project never uses, and running that step on Cloudflare Workers Builds
 breaks the build. The `.npmrc` sets `ignore-scripts=true` so the
 native step is skipped. The published symtether package then ships
 only the WASM, which is why the grammar can be a dev-dependency.
-[copy-grammars.mjs](https://github.com/jutaz/symtether/blob/main/scripts/copy-grammars.mjs)
+[copy-grammars.mjs](/scripts/copy-grammars.mjs#sym:const:grammars)
 extracts the WASM at build time and writes it into `grammars/`.
 
 ```sh
@@ -46,7 +47,7 @@ npm install --save-dev --ignore-scripts tree-sitter-<yours>
 ## 2. Copy the grammar at build time
 
 Edit
-[copy-grammars.mjs](https://github.com/jutaz/symtether/blob/main/scripts/copy-grammars.mjs)
+[copy-grammars.mjs](/scripts/copy-grammars.mjs#sym:const:grammars)
 and add a row to the `grammars` array. The row has four fields, in
 this order: package name, WASM filename, output basename, extra query
 names.
@@ -64,7 +65,8 @@ grammar ships no `tags.scm` at all (Kotlin and Bash), then your
 
 ## 3. Register the extension
 
-Add one line to the `SPECS` table inside
+Add one line to the [`SPECS`](/src/languages/index.ts#sym:const:SPECS)
+table inside
 [src/languages/index.ts](/src/languages/index.ts#sym:fn:loadLanguage).
 
 ```ts
