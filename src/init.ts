@@ -33,6 +33,11 @@ ${END}`;
 /** v0.1-compatible export: the block without the stale line. */
 export const MANAGED_BLOCK = managedBlock(false);
 
+// The scaffolded consumer workflow references our own reusable action
+// (action.yml) rather than calling `npx symtether` directly. The action
+// resolves the tool version from package.json at the pinned ref, so
+// consumers get first-class inputs and ref-based versioning for free.
+// This requires the moving v1 tag to exist; see RELEASING.md.
 const WORKFLOW = `name: symtether
 on: [push, pull_request]
 jobs:
@@ -40,10 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: npx symtether check
+      - uses: jutaz/symtether@v1
 `;
 
 export interface InitOptions {

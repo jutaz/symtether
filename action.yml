@@ -1,0 +1,117 @@
+name: 'symtether'
+description: 'Verify markdown #sym: code references against your codebase, so a broken reference fails CI instead of passing unnoticed.'
+author: 'Justas Brazauskas'
+branding:
+  icon: 'anchor'
+  color: 'blue'
+
+inputs:
+  command:
+    description: 'The symtether subcommand to run. Use check, fix, init, or update. The default is check, the command you run in CI.'
+    required: false
+    default: 'check'
+  strict:
+    description: >-
+      Staleness gate for the check command. Use "" for the default (off), "true"
+      to fail on stale refs with --strict, or "warn" to report them with
+      --strict=warn. Other commands ignore this input.
+    required: false
+    default: ''
+  globs:
+    description: >-
+      Files or globs to check, one per line. When empty, symtether finds files
+      from the repo root and honors .gitignore.
+    required: false
+    default: ''
+  exclude:
+    description: >-
+      Globs to exclude, one per line (e.g. test/fixtures/**). Each line becomes a
+      --exclude flag. When empty, only .gitignore exclusions apply.
+    required: false
+    default: ''
+  json:
+    description: >-
+      Emit stable machine-readable JSON (see schemas/check-output.schema.json)
+      instead of human output. Use this to pass the report to another action.
+      Set to "true" or "false".
+    required: false
+    default: 'false'
+  working-directory:
+    description: >-
+      The directory to run in, relative to the repo root. symtether resolves
+      refs against this directory. The default is the repository root.
+    required: false
+    default: '.'
+  args:
+    description: >-
+      Raw extra flags appended verbatim (e.g. --write). Use this for any flag
+      not covered by the inputs above.
+    required: false
+    default: ''
+
+# Versioning
+# ----------
+# The action runs the published symtether package from npm. It reads the
+# version from this repo's package.json at the git ref the consumer pinned,
+# and installs that exact version. So `uses: jutaz/symtether@v1.2.3` runs
+# symtether 1.2.3, and `@v1` runs whatever 1.x.y the moving v1 tag points at.
+# The action ref and the tool version always match, because
+# release-on-version-bump.yml tags the same commit that bumps package.json.
+#
+# If the consumer's repo has symtether in its own node_modules, `npx`
+# prefers that local copy over the version pinned above. Remove the local
+# install if you need the action to run an exact version.
+#
+# Inputs go through `env:` instead of inline `${{ }}` expressions, which
+# avoids shell injection in the `run:` script. This is the pattern GitHub
+# recommends in its Actions security guide.
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run symtether
+      working-directory: ${{ inputs.working-directory }}
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        COMMAND: ${{ inputs.command }}
+        STRICT: ${{ inputs.strict }}
+        GLOBS: ${{ inputs.globs }}
+        EXCLUDE: ${{ inputs.exclude }}
+        JSON: ${{ inputs.json }}
+        ARGS: ${{ inputs.args }}
+      run: |
+        set -euo pipefail
+
+        # Pin the tool version to whatever this action ref declares.
+        VERSION=$(node -p "require('$ACTION_PATH/package.json').version")
+
+        CMD=(npx --yes "symtether@$VERSION" "$COMMAND")
+
+        case "$STRICT" in
+          ''|false) ;;
+          true)     CMD+=(--strict) ;;
+          warn)     CMD+=(--strict=warn) ;;
+          *) echo "::error::strict must be '', 'true', or 'warn' (got: $STRICT)"; exit 2 ;;
+        esac
+
+        if [ "$JSON" = "true" ]; then
+          CMD+=(--json)
+        fi
+
+        # Turn each non-empty line into one --exclude flag.
+        while IFS= read -r line; do
+          [ -n "$line" ] && CMD+=(--exclude "$line")
+        done <<< "$EXCLUDE"
+
+        while IFS= read -r line; do
+          [ -n "$line" ] && CMD+=("$line")
+        done <<< "$GLOBS"
+
+        # Intentionally unquoted, so the extra flags and globs split into
+        # separate arguments.
+        if [ -n "$ARGS" ]; then
+          CMD+=( $ARGS )
+        fi
+
+        "${CMD[@]}"

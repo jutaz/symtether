@@ -131,3 +131,27 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run build:site
+
+  actionlint:
+    # Lint .github/workflows/*.yml and the reusable action.yml. actionlint
+    # catches unknown inputs and outputs, and expression bugs. Through
+    # shellcheck (preinstalled on ubuntu-latest) it also type-checks the
+    # bash in every `run:` block, including the script in action.yml.
+    name: Lint workflows & action.yml
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Install actionlint
+        # The script URL is pinned to the v1.7.12 tag, and we pass 1.7.12
+        # as the version argument. The upstream download script does not
+        # verify a checksum. The binary is fetched over HTTPS from GitHub's
+        # release CDN at a pinned version, which is good enough for a lint
+        # job. Do not copy this pattern into publish.yml. When updating,
+        # bump the URL tag and the argument together.
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash \
+            -o /tmp/actionlint-install.bash
+          bash /tmp/actionlint-install.bash 1.7.12
+      - name: Run actionlint
+        run: actionlint
