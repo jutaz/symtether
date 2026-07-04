@@ -1,5 +1,21 @@
 # Adding a language
 
+> **How to widen `#sym:` AST coverage to a new language.** The spec
+> is language-agnostic. The reference toolkit resolves refs at tier
+> one (AST) whenever it has a tree-sitter grammar for the file.
+> Adding a tier-one language takes four steps:
+>
+> 1. Add the tree-sitter grammar as a devDependency.
+> 2. Register it in `scripts/copy-grammars.mjs` so its WASM and tags
+>    query get copied at build time.
+> 3. Register the file extensions in
+>    [`SPECS`](/src/languages/index.ts#sym:const:SPECS).
+> 4. Add fixtures.
+>
+> The resolver has no per-language logic, so languages are data. The
+> grammar must ship a prebuilt WASM on npm, and symtether never
+> compiles grammars at install time.
+
 symtether resolves refs at three tiers. A file whose grammar is not
 bundled falls back to tier 2, and tier 2 still catches renames and
 deletions. Adding a tier-1 grammar takes four steps.

@@ -1,5 +1,16 @@
 # Guide
 
+> **What symtether is.** A one-page open spec for `#sym:`, a portable
+> markdown link fragment that points at a named symbol in source
+> code, e.g., `[fetchData](src/client.ts#sym:ApiClient.fetchData)`.
+> It also ships the reference toolkit that enforces the spec. The CLI
+> verifies every ref against the code at three tiers. Tier one is AST
+> resolution via tree-sitter for 18 languages, tier two is lexical
+> search for everything else, and tier three is file-only when the
+> fragment cannot be checked. It runs on any repo with `npx symtether
+> check`, needs no config, no repo indexing, and no native compile,
+> and fails CI when a ref is broken.
+
 symtether validates `#sym:` references in markdown. These are links that
 point at a specific function, class, method, type, or constant in a source
 file. When one breaks, symtether fails CI.
@@ -12,8 +23,12 @@ You do not need to install symtether. Run it with npx:
 npx symtether check
 ```
 
-Exit codes: `0` all refs pass · `1` broken refs (stale under `--strict`, or
-an outdated sum file under `update --check`) · `2` usage or runtime error.
+Exit codes:
+
+- `0`. All refs pass.
+- `1`. Broken refs, stale refs under `--strict`, or an outdated sum
+  file under `update --check`.
+- `2`. Usage or runtime error.
 
 Default scope is every `**/*.md` in the repo. Exclusions come from your
 `.gitignore`, plus `node_modules`, which is always skipped

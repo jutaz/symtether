@@ -19,12 +19,12 @@ There is no manual `git tag`, no `npm version`, no `npm publish`.
 
 Follow [semver](https://semver.org):
 
-- **PATCH** (`0.2.0` → `0.2.1`) — bug fixes only, no behavior
+- **PATCH** (`0.2.0` to `0.2.1`). Bug fixes only, and no behavior
   change users need to know about.
-- **MINOR** (`0.2.0` → `0.3.0`) — new features or additive
-  behavior, no breaking changes.
-- **MAJOR** (`0.2.0` → `1.0.0`) — breaking changes to the CLI,
-  the library, or the `#sym:` spec.
+- **MINOR** (`0.2.0` to `0.3.0`). New features or additive behavior,
+  and no breaking changes.
+- **MAJOR** (`0.2.0` to `1.0.0`). Breaking changes to the CLI, the
+  library, or the `#sym:` spec.
 
 Any breaking change goes in a MAJOR release. Breaking changes
 include, but are not limited to: CLI flag or subcommand renames,
@@ -73,8 +73,8 @@ New Contributors, grouped by PR).
 workflow:
 
 - Waits for maintainer approval on the `npm-publish` environment.
-  (This is a manual gate — you get a GitHub notification, and you
-  have to click "Approve and deploy" in the Actions tab.)
+  This is a manual gate. You get a GitHub notification, and you have
+  to click "Approve and deploy" in the Actions tab.
 - Runs `npm ci`, build, lint, tests, `publint`, `attw`.
 - Verifies `package.json.version` matches the release tag.
 - Runs `npm publish --provenance --access public`. The npm registry

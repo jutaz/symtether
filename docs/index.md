@@ -50,14 +50,17 @@ shifts the `#L42` fragment points at whatever code moved into line 42.
 
 ## What symtether does
 
-Write the reference to the symbol instead.
+symtether is a one-page open spec for the `#sym:` reference syntax,
+plus the reference toolkit that enforces the spec. Write the
+reference to the symbol instead of a line number.
 
 ```markdown
 Follow the fetch pattern in [ApiClient.fetchData](src/api/client.ts#sym:ApiClient.fetchData).
 ```
 
 This is still a plain markdown link, so it renders and clicks on GitHub.
-But now it names the thing it points at, so it can be checked.
+Now it names the thing it points at, and the tool can check it against
+the code.
 
 ```console
 $ npx symtether check

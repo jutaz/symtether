@@ -52,10 +52,10 @@ Follow the fetch pattern in [ApiClient.fetchData](src/api/client.ts#sym:ApiClien
 ```
 
 This is still a plain markdown link, so it renders and clicks on GitHub.
-But now `symtether check` can resolve it against the AST and fail CI when
-the symbol moves or disappears. `symtether fix` repairs the common cases
-automatically. symtether is a linter for the code references in your
-markdown.
+Now `symtether check` can resolve it against the AST and fail CI when
+the symbol moves or disappears, and `symtether fix` repairs the common
+cases automatically. symtether is a one-page open spec for the `#sym:`
+reference syntax, plus the reference toolkit that enforces it.
 
 ## 30 seconds
 
@@ -73,12 +73,12 @@ green
 ```
 
 A rename that used to pass unnoticed now fails CI, and the fix is one
-command away. There is no config file. The markdown links are the
-only source of truth. symtether can also write an optional
-`symtether.sum` file if you turn on staleness detection, and that file
-holds derived checksums that you can delete and regenerate at any
-time. It is never a source of truth. Exclusions come from your
-`.gitignore`, and `node_modules` is always skipped
+command away. There is no config file, and the markdown links are the
+only source of truth. If you turn on staleness detection, symtether
+also writes an optional `symtether.sum` file. That file holds derived
+checksums, and you can delete and regenerate it at any time. It is
+never a source of truth. Exclusions come from your `.gitignore`, and
+`node_modules` is always skipped
 ([GLOB_OPTIONS](src/check.ts#sym:const:GLOB_OPTIONS)).
 
 ## Why agents make this worse
@@ -115,8 +115,12 @@ npx symtether check --strict     # also fail when stamped targets changed
 npx symtether check --strict=warn  # …or just report staleness
 ```
 
-Exit codes: `0` all refs pass · `1` broken refs (stale under `--strict`, or
-an outdated sum file under `update --check`) · `2` usage or runtime error.
+Exit codes:
+
+- `0`. All refs pass.
+- `1`. Broken refs, stale refs under `--strict`, or an outdated sum
+  file under `update --check`.
+- `2`. Usage or runtime error.
 
 You can also use symtether as a library. The CLI calls the same four
 functions the library exports:
@@ -181,8 +185,9 @@ The sum file holds derived checksums, not decisions. `go.sum` uses the
 same idea ([sumfile.ts](src/sumfile.ts#sym:fn:parseSumFile)). If you
 delete the sum file, `check` passes or fails exactly as before, and
 `update` writes the sum file back. A repo that never runs `update`
-gives up two things and only two things: staleness detection, and the
-ability of `fix` to detect renames by content.
+gives up two things and only two things. It gives up staleness
+detection, and it gives up the ability of `fix` to detect renames by
+content.
 
 There is one trade-off. Entries are stored per target, and
 [sumKey](src/sumfile.ts#sym:fn:sumKey) ignores the written kind, so
