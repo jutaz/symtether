@@ -93,6 +93,88 @@ describe('fix on the fixable fixture', () => {
     }
   });
 
+  it('surfaces syntax-error refs as skipped instead of silently ignoring them', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'syn.md'),
+        '[x](../src/client.ts#sym:widget:Foo)\n',
+      );
+      const report = await fix({ cwd: fixture.dir, globs: ['docs/syn.md'] });
+      expect(report.edits).toHaveLength(0);
+      expect(report.skipped).toHaveLength(1);
+      expect(report.skipped[0]!.reason).toContain('cannot auto-fix');
+      expect(report.skipped[0]!.reason).toContain('unknown kind');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('refuses a moved file when the symbol lands in multiple candidates', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile, mkdir } = await import('node:fs/promises');
+      const body = 'export function relocated(): number {\n  return 1;\n}\n';
+      await mkdir(path.join(fixture.dir, 'lib'));
+      await mkdir(path.join(fixture.dir, 'pkg'));
+      await writeFile(path.join(fixture.dir, 'lib', 'util.ts'), body);
+      await writeFile(path.join(fixture.dir, 'pkg', 'util.ts'), body);
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'm.md'),
+        '[x](../src/util.ts#sym:relocated)\n',
+      );
+      const report = await fix({ cwd: fixture.dir, globs: ['docs/m.md'] });
+      expect(report.edits).toHaveLength(0);
+      expect(report.skipped[0]!.reason).toContain('ambiguous');
+      expect(report.skipped[0]!.reason).toContain('2 files');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('refuses multiple close rename candidates, naming them', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(
+        path.join(fixture.dir, 'src', 'twins.ts'),
+        'export function fetchDatb() {}\nexport function fetchDatc() {}\n',
+      );
+      await writeFile(
+        path.join(fixture.dir, 'docs', 't.md'),
+        '[x](../src/twins.ts#sym:fetchData)\n',
+      );
+      const report = await fix({ cwd: fixture.dir, globs: ['docs/t.md'] });
+      expect(report.edits).toHaveLength(0);
+      expect(report.skipped[0]!.reason).toContain('multiple rename candidates');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('repairs wrong-case paths with zero guessing (case-insensitive fs)', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'case.md'),
+        '[x](../src/CLIENT.ts#sym:ApiClient.fetchData)\n',
+      );
+      const report = await fix({ cwd: fixture.dir, globs: ['docs/case.md'] });
+      const edit = report.edits.find((e) => e.reason.includes('casing'));
+      if (edit) {
+        // macOS/Windows: resolver names the on-disk path; fix rewrites to it.
+        expect(edit.newUrl).toBe('../src/client.ts#sym:ApiClient.fetchData');
+      } else {
+        // Linux: no case-insensitive match exists; heuristics run instead.
+        expect(report.skipped.length + report.edits.length).toBeGreaterThan(0);
+      }
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   it('canonicalizes compat refs only when asked', async () => {
     const fixture = await setupFixture('basic');
     try {

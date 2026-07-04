@@ -62,7 +62,14 @@ export async function fix(options: FixOptions = {}): Promise<FixReport> {
     for (const ref of extractRefs(repoRoot, docPath, content)) {
       const resolution = await resolver.resolve(ref);
 
-      if (resolution.status === 'broken' && !ref.syntaxError) {
+      if (resolution.status === 'broken' && ref.syntaxError) {
+        // Malformed refs can't be auto-repaired, but silence would read as
+        // "nothing wrong here" — surface them with the cause.
+        skipped.push({
+          resolution,
+          reason: `cannot auto-fix: ${ref.syntaxError}`,
+        });
+      } else if (resolution.status === 'broken') {
         const edit = await proposeFix(
           repoRoot,
           resolver,
@@ -108,6 +115,20 @@ async function proposeFix(
   basenameMatches: Map<string, Promise<string[]>>,
 ): Promise<Proposal> {
   const fragment = `#${ref.fragment}`;
+
+  // Case 0 — wrong casing: the resolver already found the on-disk path;
+  // rewriting to it is zero-guess.
+  if (resolution.diskPath) {
+    return {
+      edit: {
+        doc: ref.doc,
+        line: ref.line,
+        oldUrl: `${ref.rawTarget}${fragment}`,
+        newUrl: `${relativeUrl(ref, resolution.diskPath)}${fragment}`,
+        reason: `path casing corrected to ${resolution.diskPath}`,
+      },
+    };
+  }
 
   // Case 1 — moved file: target path is gone, but exactly one file in the
   // repo has the same basename and still contains the symbol (§7.2).

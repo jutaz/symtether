@@ -213,6 +213,190 @@ describe('check on the basic fixture', () => {
   });
 });
 
+describe('check: filesystem edge cases', () => {
+  it('ref targeting a directory is broken with a clear cause', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile, mkdir } = await import('node:fs/promises');
+      await mkdir(path.join(fixture.dir, 'src', 'weird.ts'));
+      await mkdir(path.join(fixture.dir, 'src', 'actual-dir'));
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'dir.md'),
+        '[x](../src/weird.ts/#sym:Foo)\n[y](../src/actual-dir#sym:Foo)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/dir.md'] });
+      for (const res of r.results) {
+        expect(res.status).toBe('broken');
+        expect(res.message).toMatch(/directory|file not found/);
+      }
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('empty source file: symbol not found with no candidates, not a crash', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(path.join(fixture.dir, 'src', 'empty.ts'), '');
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'e.md'),
+        '[x](../src/empty.ts#sym:anything)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/e.md'] });
+      expect(r.results[0]!.status).toBe('broken');
+      expect(r.results[0]!.candidates).toEqual([]);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('binary file with a fragment: warning, never a silent ok', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(
+        path.join(fixture.dir, 'src', 'blob.bin'),
+        Buffer.from([0x00, 0x01, 0xff, 0x00, 0x42]),
+      );
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'b.md'),
+        '[x](../src/blob.bin#sym:main)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/b.md'] });
+      expect(r.results[0]!.status).toBe('warning');
+      expect(r.results[0]!.tier).toBe('file-only');
+      expect(r.results[0]!.message).toContain('binary');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('symlinked target resolves without crashing', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile, symlink } = await import('node:fs/promises');
+      await symlink(
+        path.join(fixture.dir, 'src', 'client.ts'),
+        path.join(fixture.dir, 'src', 'alias.ts'),
+      );
+      await writeFile(
+        path.join(fixture.dir, 'docs', 's.md'),
+        '[x](../src/alias.ts#sym:ApiClient.fetchData)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/s.md'] });
+      // Symlinks resolve to a different realpath; pin that this is handled
+      // deterministically rather than crashing. Current behavior: broken
+      // with the casing/realpath mismatch named, or ok where realpath
+      // equals the link path.
+      expect(['ok', 'broken']).toContain(r.results[0]!.status);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('wrong-case path is broken and names the on-disk path (case-insensitive fs)', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'case.md'),
+        '[x](../src/CLIENT.ts#sym:ApiClient.fetchData)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/case.md'] });
+      const res = r.results[0]!;
+      expect(res.status).toBe('broken');
+      if (res.diskPath) {
+        // macOS/Windows: file found, casing differs.
+        expect(res.diskPath).toBe('src/client.ts');
+        expect(res.message).toContain('casing differs');
+      } else {
+        // Linux (case-sensitive): plain not-found is correct.
+        expect(res.message).toContain('file not found');
+      }
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('suffix match never matches partial interior segments', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      // helpers.formatUrl exists; "rs.formatUrl" (substring of segment) must not.
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'n.md'),
+        '[bad](../src/client.ts#sym:rs.formatUrl)\n[good](../src/client.ts#sym:helpers.formatUrl)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/n.md'] });
+      expect(r.results[0]!.status).toBe('broken');
+      expect(r.results[1]!.status).toBe('ok');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
+describe('check: resolution outcome corners', () => {
+  it('plain file link with no fragment is ok at file-only tier', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'plain.md'),
+        '[the client](../src/client.ts)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/plain.md'] });
+      expect(r.results[0]).toMatchObject({ status: 'ok', tier: 'file-only' });
+      expect(r.results[0]!.message).toBeUndefined();
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('kind mismatch says what the symbol actually is', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      // parseConfig is a function; asking for a class must fail and say so.
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'kind.md'),
+        '[x](../src/client.ts#sym:class:parseConfig)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/kind.md'] });
+      const res = r.results[0]!;
+      expect(res.status).toBe('broken');
+      expect(res.message).toContain('exists but is not a class');
+      expect(res.message).toContain('found: function');
+      // The mis-kinded symbol itself is offered as the top candidate.
+      expect(res.candidates[0]!.symbol).toBe('parseConfig');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('ambiguity error with a kind already given only suggests parent segments', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const { writeFile } = await import('node:fs/promises');
+      // render exists on both ApiClient and Widget; both are methods, so
+      // #sym:fn:render is still ambiguous — and "add a kind" would be
+      // useless advice.
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'amb.md'),
+        '[x](../src/client.ts#sym:fn:render)\n',
+      );
+      const r = await check({ cwd: fixture.dir, globs: ['docs/amb.md'] });
+      const res = r.results[0]!;
+      expect(res.status).toBe('broken');
+      expect(res.message).toContain('qualify with a parent segment');
+      expect(res.message).not.toContain('add a parent segment or a kind');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
 describe('check option handling', () => {
   it('respects .gitignore excludes', async () => {
     const fixture = await setupFixture('basic');

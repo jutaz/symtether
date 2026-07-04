@@ -78,6 +78,12 @@ export interface Resolution {
    * results only) — lets consumers deep-link, e.g. GitHub `#L<n>` anchors.
    */
   matchLine?: number;
+  /**
+   * On-disk path when it differs from the written one only by casing
+   * (broken refs on case-insensitive filesystems). Lets fix rewrite the
+   * path without guessing.
+   */
+  diskPath?: string;
 }
 
 export interface CheckSummary {

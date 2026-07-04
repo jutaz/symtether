@@ -1,4 +1,4 @@
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { combineHashes, hashDefinition, hashLexicalLine } from './checksum.js';
 import {
@@ -31,8 +31,30 @@ export class Resolver {
 
     const abs = path.join(this.repoRoot, ref.targetPath);
     const fileStat = await stat(abs).catch(() => null);
+    if (fileStat?.isDirectory()) {
+      return broken(
+        ref,
+        'file-only',
+        'target is a directory, not a file — point the ref at the source file that defines the symbol',
+      );
+    }
     if (!fileStat?.isFile()) {
       return broken(ref, tierFor(ref), 'file not found');
+    }
+
+    // Case-insensitive filesystems (macOS, Windows) resolve CLIENT.ts to
+    // client.ts locally, then the ref breaks on Linux CI. Compare the
+    // on-disk casing with what the doc wrote (§11).
+    const caseMismatch = await this.checkCase(abs, ref.targetPath);
+    if (caseMismatch) {
+      return {
+        ref,
+        status: 'broken',
+        tier: tierFor(ref),
+        message: `file found but casing differs: doc says "${ref.targetPath}", disk says "${caseMismatch}" — this breaks on case-sensitive filesystems`,
+        candidates: [],
+        diskPath: caseMismatch,
+      };
     }
 
     // Plain file link to an existing source file: nothing more to verify.
@@ -161,6 +183,43 @@ export class Resolver {
     }
     return broken(ref, 'lexical', 'file OK; symbol not found (lexical search)');
   }
+
+  /**
+   * Returns the on-disk repo-relative path when its casing differs from
+   * the written one, or null when they agree. realpath resolves the true
+   * casing on case-insensitive filesystems; on case-sensitive ones a
+   * mismatched path already failed the stat, so this never fires.
+   */
+  private async checkCase(
+    abs: string,
+    written: string,
+  ): Promise<string | null> {
+    try {
+      const [realAbs, realRoot] = await Promise.all([
+        realpath(abs),
+        this.realRepoRoot(),
+      ]);
+      const onDisk = path.relative(realRoot, realAbs).split(path.sep).join('/');
+      // Only a pure case difference is an error — a symlink legitimately
+      // resolves to a different path and must not be flagged.
+      if (
+        onDisk !== written &&
+        onDisk.toLowerCase() === written.toLowerCase()
+      ) {
+        return onDisk;
+      }
+      return null;
+    } catch {
+      return null; // realpath failure: don't invent errors stat didn't find
+    }
+  }
+
+  private realRepoRoot(): Promise<string> {
+    this.realRoot ??= realpath(this.repoRoot).catch(() => this.repoRoot);
+    return this.realRoot;
+  }
+
+  private realRoot: Promise<string> | undefined;
 
   /** Public lookup for fix's hash-verified rename detection (§9.2). */
   async definitionsForFile(repoRelPath: string): Promise<Definition[] | null> {

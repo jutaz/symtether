@@ -245,6 +245,51 @@ describe('update + check --strict', () => {
   });
 });
 
+describe('update edge cases', () => {
+  it('produces an empty sum file for a repo with only file-only refs', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      // Scope update to a doc with a plain file link and nothing else.
+      await writeFile(
+        path.join(fixture.dir, 'docs', 'plain-only.md'),
+        '[client](../src/client.ts)\n',
+      );
+      // Exclude every other doc so only the file-only ref is in scope.
+      const result = await update({
+        cwd: fixture.dir,
+        exclude: ['docs/guide.md', 'docs/languages.md', 'docs/other.md'],
+      });
+      expect(result.written).toBe(0);
+      const sum = await readFile(
+        path.join(fixture.dir, 'symtether.sum'),
+        'utf8',
+      );
+      expect(sum).toBe('');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
+  it('lexical refs are stamped with lex: hashes and verified by strict', async () => {
+    const fixture = await setupFixture('basic');
+    const zsh = path.join(fixture.dir, 'src', 'deploy.zsh');
+    try {
+      await update({ cwd: fixture.dir });
+      // The lexical hash covers the lines that mention the symbol — change
+      // one of those (not an unrelated line) to trigger tier-2 staleness.
+      const original = await readFile(zsh, 'utf8');
+      await writeFile(zsh, original.replace('main "$@"', 'main "$@" --now'));
+      const report = await check({ cwd: fixture.dir, strict: true });
+      const stale = report.results.filter(
+        (r) => r.status === 'stale' && r.ref.targetPath === 'src/deploy.zsh',
+      );
+      expect(stale).toHaveLength(1);
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+});
+
 describe('update --check (CI mode)', () => {
   it('passes when the sum file is current, without touching it', async () => {
     const fixture = await setupFixture('basic');
