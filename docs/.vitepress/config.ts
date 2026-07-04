@@ -109,12 +109,60 @@ async function buildRefRewrites(): Promise<Map<string, string>> {
 
 const refRewrites = await buildRefRewrites();
 
+const SITE = 'https://symtether.dev';
+const DESCRIPTION =
+  'symtether checks the symbol references in your markdown against the code itself and fails CI when they break. Built for AGENTS.md and the docs coding agents read as instructions.';
+
 export default defineConfig({
   title: 'symtether',
-  description:
-    'Stateless linter that checks symbol references in markdown still point at real code. Built for AGENTS.md and the docs coding agents read as instructions.',
+  description: DESCRIPTION,
   cleanUrls: true,
   srcExclude: [],
+  lastUpdated: true,
+  sitemap: { hostname: SITE },
+
+  head: [
+    ['link', { rel: 'canonical', href: SITE }],
+    ['meta', { name: 'theme-color', content: '#1b1b1f' }],
+    // Open Graph / Twitter: link previews in Slack, X, Discord, etc.
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:site_name', content: 'symtether' }],
+    [
+      'meta',
+      {
+        property: 'og:title',
+        content: 'symtether — docs that point at real code',
+      },
+    ],
+    ['meta', { property: 'og:description', content: DESCRIPTION }],
+    ['meta', { property: 'og:url', content: SITE }],
+    ['meta', { name: 'twitter:card', content: 'summary' }],
+    [
+      'meta',
+      {
+        name: 'twitter:title',
+        content: 'symtether — docs that point at real code',
+      },
+    ],
+    ['meta', { name: 'twitter:description', content: DESCRIPTION }],
+    // Structured data: software application, for rich results.
+    [
+      'script',
+      { type: 'application/ld+json' },
+      JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: 'symtether',
+        applicationCategory: 'DeveloperApplication',
+        operatingSystem: 'Linux, macOS, Windows',
+        description: DESCRIPTION,
+        url: SITE,
+        downloadUrl: 'https://www.npmjs.com/package/symtether',
+        license: 'https://opensource.org/licenses/MIT',
+        offers: { '@type': 'Offer', price: '0' },
+      }),
+    ],
+  ],
 
   vite: {
     plugins: [

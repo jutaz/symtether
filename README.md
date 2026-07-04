@@ -1,41 +1,40 @@
 # symtether
 
-> Checks that symbol references in your markdown still point at real code.
+> Docs that point at real code — and fail CI when they stop.
 > Built for `AGENTS.md` and the other docs coding agents read as instructions.
 
 [![CI](https://github.com/jutaz/symtether/actions/workflows/ci.yml/badge.svg)](https://github.com/jutaz/symtether/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/symtether)](https://www.npmjs.com/package/symtether)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**symtether** is a stateless, zero-config linter for links that point at a
-specific function, class, method, type, or constant inside a source file:
+Your `AGENTS.md` says *"follow the pattern in `fetchData`."* Three sprints
+later `fetchData` is gone — renamed, moved, refactored away. Nothing fails.
+The doc still reads fine, and everyone it points at code that no longer
+exists finds out the hard way.
+
+Broken URLs 404. Broken code references don't:
+
+```markdown
+<!-- The file exists, so every link checker passes this — -->
+<!-- but fetchData was renamed two weeks ago. -->
+Follow the fetch pattern in [fetchData](src/api/client.ts#L42).
+```
+
+A link checker verifies the file. Nothing verifies the *symbol* — and the
+`#L42` makes it worse by silently pointing at whatever moved into line 42.
+
+**symtether** fixes this by making the reference name the symbol, then
+checking it against the code itself:
 
 ```markdown
 Follow the fetch pattern in [ApiClient.fetchData](src/api/client.ts#sym:ApiClient.fetchData).
 ```
 
-`symtether check` resolves each reference against the code (tree-sitter
-ASTs where supported, lexical search everywhere else) and fails CI when one
-breaks — file moved, symbol renamed or deleted. `symtether fix` repairs the
-common cases. `symtether init` adds a short section to `AGENTS.md` so
-coding agents keep the references working.
-
-Think eslint, but for code references in markdown.
-
-## Why
-
-`AGENTS.md`, `CLAUDE.md`, and skill files get read by coding agents as
-instructions, and the most useful thing you can put in them is a pointer to
-existing code: "follow the pattern in X." Those pointers rot. Nothing in a
-standard toolchain fails when the referenced symbol gets renamed, so an
-agent pointed at a deleted pattern wastes tokens hunting for it and then
-imitates whatever it finds instead.
-
-The `#sym:` convention helps even before you install anything. An agent
-reading `src/client.ts#sym:ApiClient.fetchData` has the file path and an
-exact string to grep, which beats a bare file link (read 400 lines and
-hope) or a line-number link (read the wrong 20 lines after the file
-shifts). symtether is what makes the convention enforceable.
+Still a plain markdown link — renders and clicks on GitHub. But now
+`symtether check` can resolve it against the AST and fail CI the moment the
+symbol moves, gets renamed, or disappears. `symtether fix` repairs the
+common cases automatically. Think eslint, but for the code references in
+your markdown.
 
 ## 30 seconds
 
@@ -52,9 +51,28 @@ $ npx symtether check && echo green
 green
 ```
 
-There is no config file and no lockfile. The markdown links are the only
-state; exclusions come from your `.gitignore`, plus `node_modules`, which
-is always skipped ([GLOB_OPTIONS](src/check.ts#sym:const:GLOB_OPTIONS)).
+The rename that used to rot silently is a red build with the fix one
+command away. There is no config file and no lockfile. The markdown links
+are the only state; exclusions come from your `.gitignore`, plus
+`node_modules`, which is always skipped
+([GLOB_OPTIONS](src/check.ts#sym:const:GLOB_OPTIONS)).
+
+## Why this matters more with agents
+
+Coding agents read `AGENTS.md`, `CLAUDE.md`, and skill files as
+instructions, and the highest-value instruction is a pointer to real code:
+*"do it like X."* An agent pointed at a deleted symbol doesn't shrug like a
+human — it searches, guesses, and confidently imitates whatever it finds
+instead. Agents cause the rot too: every refactor an agent lands can break
+the pointers the next session depends on.
+
+The `#sym:` convention pays off even before the tool is installed. An agent
+reading `src/client.ts#sym:ApiClient.fetchData` has the file path and an
+exact string to grep, which beats a bare file link (read 400 lines and
+hope) or a line-number link (read the wrong 20 lines with confidence).
+symtether makes the convention enforceable: `check` in CI catches what
+agents and humans break, `fix` repairs it, and `init` installs a short
+managed block that teaches agents to keep refs working themselves.
 
 ## Usage
 
