@@ -3,7 +3,9 @@ node_modules/
 
 # Build output
 dist/
-grammars/
+# Root-anchored: vendor/grammars/ is committed source, only the
+# build-time copy at ./grammars/ is generated.
+/grammars/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 *.tsbuildinfo
