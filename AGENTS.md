@@ -4,9 +4,10 @@ Instructions for coding agents working in this repository.
 
 ## Project
 
-symtether is a stateless linter for `#sym:` symbol references in markdown.
-`SPEC.md` is the normative reference syntax spec and must stay in sync with
-the resolver's behavior.
+symtether is a one-page open spec for `#sym:` symbol references in
+markdown, plus the stateless reference toolkit that enforces it.
+`SPEC.md` is the normative reference syntax spec and must stay in
+sync with the resolver's behavior.
 
 ## Layout
 
@@ -33,6 +34,10 @@ the resolver's behavior.
   through its native Git integration, and configured in the dashboard, so
   fork PRs never build there. `wrangler.jsonc` serves
   `docs/.vitepress/dist` as static assets.
+- `npm run favicons:build`. Regenerates PNG favicons and apple-touch-icon
+  under `docs/public/` from `docs/public/favicon.svg` via `@resvg/resvg-wasm`.
+  Committed artifacts, not part of `build:site`. Rerun only when the SVG
+  changes.
 
 ## Rules
 

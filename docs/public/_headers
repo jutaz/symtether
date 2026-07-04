@@ -23,8 +23,23 @@
 # only, so keep the window short enough to redeploy without waiting.
 /*.svg
   Cache-Control: public, max-age=86400, must-revalidate
+/*.png
+  Cache-Control: public, max-age=86400, must-revalidate
 /favicon.svg
   Cache-Control: public, max-age=86400, must-revalidate
+# Favicons: same short-revalidate window, and served with the correct
+# Content-Type so Google's crawler picks up the icon change on refresh.
+/favicon-96.png
+  Cache-Control: public, max-age=86400, must-revalidate
+/favicon-192.png
+  Cache-Control: public, max-age=86400, must-revalidate
+/favicon-512.png
+  Cache-Control: public, max-age=86400, must-revalidate
+/apple-touch-icon.png
+  Cache-Control: public, max-age=86400, must-revalidate
+/site.webmanifest
+  Cache-Control: public, max-age=86400, must-revalidate
+  Content-Type: application/manifest+json
 
 # HTML entry points: revalidate every request so a new deploy is picked up
 # immediately, but let CDN caches serve during backend hiccups.

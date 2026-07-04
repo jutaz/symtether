@@ -14,8 +14,9 @@ disclosure.
 
 ## Scope
 
-symtether is a linter that parses markdown and reads source files from
-a repository. Vulnerabilities in scope include:
+symtether is the reference toolkit for the `#sym:` spec. It parses
+markdown and reads source files from a repository. Vulnerabilities in
+scope include:
 
 - Any issue that lets a malicious source file execute code outside the
   intended parse-and-report boundary.

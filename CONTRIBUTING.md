@@ -35,13 +35,14 @@ Requirements:
 
 Commands:
 
-- `npm run build` — builds the CLI bundle and copies grammar WASM
+- `npm run build`. Builds the CLI bundle and copies grammar WASM
   into `grammars/`. Required before running the CLI or the tests.
-- `npm test` — runs the full test suite.
-- `npm run lint` — eslint on `src/` plus prettier on the whole tree.
-- `npm run typecheck` — TypeScript compile without emit.
-- `npm run dev:site` — VitePress dev server for the documentation
-  site.
+- `npm test`. Runs the full test suite.
+- `npm run lint`. Runs eslint on `src/` and prettier on the whole tree.
+- `npm run typecheck`. Runs the TypeScript compiler without emitting
+  files.
+- `npm run dev:site`. Starts the VitePress dev server for the
+  documentation site.
 
 Before opening a PR:
 
@@ -52,22 +53,21 @@ Before opening a PR:
 
 ## Commit messages
 
-Use Conventional Commits. This is not just aesthetic. The release
-notes on GitHub are generated from PR titles, and the categories are
-driven by the prefix.
+Use Conventional Commits. The release notes on GitHub are generated
+from PR titles, and the categories are driven by the prefix.
 
 Common prefixes:
 
-- `feat:` — a new feature.
-- `fix:` — a bug fix.
-- `docs:` — documentation only.
-- `perf:` — performance improvement.
-- `chore:` — housekeeping (dep bumps, tool config, etc.).
-- `refactor:` — code change that neither fixes a bug nor adds a
+- `feat:`. A new feature.
+- `fix:`. A bug fix.
+- `docs:`. Documentation only.
+- `perf:`. A performance improvement.
+- `chore:`. Housekeeping, e.g., dependency bumps or tool config.
+- `refactor:`. A code change that neither fixes a bug nor adds a
   feature.
-- `test:` — tests only.
+- `test:`. Tests only.
 
-Breaking changes get an exclamation mark before the colon, e.g.
+Breaking changes get an exclamation mark before the colon, e.g.,
 `feat!: rename the check command`. A `BREAKING CHANGE:` footer in the
 commit body is also acceptable and preferred if the breakage needs
 explanation.
@@ -83,16 +83,15 @@ one of the highest-value contribution paths.
 Fine, with rules:
 
 - **Disclose it.** A PR that was written by an agent should say so in
-  the description. This is not a filter; it is a request for honesty
-  so reviewers can calibrate.
+  the description. This is a request for honesty so reviewers know
+  what they are reviewing.
 - **Understand the code you submit.** If you cannot explain a change
   when asked, do not submit it.
 - **Follow AGENTS.md.** The rules in that file are the same rules a
-  human maintainer would apply. Agents are held to the same standard,
-  not a lower one.
-- **No AI-generated release notes, no AI-generated commit messages
+  human maintainer would apply. Agents are held to the same standard.
+- **No AI-generated release notes, and no AI-generated commit messages
   that read as filler.** GitHub's release-notes generator does the
-  formatting; humans (or agents) write the actual PR titles.
+  formatting, and humans or agents write the actual PR titles.
 
 ## Security
 

@@ -51,6 +51,7 @@
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
     "vendor:swift": "node scripts/vendor-swift.mjs",
+    "favicons:build": "node scripts/render-favicons.mjs",
     "prepublishOnly": "npm run build && npm run lint && vitest run"
   },
   "engines": {

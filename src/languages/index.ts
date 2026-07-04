@@ -23,11 +23,11 @@ import type { SymbolKind } from '../types.js';
  *   - `dist/cli.js`             (esbuild single-file bundle)
  *   - `dist/index.js`           (library entry)
  *
- * Requiring **both** markers together is what makes this robust in
- * monorepos and pnpm workspaces: an intermediate `package.json` that
- * isn't ours (a workspace root, a hoisted dep's parent) is skipped
- * because it has no `grammars/` sibling; the walk continues until it
- * finds our own root.
+ * Requiring **both** markers together is what makes this work in
+ * monorepos and pnpm workspaces. An intermediate `package.json` that
+ * isn't ours (a workspace root, or a hoisted dep's parent) is
+ * skipped because it has no `grammars/` sibling. The walk continues
+ * until it finds our own root.
  *
  * Not depth-capped: filesystem walks always terminate at the root, and
  * an environment where our own package root isn't findable is a
