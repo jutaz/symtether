@@ -29,8 +29,23 @@ name: Publish to npm
 # on this file catches that.
 
 on:
+  # Two triggers, both leading to the same job:
+  #
+  # - release: published fires when a human clicks 'Publish release'
+  #   in the GitHub UI. Kept for the manual-publish case.
+  # - workflow_dispatch is what release-on-version-bump.yml calls
+  #   after cutting the tag+release. Needed because GitHub does not
+  #   trigger workflows in response to events created by GITHUB_TOKEN
+  #   (docs: 'Triggering a workflow from a workflow'), so the release
+  #   event would never fire if we relied on the automated path.
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (vX.Y.Z) to publish'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -75,9 +90,15 @@ jobs:
       # This check is a defense against out-of-band releases (someone
       # hand-creates a release without a bump PR).
       - name: Verify package.json version matches release tag
+        # The tag comes from either the release event (GITHUB_REF_NAME)
+        # or the workflow_dispatch input. Both paths are guarded by
+        # this check so publishing an unexpected version cannot happen.
+        env:
+          DISPATCH_TAG: ${{ inputs.tag }}
         run: |
           pkg_version=$(node -p "require('./package.json').version")
-          tag_version="${GITHUB_REF_NAME#v}"
+          tag_ref="${DISPATCH_TAG:-$GITHUB_REF_NAME}"
+          tag_version="${tag_ref#v}"
           if [ "$pkg_version" != "$tag_version" ]; then
             echo "::error::package.json version ($pkg_version) does not match release tag ($tag_version). Run 'npm version <bump>' before tagging."
             exit 1
