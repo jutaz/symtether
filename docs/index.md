@@ -24,7 +24,7 @@ features:
   - title: Built for agents
     details: symtether init adds a short managed section to AGENTS.md so coding agents read, write, and repair refs as part of normal work.
   - title: Staleness detection when you want it
-    details: symtether update stamps content hashes, and check --strict flags refs whose implementation changed since. Skip it entirely and check still works.
+    details: symtether update stamps content hashes for every ref, and check --strict flags refs whose implementation has changed since the last stamp. Skip the whole feature and check still works.
 ---
 
 ## The problem
@@ -72,7 +72,7 @@ $ npx symtether check && echo green
 green
 ```
 
-A rename that used to rot silently is now a red build, and the fix is one
+A rename that used to rot silently now fails CI, and the fix is one
 command away.
 
 ## Why this matters more with agents

@@ -4,9 +4,9 @@ symtether validates `#sym:` references in markdown. These are links that
 point at a specific function, class, method, type, or constant in a source
 file. When one breaks, symtether fails CI.
 
-## Install & first run
+## Install and first run
 
-No install needed:
+You do not need to install symtether. Run it with npx:
 
 ```console
 npx symtether check
@@ -35,7 +35,7 @@ npx symtether check --strict       # also fail when stamped targets changed
 npx symtether check --strict=warn  # …or just report staleness
 ```
 
-The CLI is a thin shell over the library:
+The CLI calls the same functions the library exports:
 
 ```ts
 import { check } from 'symtether';
@@ -57,12 +57,12 @@ output. Anything that could not be fully verified shows up as `lexical` or
 
 Adding a tier-1 language is mostly a grammar import plus fixtures
 ([loadLanguage](/src/languages/index.ts#sym:fn:loadLanguage)). See
-[Adding a language](./adding-a-language.md) for the step-by-step.
-issue if yours is missing. The prerequisite is a WASM build of the
+[Adding a language](./adding-a-language.md) for the walkthrough. Open
+an issue if yours is missing. The prerequisite is a WASM build of the
 grammar. Most grammars ship prebuilt on npm. Swift's does not, so we
-compile and vendor it ourselves. Dart has no usable WASM build at all, so
-it resolves at tier 2. Renames and deletions still get caught there, just
-without awareness of nesting.
+compile and vendor it ourselves. Dart has no usable WASM build at all,
+so it resolves at tier 2. Renames and deletions still get caught
+there, without awareness of nesting.
 
 ### Kind mapping
 
@@ -96,11 +96,12 @@ eliminates every match, the error names the kinds that do exist:
 npx symtether init
 ```
 
-installs a short managed block into `AGENTS.md`. Re-running it updates the
-block in place without duplicating it or touching anything outside the
-markers. The block tells agents to resolve refs by grepping, to run
-`check`/`fix` after renaming symbols, and to prefer `#sym:` refs over line
-numbers when writing docs. CI is the backstop:
+installs a short managed block into `AGENTS.md`. Re-running it updates
+the block in place, and it does not duplicate the block or touch
+anything outside the markers. The block tells agents to resolve refs
+by grepping, to run `check` and `fix` after renaming symbols, and to
+prefer `#sym:` refs over line numbers when writing docs. CI catches
+what agents miss:
 
 ```console
 npx symtether init --ci
@@ -108,8 +109,9 @@ npx symtether init --ci
 
 ## Staleness detection
 
-By default `check` fails only on broken refs. To also find out when the
-implementation behind a ref changes:
+By default `check` fails only on broken refs. If you also want to find
+out when the implementation behind a ref changes, use the sum file.
+The flow is:
 
 1. `npx symtether update` writes `symtether.sum`, which holds a normalized
    content hash ([hashDefinition](/src/checksum.ts#sym:fn:hashDefinition))
@@ -122,9 +124,12 @@ implementation behind a ref changes:
 3. Re-read the prose, fix it or confirm it, then re-stamp with
    `npx symtether update <target>`.
 
-The sum file holds derived checksums, not decisions, in the same way
-`go.sum` does. Delete it and `check` passes or fails exactly as before,
-and `update` writes it back.
+The sum file is optional. If a repo never runs `update`, the sum file
+is never written, and `check` still runs against the markdown links.
+When the sum file does exist, it holds derived checksums, not
+decisions. `go.sum` uses the same idea. If you delete the sum file,
+`check` passes or fails exactly as before, and the next `update`
+writes the sum file back.
 
 ## Limits
 

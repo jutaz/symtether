@@ -71,10 +71,13 @@ $ npx symtether check && echo green
 green
 ```
 
-A rename that used to rot silently is now a red build, and the fix is one
-command away. There is no config file and no lockfile. The markdown links
-are the only state. Exclusions come from your `.gitignore`, and
-`node_modules` is always skipped
+A rename that used to rot silently now fails CI, and the fix is one
+command away. There is no config file. The markdown links are the
+only source of truth. symtether can also write an optional
+`symtether.sum` file if you turn on staleness detection, and that file
+holds derived checksums that you can delete and regenerate at any
+time. It is never a source of truth. Exclusions come from your
+`.gitignore`, and `node_modules` is always skipped
 ([GLOB_OPTIONS](src/check.ts#sym:const:GLOB_OPTIONS)).
 
 ## Why this matters more with agents
@@ -114,9 +117,10 @@ npx symtether check --strict=warn  # …or just report staleness
 Exit codes: `0` all refs pass · `1` broken refs (stale under `--strict`, or
 an outdated sum file under `update --check`) · `2` usage or runtime error.
 
-You can also use symtether as a library. The CLI is a thin shell over
+You can also use symtether as a library. The CLI calls the same four
+functions the library exports:
 [check](src/check.ts#sym:fn:check), [fix](src/fix.ts#sym:fn:fix),
-[init](src/init.ts#sym:fn:init), and [update](src/update.ts#sym:fn:update):
+[init](src/init.ts#sym:fn:init), and [update](src/update.ts#sym:fn:update).
 
 ```ts
 import { check } from 'symtether';
@@ -157,8 +161,9 @@ Open an issue if yours is missing.
 
 ## Staleness detection
 
-By default `check` fails only on broken refs. To also find out when the
-implementation behind a ref changes:
+By default `check` fails only on broken refs. If you also want to find
+out when the implementation behind a ref changes, use the sum file.
+The flow is:
 
 1. `npx symtether update` writes `symtether.sum`, which holds a normalized
    content hash ([hashDefinition](src/checksum.ts#sym:fn:hashDefinition))
@@ -171,16 +176,17 @@ implementation behind a ref changes:
 3. Re-read the prose, fix it or confirm it, then re-stamp with
    `npx symtether update <target>`.
 
-The sum file holds derived checksums, not decisions, in the same way
-`go.sum` does ([sumfile.ts](src/sumfile.ts#sym:fn:parseSumFile)). Delete it
-and `check` passes or fails exactly as before, and `update` writes it back.
-A repo that never runs `update` gives up staleness detection and
-content-verified renames, nothing else.
+The sum file holds derived checksums, not decisions. `go.sum` uses the
+same idea ([sumfile.ts](src/sumfile.ts#sym:fn:parseSumFile)). If you
+delete the sum file, `check` passes or fails exactly as before, and
+`update` writes the sum file back. A repo that never runs `update`
+gives up two things and only two things: staleness detection, and the
+ability of `fix` to detect renames by content.
 
-There is one accepted trade-off. Entries are stored per target
-([sumKey](src/sumfile.ts#sym:fn:sumKey) ignores the written kind), so
-re-stamping a target clears staleness for every doc that references it.
-This is why stale output lists every referencing doc for review.
+There is one trade-off. Entries are stored per target, and
+[sumKey](src/sumfile.ts#sym:fn:sumKey) ignores the written kind, so
+re-stamping a target clears staleness for every doc that references
+it. That is why stale output lists every referencing doc for review.
 
 ## Limits
 
@@ -195,20 +201,26 @@ This is why stale output lists every referencing doc for review.
 
 ## Prior art
 
-Other tools attack the same problem from different angles:
+Other tools work on the same problem in different ways.
 
 | Tool | Mechanism | Difference |
 |---|---|---|
 | [Fiberplane Drift](https://github.com/fiberplane/drift) | Stateful binder. `drift link` writes bindings and AST fingerprints into `drift.lock` | The lockfile is the source of truth, and every intentional change needs re-stamping |
-| [docref](https://github.com/supersterling/docref) | Early exploration of markdown `path#Symbol` links plus tree-sitter and `.docref.lock` | Lockfile-first, cargo-only, and never released. Credit for prototyping the direction |
+| [docref](https://github.com/supersterling/docref) | Early exploration of markdown `path#Symbol` links plus tree-sitter and `.docref.lock` | Lockfile-first, cargo-only, and never released. It prototyped the direction and deserves the credit |
 | [Roam-Code](https://github.com/Cranot/roam-code) | A codebase intelligence platform with a SQLite symbol index | Requires indexing, and doc checking is one feature among hundreds |
-| [AgentLinter](https://github.com/seojoonkim/agentlinter) | Lints AGENTS.md structure, token budget, and file-level references | Overlaps with symtether's `file-only` tier; symtether adds AST symbol resolution. A repo can run both |
-| [lychee](https://github.com/lycheeverse/lychee), [markdown-link-check](https://github.com/tcort/markdown-link-check) | HTTP/filesystem link checkers | Verify that URLs 200 and files exist. Neither reads the code, so `#L42` and `#sym:` fragments pass as long as the file does. Complementary |
+| [AgentLinter](https://github.com/seojoonkim/agentlinter) | Lints AGENTS.md structure, token budget, and file-level references | Overlaps with symtether's `file-only` tier, and symtether adds AST symbol resolution. A repo can run both linters |
+| [lychee](https://github.com/lycheeverse/lychee), [markdown-link-check](https://github.com/tcort/markdown-link-check) | HTTP and filesystem link checkers | They verify that URLs return 200 and that files exist. Neither reads the code, so `#L42` and `#sym:` fragments pass as long as the file does. They are complementary to symtether |
 
-symtether differs in that there is no lockfile or index to maintain,
-ordinary clickable markdown links are the only source of truth, and
-checking fails only when a ref is actually broken. Staleness detection
-stays opt-in. Drift's guarantees without Drift's ceremony.
+symtether differs in three ways:
+
+- ordinary clickable markdown links are the only source of truth,
+- the optional `symtether.sum` file holds derived checksums that you
+  can delete and regenerate at any time, and no other index is
+  maintained,
+- checking fails only when a ref is actually broken, and staleness
+  detection stays opt-in.
+
+Drift's guarantees without Drift's ceremony.
 
 ## License
 
