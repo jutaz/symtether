@@ -2,10 +2,11 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { globby } from 'globby';
 import { extractRefs } from './extract.js';
+import { isSupportedExtension, loadLanguage } from './languages/index.js';
 import { findRepoRoot, toPosix } from './repo.js';
 import { Resolver } from './resolve.js';
 import { readSumFile, sumKey } from './sumfile.js';
-import type { CheckOptions, CheckReport, Resolution } from './types.js';
+import type { CheckOptions, CheckReport, Ref, Resolution } from './types.js';
 import { UsageError } from './types.js';
 
 /**
@@ -27,6 +28,53 @@ export const GLOB_OPTIONS: {
   followSymbolicLinks: false,
 };
 
+export interface LoadedDoc {
+  /** Repo-relative posix path (matches Ref.doc). */
+  doc: string;
+  /** Absolute path on disk, useful for later writeFile in fix.ts. */
+  abs: string;
+  /** Raw markdown contents. */
+  content: string;
+  /** Refs extracted from this doc, in source order. */
+  refs: Ref[];
+}
+
+/**
+ * Read + extract every ref in `docs`, kicking off grammar loads the moment
+ * we discover an extension. Two overlaps that matter on multi-language
+ * repos: (a) file reads for later docs happen while earlier grammars are
+ * still compiling, and (b) grammar WASM/Query compilation runs in the
+ * libuv threadpool alongside the JS-side extract/parse loop. On the
+ * on-demand path `loadLanguage` was serialized inside the resolve loop
+ * and dominated cold runs.
+ */
+export async function loadDocs(
+  repoRoot: string,
+  docs: string[],
+): Promise<LoadedDoc[]> {
+  const loaded: LoadedDoc[] = [];
+  const grammarLoads: Promise<unknown>[] = [];
+  const seenExts = new Set<string>();
+  for (const doc of docs) {
+    const docPath = toPosix(doc);
+    const abs = path.join(repoRoot, doc);
+    const content = await readFile(abs, 'utf8');
+    const refs = extractRefs(repoRoot, docPath, content);
+    loaded.push({ doc: docPath, abs, content, refs });
+    for (const ref of refs) {
+      if (ref.dotpath.length === 0) continue; // file-only, no grammar needed
+      const ext = path.extname(ref.targetPath);
+      if (!seenExts.has(ext) && isSupportedExtension(ext)) {
+        seenExts.add(ext);
+        // Fire immediately; loadLanguage caches by ext so this is safe.
+        grammarLoads.push(loadLanguage(ext));
+      }
+    }
+  }
+  await Promise.all(grammarLoads);
+  return loaded;
+}
+
 /**
  * Check all symbol refs in the repo's markdown files.
  * Library entry point — the CLI is a thin shell around this.
@@ -43,11 +91,11 @@ export async function check(options: CheckOptions = {}): Promise<CheckReport> {
   docs.sort();
 
   const resolver = new Resolver(repoRoot);
+  const loaded = await loadDocs(repoRoot, docs);
+
   const results: Resolution[] = [];
-  for (const doc of docs) {
-    const docPath = toPosix(doc);
-    const content = await readFile(path.join(repoRoot, doc), 'utf8');
-    for (const ref of extractRefs(repoRoot, docPath, content)) {
+  for (const { refs } of loaded) {
+    for (const ref of refs) {
       results.push(await resolver.resolve(ref));
     }
   }

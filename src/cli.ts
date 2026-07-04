@@ -4,11 +4,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import pc from 'picocolors';
-import { check } from './check.js';
-import { fix } from './fix.js';
-import { init } from './init.js';
-import { toHuman, toJson } from './report.js';
-import { update } from './update.js';
+// Command modules are imported lazily inside each `.action` closure so that
+// --version, --help, and usage errors don't pay for the check/update/fix
+// dependency graph (globby, unified, web-tree-sitter) they never touch.
+// UsageError is a plain error class with no transitive cost.
 import { UsageError } from './types.js';
 
 /** Exit codes (§7.1): 0 = pass, 1 = broken refs, 2 = usage/runtime error. */
@@ -93,6 +92,10 @@ Examples:
         `invalid --strict mode "${strictMode}" (fail|warn)${hint}`,
       );
     }
+    const [{ check }, { toHuman, toJson }] = await Promise.all([
+      import('./check.js'),
+      import('./report.js'),
+    ]);
     const report = await check({
       globs,
       include: opts.include,
@@ -132,6 +135,7 @@ Examples:
   symtether fix docs/guide.md --write  # scope to one doc`,
   )
   .action(async (globs: string[], opts) => {
+    const { fix } = await import('./fix.js');
     const report = await fix({
       globs,
       write: Boolean(opts.write),
@@ -185,6 +189,7 @@ Examples:
   symtether update --check             # CI: fail if the file is outdated`,
   )
   .action(async (targets: string[], opts) => {
+    const { update } = await import('./update.js');
     const result = await update({
       targets,
       exclude: opts.exclude,
@@ -232,6 +237,7 @@ Idempotent: re-running updates the block in place without duplicating it
 or editing anything outside the markers.`,
   )
   .action(async (opts) => {
+    const { init } = await import('./init.js');
     const result = await init({ file: opts.file, ci: Boolean(opts.ci) });
     console.log(`${result.file} ${result.action}`);
     if (result.workflow) console.log(`${result.workflow} written`);

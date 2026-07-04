@@ -1,8 +1,5 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { globby } from 'globby';
-import { GLOB_OPTIONS } from './check.js';
-import { extractRefs } from './extract.js';
+import { GLOB_OPTIONS, loadDocs } from './check.js';
 import { findRepoRoot, toPosix } from './repo.js';
 import { Resolver } from './resolve.js';
 import { readSumFile, sumKey, writeSumFile, SUM_FILE } from './sumfile.js';
@@ -64,10 +61,10 @@ export async function update(
   const targetFilter = options.targets ?? [];
   let skippedBroken = 0;
 
-  for (const doc of docs) {
-    const docPath = toPosix(doc);
-    const content = await readFile(path.join(repoRoot, doc), 'utf8');
-    for (const ref of extractRefs(repoRoot, docPath, content)) {
+  const loaded = await loadDocs(repoRoot, docs);
+
+  for (const { refs } of loaded) {
+    for (const ref of refs) {
       if (ref.dotpath.length === 0) continue; // file-only refs carry no hash
       const key = sumKey(ref.targetPath, ref.dotpath);
       if (next.has(key)) continue; // dedup across docs (§9.1)

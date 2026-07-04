@@ -1,8 +1,7 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { globby } from 'globby';
-import { GLOB_OPTIONS } from './check.js';
-import { extractRefs } from './extract.js';
+import { GLOB_OPTIONS, loadDocs } from './check.js';
 import { findRepoRoot, toPosix } from './repo.js';
 import { Resolver, similarity } from './resolve.js';
 import { readSumFile, sumKey } from './sumfile.js';
@@ -53,13 +52,12 @@ export async function fix(options: FixOptions = {}): Promise<FixReport> {
   const edits: FixEdit[] = [];
   const skipped: FixReport['skipped'] = [];
 
-  for (const doc of docs) {
-    const docPath = toPosix(doc);
-    const abs = path.join(repoRoot, doc);
-    const content = await readFile(abs, 'utf8');
+  const loaded = await loadDocs(repoRoot, docs);
+
+  for (const { doc: docPath, abs, content, refs } of loaded) {
     const docEdits: FixEdit[] = [];
 
-    for (const ref of extractRefs(repoRoot, docPath, content)) {
+    for (const ref of refs) {
       const resolution = await resolver.resolve(ref);
 
       if (resolution.status === 'broken' && ref.syntaxError) {
