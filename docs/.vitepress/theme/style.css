@@ -93,6 +93,14 @@
   --vp-code-color: var(--fg-100);
 }
 
+/* VitePress excludes headings from the `--vp-code-color` rule so inline
+   code inside an H1..H6 inherits the heading color. In light mode that
+   heading color is near-black, which renders invisibly on our dark chip
+   background. Re-color heading-embedded code to match the chip. */
+:root:not(.dark) .vp-doc :is(h1, h2, h3, h4, h5, h6) > code {
+  color: var(--vp-code-color);
+}
+
 /* Shiki emits dual themes (`--shiki-light` and `--shiki-dark` per token)
    and the default rule under `html.dark` switches to the dark values. We
    force the code-block surface dark in light mode too, so the tokens have
