@@ -7,3 +7,13 @@ insert_final_newline = true
 trim_trailing_whitespace = true
 indent_style = space
 indent_size = 2
+# Matches prettier's printWidth default. We do not override printWidth
+# in .prettierrc.json, so 80 is what prettier --check enforces on wrap
+# candidates. Setting it here lets editors soft-wrap and lets tools like
+# fmt honor the same limit.
+max_line_length = 80
+
+# Markdown uses two trailing spaces as a hard line break (CommonMark).
+# Do not strip them.
+[*.md]
+trim_trailing_whitespace = false

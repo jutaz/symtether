@@ -13,6 +13,9 @@ docs/.vitepress/cache/
 # Test artifacts
 coverage/
 
+# Local audit output from `npm pack` inspection runs.
+.pack-audit/
+
 # Logs
 *.log
 npm-debug.log*
