@@ -54,6 +54,11 @@ the resolver's behavior.
   `copy-grammars.mjs` concatenates them at build time. Never duplicate a
   pattern across javascript.extra.scm and typescript.extra.scm — the
   resolver already layers the JS query under the TS one.
+- `.npmrc` sets `ignore-scripts=true`: grammar packages would otherwise
+  node-gyp-compile native bindings we never use, which breaks on hosts
+  that run plain `npm ci` (Cloudflare Workers Builds). Consequence:
+  `prepublishOnly` does not fire — the publish workflow builds and tests
+  explicitly.
 - Grammar packages are devDependencies only; the published package ships
   prebuilt WASM copied at build time by `scripts/copy-grammars.mjs`.
   Swift's WASM is compiled by us and committed under `vendor/grammars/`
