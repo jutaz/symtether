@@ -149,9 +149,13 @@ jobs:
         # release CDN at a pinned version, which is good enough for a lint
         # job. Do not copy this pattern into publish.yml. When updating,
         # bump the URL tag and the argument together.
+        #
+        # The script downloads the binary into the current directory (the
+        # workspace). It is not on PATH, so the next step runs it as
+        # ./actionlint.
         run: |
           curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash \
             -o /tmp/actionlint-install.bash
           bash /tmp/actionlint-install.bash 1.7.12
       - name: Run actionlint
-        run: actionlint
+        run: ./actionlint
