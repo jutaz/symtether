@@ -31,6 +31,8 @@ src/matrix.cpp#Matrix.transpose  ast:sha256:114c4fadefb9004fe13f9911f14ad7bee595
 src/matrix.cpp#identity  ast:sha256:edb8438eaa6556a8adcef7b2d2fc6d2433d513d0f61d1123c55c152f4de00d46  2026-07-03
 src/matrix.cpp#math  ast:sha256:13f717935c385d7e0cf0c1bb5b4901e2889da047a96e26e0e99619d9a9bc207f  2026-07-03
 src/matrix.cpp#math.Matrix.rows  ast:sha256:114c4fadefb9004fe13f9911f14ad7bee595cfb37b6bee330ddccf67b448873b  2026-07-03
+src/models.dart#CartModel.addItem  lex:sha256:9b81d8338d463ad6c1cbc90a0a474194cbc0426f1c32d39723d5170f220154a7  2026-07-03
+src/models.dart#formatPrice  lex:sha256:cada5a47d2599db01d7358ed263c945fa134ddc85f8950f244a6d08c80a18f1b  2026-07-03
 src/parser.rs#MAX_DEPTH  ast:sha256:c222c56ebd7ba1a492a45f54818f9df29fa8ec9777f0c9decf940b2ef8e50f75  2026-07-03
 src/parser.rs#Parser.parse  ast:sha256:90703006d652d9d2d1781fff55fee14a238fd76ff62830c5856fa435576de375  2026-07-03
 src/parser.rs#Token  ast:sha256:37fd204ac096b30a7df4bb5c9a90de5569f7ce364b4e2eea419446b7d8f872d0  2026-07-03

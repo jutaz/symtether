@@ -55,6 +55,10 @@ couldn't fully verify is never silently passed
 
 More tier-1 languages land on request — each is roughly a grammar import
 plus fixtures ([loadLanguage](/src/languages/index.ts#sym:fn:loadLanguage)).
+The constraint is a prebuilt WASM grammar on npm: Swift and Dart currently
+publish none (Swift's must be compiled from source with emscripten), so
+they resolve at tier 2 until that changes — which still catches renames
+and deletions, just without nesting-chain awareness.
 
 ### Kind mapping
 

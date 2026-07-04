@@ -87,7 +87,13 @@ Lua:
 - [constructor](../src/scheduler.lua#sym:fn:new)
 - [local helper](../src/scheduler.lua#sym:fn:default_clock)
 
+Dart (no grammar — resolves at tier 2, lexical):
+
+- [add item](../src/models.dart#sym:CartModel.addItem)
+- [format price](../src/models.dart#sym:formatPrice)
+
 Broken (each language reports symbol-level failures):
 
 - [gone go fn](../src/server.go#sym:Restart)
 - [gone rust fn](../src/parser.rs#sym:Parser.reset)
+- [gone dart fn](../src/models.dart#sym:checkoutCart)

@@ -94,15 +94,31 @@ describe('tier-1 language coverage', () => {
     }
   });
 
+  it('unsupported languages (Dart) degrade to tier 2, loudly not silently', () => {
+    // Law 4: reduced confidence is always reported, never hidden.
+    expect(find('sym:CartModel.addItem')).toMatchObject({
+      status: 'ok',
+      tier: 'lexical',
+    });
+    expect(find('sym:formatPrice')).toMatchObject({
+      status: 'ok',
+      tier: 'lexical',
+    });
+    // Broken refs still fail at tier 2 — lexical is honest coverage.
+    const broken = find('sym:checkoutCart');
+    expect(broken.status).toBe('broken');
+    expect(broken.tier).toBe('lexical');
+  });
+
   it('suffix-matches receiver methods per SPEC §5.2 (Go Server.Start)', () => {
     // Server.Start matches a method with receiver *Server — the language-
     // agnostic dotpath form, not Go's own syntax.
     expect(find('sym:Server.Start').status).toBe('ok');
   });
 
-  it('summary: every valid ref is ast-tier, none fell to lexical', () => {
-    expect(report.summary.lexical).toBe(0);
-    expect(report.summary.broken).toBe(2);
+  it('summary: grammar-backed refs are ast-tier; only Dart is lexical', () => {
+    expect(report.summary.lexical).toBe(2);
+    expect(report.summary.broken).toBe(3);
   });
 });
 

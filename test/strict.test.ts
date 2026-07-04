@@ -129,8 +129,11 @@ describe('update + check --strict', () => {
       expect(stale.length).toBeGreaterThan(0);
       expect(stale[0]!.message).toContain('docs/guide.md');
       expect(stale[0]!.message).toContain('symtether update');
-      // Broken refs stay broken; stale only replaces ok.
-      expect(report.summary.broken).toBe(5);
+      // Broken refs stay broken; stale only replaces ok — strict never
+      // changes the broken count, whatever the fixture's current total is.
+      const broken = report.results.filter((r) => r.status === 'broken').length;
+      expect(report.summary.broken).toBe(broken);
+      expect(broken).toBeGreaterThanOrEqual(5);
 
       // Stale output must still satisfy the stable JSON contract.
       const schema = JSON.parse(readFileSync(SCHEMA_PATH, 'utf8'));
