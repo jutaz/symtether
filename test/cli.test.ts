@@ -12,21 +12,58 @@ const CLI = path.join(
   'cli.js',
 );
 
+// Node debug flags forwarded to the subprocess. These make silent
+// crashes talk: --trace-uncaught prints a stack for uncaught exceptions
+// before the process dies; --unhandled-rejections=strict turns any
+// unhandled promise rejection into an uncaught exception (which then
+// gets the trace); --trace-warnings prints stacks for warnings that
+// otherwise arrive without context. Kept always-on because they cost
+// nothing on the happy path and make CI-only crashes debuggable.
+const NODE_DEBUG_ARGS = [
+  '--trace-uncaught',
+  '--trace-warnings',
+  '--unhandled-rejections=strict',
+];
+
 /** Run the built CLI; never throws. Returns exit code + output. */
 async function run(
   args: string[],
   cwd: string,
-): Promise<{ code: number; stdout: string; stderr: string }> {
+): Promise<{ code: number; stdout: string; stderr: string; signal?: string }> {
   try {
-    const { stdout, stderr } = await exec('node', [CLI, ...args], { cwd });
+    const { stdout, stderr } = await exec(
+      'node',
+      [...NODE_DEBUG_ARGS, CLI, ...args],
+      { cwd },
+    );
     return { code: 0, stdout, stderr };
   } catch (err) {
-    const e = err as { code?: number; stdout?: string; stderr?: string };
-    return {
+    const e = err as {
+      code?: number;
+      signal?: string;
+      stdout?: string;
+      stderr?: string;
+    };
+    const result = {
       code: e.code ?? -1,
+      signal: e.signal,
       stdout: e.stdout ?? '',
       stderr: e.stderr ?? '',
     };
+    // Dump the subprocess output on unexpected exits. The CLI contract
+    // is exit 0/1/2; anything else is a crash and we want to see what
+    // the process managed to print before dying, plus the signal (if
+    // Node reported one) so CI logs carry the full picture.
+    if (result.code !== 0 && result.code !== 1 && result.code !== 2) {
+      console.error(
+        `\n[cli.test.ts] Unexpected exit: code=${result.code}` +
+          (result.signal ? ` signal=${result.signal}` : '') +
+          `\n  args: ${JSON.stringify(args)}\n  cwd:  ${cwd}\n` +
+          `--- stdout ---\n${result.stdout}\n` +
+          `--- stderr ---\n${result.stderr}\n---`,
+      );
+    }
+    return result;
   }
 }
 
@@ -69,26 +106,16 @@ describe('cli exit codes', () => {
     }
   });
 
-  // Skipped on Windows: node subprocess exits with 0xC0000135 before
-  // reaching the UsageError path, reproducibly on Node 24 + Windows in
-  // CI. Cannot reproduce on macOS or Linux locally, and cannot repro on
-  // the same CI runner with any other test in this file. The rest of
-  // the --strict code path is covered by '--strict=warn reports stale
-  // but exits 0; --strict fails' below, which exercises the same
-  // applyStrict entry point with a sum file present.
-  it.skipIf(process.platform === 'win32')(
-    'exits 2 for --strict without a sum file',
-    async () => {
-      const fixture = await setupFixture('basic');
-      try {
-        const r = await run(['check', '--strict'], fixture.dir);
-        expect(r.code).toBe(2);
-        expect(r.stderr).toContain('symtether update');
-      } finally {
-        await fixture.cleanup();
-      }
-    },
-  );
+  it('exits 2 for --strict without a sum file', async () => {
+    const fixture = await setupFixture('basic');
+    try {
+      const r = await run(['check', '--strict'], fixture.dir);
+      expect(r.code).toBe(2);
+      expect(r.stderr).toContain('symtether update');
+    } finally {
+      await fixture.cleanup();
+    }
+  });
 
   it('exits 2 for an invalid --strict mode', async () => {
     const fixture = await setupFixture('basic');
