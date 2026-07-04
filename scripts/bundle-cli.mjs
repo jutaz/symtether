@@ -4,19 +4,24 @@
  * so `npm run build` stays `tsc && node scripts/bundle-cli.mjs` (each
  * extra `node` invocation costs ~80ms of boot).
  *
- * Why bundle: every subprocess pays the module-graph traversal cost of
- * ~180 files (globby, unified, remark-parse, mdast-util-*, micromark-*,
- * commander, picocolors, plus our src/ tree). Cold `node dist/cli.js
- * --version` was ~150ms of pure module loading. Bundling collapses this
- * to one file that Node parses once, saving ~70-100ms per subprocess in
- * exchange for a build step.
+ * Why bundle: bundling our own `src/**` into one file lets Node parse
+ * a single module instead of walking our internal graph on every CLI
+ * invocation. It also lets us keep source-map-linked stack traces and
+ * a legal-comments sidecar without shipping the whole tsc-emitted tree.
  *
- * What stays external:
- * - `web-tree-sitter` — uses `import.meta.url` to locate its sibling
- *   `.wasm`; bundling would either need file-loader gymnastics or a
- *   runtime patch, and the win is small (its module-load cost is
- *   already dominated by the WASM instantiation we can't avoid).
+ * What stays external — everything in `dependencies`:
+ * - Runtime deps (commander, globby, remark, unified, picocolors, …)
+ *   resolve from the installed `node_modules` at runtime, exactly like
+ *   `dist/index.js` (the library entry) already does. This keeps the
+ *   `dependencies` block in package.json meaningful and avoids shipping
+ *   a second inlined copy of every runtime dep inside `dist/cli.js`.
+ * - `web-tree-sitter` in particular uses `import.meta.url` to locate its
+ *   sibling `.wasm`; bundling would need file-loader gymnastics anyway.
  * - Node builtins — never bundle these.
+ *
+ * The externals list is derived from `package.json.dependencies` so it
+ * stays in sync automatically; adding a runtime dep is enough, no edit
+ * here required.
  *
  * The output lands at `dist/cli.js`, replacing the tsc-emitted CLI file.
  * That path is deliberate: `bin` in package.json, tests, and the
@@ -24,11 +29,22 @@
  * `import.meta.url`) all keep working unchanged.
  */
 import { build } from 'esbuild';
+import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import './copy-grammars.mjs';
 
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+
+// Derive runtime externals from package.json so the list can't drift.
+// Match both bare specifiers (`commander`) and deep subpath imports
+// (`unist-util-visit/do`) with the `pkg/*` companion entry — esbuild's
+// external matcher treats them as separate patterns.
+const pkg = JSON.parse(
+  await readFile(path.join(ROOT, 'package.json'), 'utf8'),
+);
+const runtimeDeps = Object.keys(pkg.dependencies ?? {});
+const external = runtimeDeps.flatMap((name) => [name, `${name}/*`]);
 
 const result = await build({
   entryPoints: [path.join(ROOT, 'src/cli.ts')],
@@ -43,16 +59,15 @@ const result = await build({
   // `import.meta.url` stays intact under `platform: node` (used by our
   // own path math in languages/index.ts to locate `../grammars/`).
   //
-  // Some CJS deps (commander, mdast-util-*) call `require()` for lazy
-  // internal loads. When esbuild emits ESM, those calls have no
-  // `require` in scope and fail at runtime. Inject a `createRequire`
-  // shim so bundled CJS runs correctly. Standard pattern documented in
-  // esbuild's ESM/Node section.
+  // Runtime `dependencies` are kept external (resolved from
+  // node_modules at runtime), so the `require` calls that some CJS deps
+  // do internally no longer land in the bundle. The `createRequire`
+  // shim below is retained defensively in case a future refactor pulls
+  // a CJS module back into the bundled `src/**` graph.
   banner: {
     js: "import { createRequire as __createRequire } from 'node:module'; const require = __createRequire(import.meta.url);",
   },
-  // Keep web-tree-sitter external; see file header.
-  external: ['web-tree-sitter'],
+  external,
   // Sourcemaps land at `dist/cli.js.map` and reference `src/**` files so
   // stack traces in production stay actionable.
   sourcemap: true,
