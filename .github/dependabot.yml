@@ -43,3 +43,11 @@ updates:
           - 'eslint*'
           - 'prettier*'
           - 'typescript-eslint'
+      # Group vitest with its first-party plugins. @vitest/coverage-v8
+      # declares an *exact* peer on vitest (e.g. `vitest: 4.1.10`), so a
+      # lone coverage bump makes `npm ci` fail with ERESOLVE. They have to
+      # move together or not at all.
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
