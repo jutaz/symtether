@@ -215,6 +215,9 @@ export class Resolver {
   }
 
   private realRepoRoot(): Promise<string> {
+    // realpath only rejects if the repo root disappears mid-run. Defensive,
+    // and deliberately not exercised by the suite.
+    /* v8 ignore next -- @preserve */
     this.realRoot ??= realpath(this.repoRoot).catch(() => this.repoRoot);
     return this.realRoot;
   }
@@ -353,6 +356,9 @@ export class Resolver {
 }
 
 async function readTextFile(abs: string): Promise<string | null> {
+  // Covers the stat/read race and EISDIR. Defensive, and deliberately not
+  // exercised by the suite.
+  /* v8 ignore next -- @preserve */
   const buf = await readFile(abs).catch(() => null);
   if (buf === null || buf.includes(0)) return null; // NUL byte ≈ binary
   return buf.toString('utf8');
