@@ -66,6 +66,10 @@ sync with the resolver's behavior.
   on hosts that run plain `npm ci` (Cloudflare Workers Builds). One
   consequence is that `prepublishOnly` does not fire, so the publish
   workflow builds and tests explicitly.
+- `overrides.undici` forces `^7.29.0`. `miniflare` (via `wrangler`) pins
+  `undici` to an exact version and is still on 7.28.0, which carries five
+  open advisories. The override is dev-only and patch-level; drop it once
+  miniflare pins 7.29.0 or later.
 - Grammar packages are devDependencies only. The published package ships
   prebuilt WASM copied at build time by `scripts/copy-grammars.mjs`.
   Swift's WASM is compiled by us and committed under `vendor/grammars/`
