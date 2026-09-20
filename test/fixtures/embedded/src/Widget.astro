@@ -1,26 +1,79 @@
 ---
 import WidgetShell from '../layouts/WidgetShell.astro';
 
-interface Props {
+export interface Props {
   label: string;
 }
 
+export type WidgetId = string;
+
+export enum WidgetState {
+  Idle = 0,
+  Busy = 1,
+}
+
+export namespace widgets {
+  export function describe(): string {
+    return 'widget';
+  }
+}
+
 class Widget {
+  static VERSION = '2.0';
+
+  size = 3;
+
+  onTap = (): void => {};
+
+  get state(): WidgetState {
+    return WidgetState.Idle;
+  }
+
   render(): string {
     return 'widget';
+  }
+
+  async hydrate(): Promise<void> {}
+
+  static create(): Widget {
+    return new Widget();
   }
 }
 
 export function buildWidget(label: string): Widget {
   return new Widget();
 }
+
+export async function fetchWidget(): Promise<Widget> {
+  return buildWidget('x');
+}
+
+export function* widgetIds(): Generator<WidgetId> {
+  yield 'w';
+}
+
+export const makeWidget = (): Widget => new Widget();
+
+export const widgetActions = {
+  show: 'show',
+  hide: (): void => {},
+};
+
+export const WIDGET_DEFAULTS = { theme: 'dark' } as const;
 ---
+
 <WidgetShell label={label}>
   <slot />
 </WidgetShell>
 
 <script>
   export const WIDGET_ID = 'widget';
+
+  export class ClientWidget {
+    mount(node) {
+      node.dataset.mounted = 'true';
+    }
+  }
 
   function mountClient(node) {
     node.dataset.mounted = 'true';
