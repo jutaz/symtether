@@ -5,7 +5,7 @@
 > code, e.g., `[fetchData](src/client.ts#sym:ApiClient.fetchData)`.
 > It also ships the reference toolkit that enforces the spec. The CLI
 > verifies every ref against the code at three tiers. Tier one is AST
-> resolution via tree-sitter for 18 languages, tier two is lexical
+> resolution via tree-sitter for 20 languages, tier two is lexical
 > search for everything else, and tier three is file-only when the
 > fragment cannot be checked. It runs on any repo with `npx symtether
 > check`, needs no config, no repo indexing, and no native compile,
@@ -66,7 +66,7 @@ output. Anything that could not be fully verified shows up as `lexical` or
 
 | Tier | When | Meaning |
 |---|---|---|
-| `ast` | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash | Symbol verified against the parsed AST |
+| `ast` | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash, Svelte, Astro | Symbol verified against the parsed AST |
 | `lexical` | any other text file | Word-boundary match for the symbol name |
 | `file-only` | fragment not checkable | Path existence only, reported as a warning |
 

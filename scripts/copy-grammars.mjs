@@ -13,7 +13,16 @@ const require = createRequire(import.meta.url);
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const outDir = path.join(root, 'grammars');
 
-const pkgDir = (name) => path.dirname(require.resolve(`${name}/package.json`));
+const pkgDir = (name, wasm) => {
+  try {
+    return path.dirname(require.resolve(`${name}/package.json`));
+  } catch (err) {
+    // Some packages omit ./package.json from their exports map but do export
+    // the wasm file (see the astro row). Resolve the wasm instead.
+    if (err.code !== 'ERR_PACKAGE_PATH_NOT_EXPORTED') throw err;
+    return path.dirname(require.resolve(`${name}/${wasm}`));
+  }
+};
 
 // [source package, wasm file in package, output basename, extra-query basenames]
 // Extras live in queries/*.extra.scm and cover definitions the upstream
@@ -61,6 +70,22 @@ const grammars = [
     'lua',
     ['lua'],
   ],
+  // Svelte and Astro carry no upstream tags.scm: their own trees only locate
+  // the opaque script/frontmatter blocks, which the resolver re-parses with
+  // the TypeScript grammar (see src/languages/index.ts). The copied tags.scm
+  // is therefore empty on purpose.
+  [
+    '@tree-sitter-grammars/tree-sitter-svelte',
+    'tree-sitter-svelte.wasm',
+    'svelte',
+    [],
+  ],
+  // @lumis-sh/wasm-astro is a third-party WASM redistribution (MIT, lumis.sh)
+  // of virchau13/tree-sitter-astro at revision 213f6e6. Upstream publishes no
+  // canonical npm package, so this is the only prebuilt option that honors
+  // the no-native-compilation law. Build provenance for the wasm is recorded
+  // in the package's lumis.json (definitionHash + sha256).
+  ['@lumis-sh/wasm-astro', 'tree-sitter-astro.wasm', 'astro', []],
 ];
 
 // Grammars whose WASM upstream doesn't publish; we compile and commit them
@@ -73,7 +98,7 @@ const vendored = [['swift', ['swift'], true]];
 await mkdir(outDir, { recursive: true });
 
 for (const [pkg, wasm, out, extras] of grammars) {
-  const dir = pkgDir(pkg);
+  const dir = pkgDir(pkg, wasm);
   await copyFile(path.join(dir, wasm), path.join(outDir, `${out}.wasm`));
   const upstream = await readFile(
     path.join(dir, 'queries', 'tags.scm'),

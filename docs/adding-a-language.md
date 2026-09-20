@@ -31,6 +31,10 @@ per-language logic. The steps to reach tier 1 are:
 3. register the extension in the [`SPECS`](/src/languages/index.ts#sym:const:SPECS) table,
 4. add test fixtures.
 
+If the grammar keeps definitions inside opaque text (Svelte, Astro), step 3
+also declares an `injections` descriptor instead of a tags query. See
+[Embedded languages](#embedded-languages) below.
+
 ## Prerequisites
 
 The grammar package must ship a prebuilt WASM. Most tree-sitter
@@ -160,6 +164,66 @@ two places when you send the PR:
 - the guide table and the
   [registry snippet](/src/languages/index.ts#sym:fn:loadLanguage),
 - the [Guide's Resolution tiers section](./guide.md).
+
+## Embedded languages
+
+Some grammars cannot see their own definitions. Svelte and Astro keep the
+contents of `<script>` blocks (and, for Astro, frontmatter) as opaque
+`raw_text`/`frontmatter_js_block` nodes. A single tags query cannot look
+inside them, and neither grammar ships a `tags.scm` at all. To reach tier
+1, the grammar row carries an `injections` list in
+[`SPECS`](/src/languages/index.ts#sym:const:SPECS):
+
+```ts
+'.svelte': {
+  grammar: 'svelte',
+  tags: [],
+  injections: [
+    {
+      node: 'raw_text',
+      parent: 'script_element',
+      grammar: 'typescript',
+      tags: ['javascript', 'typescript'],
+    },
+  ],
+},
+```
+
+Each descriptor is data:
+
+- `node` is the outer-tree node type that holds the embedded source.
+- `parent` (optional) restricts `node` to one immediate parent type. Use
+  it when the node type is not exclusive to scripts, e.g., Svelte's
+  `raw_text` also backs `<style>`.
+- `grammar` and `tags` name the embedded grammar and its tag chain, the
+  same way the outer row does.
+
+The resolver walks the outer tree for matching nodes, re-parses their byte
+ranges with the embedded grammar via web-tree-sitter's `includedRanges`
+(which preserves absolute file offsets and line numbers), and runs the
+embedded tags query over the result. Injected definitions join the same
+dedup, nesting-chain, and hashing pipeline as native ones, so nothing
+downstream needs to know the language was embedded.
+
+Two consequences:
+
+- The outer grammar is only a locator. It contributes no definitions, so
+  its parse errors must not count toward the "file has syntax errors"
+  message: only the injected parses do. Otherwise a markup-grammar gap
+  would blame a script that parses fine.
+- Mix the script language freely. The TypeScript grammar parses plain
+  JavaScript cleanly, so a `<script>` with no `lang` attribute needs no
+  special handling; always inject TypeScript.
+
+A third-party WASM redistribution is acceptable when no canonical npm
+package exists, as long as it ships prebuilt WASM (law: no native
+compilation). Astro takes this route
+([`@lumis-sh/wasm-astro`](https://www.npmjs.com/package/@lumis-sh/wasm-astro),
+a redistribution of `virchau13/tree-sitter-astro`). Record the upstream
+revision and build provenance next to the dependency in
+[`scripts/copy-grammars.mjs`](/scripts/copy-grammars.mjs#sym:const:grammars),
+because a future maintainer will ask why this package and not an official
+one.
 
 ## Grammars that need vendoring
 

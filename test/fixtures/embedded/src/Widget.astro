@@ -1,0 +1,28 @@
+---
+import WidgetShell from '../layouts/WidgetShell.astro';
+
+interface Props {
+  label: string;
+}
+
+class Widget {
+  render(): string {
+    return 'widget';
+  }
+}
+
+export function buildWidget(label: string): Widget {
+  return new Widget();
+}
+---
+<WidgetShell label={label}>
+  <slot />
+</WidgetShell>
+
+<script>
+  export const WIDGET_ID = 'widget';
+
+  function mountClient(node) {
+    node.dataset.mounted = 'true';
+  }
+</script>

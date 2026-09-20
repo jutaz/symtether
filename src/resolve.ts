@@ -1,17 +1,103 @@
 import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
+import type { Node, Query, Tree } from 'web-tree-sitter';
 import { combineHashes, hashDefinition, hashLexicalLine } from './checksum.js';
 import {
   isSupportedExtension,
   kindSatisfies,
   loadLanguage,
 } from './languages/index.js';
+import type { LoadedInjection } from './languages/index.js';
 import type { Candidate, Definition, Ref, Resolution, Tier } from './types.js';
 
 interface ExtractedDefinitions {
   definitions: Definition[];
   /** Tree-sitter recovered from syntax errors while parsing the file. */
   hasParseErrors: boolean;
+}
+
+interface RawDef {
+  name: string;
+  kind: string;
+  start: number;
+  end: number;
+  line: number;
+  hash: string;
+  /** Chain prefix from an explicit @receiver capture (Go/Rust). */
+  receiver?: string;
+}
+
+/**
+ * Collect `@definition.*` captures from a tags query over one tree. Factored
+ * out so the same query logic runs over an injected embedded-language tree,
+ * whose nodes carry absolute offsets into the original file.
+ */
+function collectRawDefs(tagsQuery: Query, root: Node): RawDef[] {
+  const raw: RawDef[] = [];
+  for (const match of tagsQuery.matches(root)) {
+    const def = match.captures.find((c) => c.name.startsWith('definition.'));
+    const name = match.captures.find((c) => c.name === 'name');
+    if (!def || !name) continue;
+    // @receiver ties a method to its type when nesting isn't lexical:
+    // Go receivers and Rust impl blocks (our queries/*.extra.scm).
+    const receiver = match.captures.find((c) => c.name === 'receiver');
+    raw.push({
+      name: name.node.text,
+      kind: def.name.slice('definition.'.length),
+      start: def.node.startIndex,
+      end: def.node.endIndex,
+      line: name.node.startPosition.row + 1,
+      hash: hashDefinition(def.node, name.node.text),
+      receiver: receiver?.node.text,
+    });
+  }
+  return raw;
+}
+
+/** Depth-first walk over an outer tree. */
+function walkTree(root: Node, visit: (node: Node) => void): void {
+  visit(root);
+  for (let i = 0; i < root.childCount; i++) {
+    const child = root.child(i);
+    if (child) walkTree(child, visit);
+  }
+}
+
+/** Collect the outer-tree nodes that hold embedded-language source. */
+function injectionRanges(root: Node, injection: LoadedInjection): Node[] {
+  const ranges: Node[] = [];
+  walkTree(root, (node) => {
+    if (node.type !== injection.node) return;
+    if (injection.parent && node.parent?.type !== injection.parent) return;
+    ranges.push(node);
+  });
+  return ranges;
+}
+
+/**
+ * Re-parse embedded ranges with the injected grammar. Passing
+ * `includedRanges` makes web-tree-sitter keep absolute byte offsets, so the
+ * resulting nodes slot into the same dedup/chain/hash pipeline as native
+ * definitions, at their real file lines.
+ */
+function parseInjected(
+  injection: LoadedInjection,
+  content: string,
+  ranges: Node[],
+): Tree | null {
+  const parser = injection.newParser();
+  try {
+    return parser.parse(content, null, {
+      includedRanges: ranges.map((r) => ({
+        startIndex: r.startIndex,
+        endIndex: r.endIndex,
+        startPosition: r.startPosition,
+        endPosition: r.endPosition,
+      })),
+    });
+  } finally {
+    parser.delete();
+  }
 }
 
 /** Caches parses and file reads per run (§11 performance). */
@@ -254,35 +340,24 @@ export class Resolver {
       const tree = parser.parse(content);
       if (!tree) return null;
 
-      interface RawDef {
-        name: string;
-        kind: string;
-        start: number;
-        end: number;
-        line: number;
-        hash: string;
-        /** Chain prefix from an explicit @receiver capture (Go/Rust). */
-        receiver?: string;
-      }
-      const raw: RawDef[] = [];
-      for (const match of lang.tagsQuery.matches(tree.rootNode)) {
-        const def = match.captures.find((c) =>
-          c.name.startsWith('definition.'),
-        );
-        const name = match.captures.find((c) => c.name === 'name');
-        if (!def || !name) continue;
-        // @receiver ties a method to its type when nesting isn't lexical:
-        // Go receivers and Rust impl blocks (our queries/*.extra.scm).
-        const receiver = match.captures.find((c) => c.name === 'receiver');
-        raw.push({
-          name: name.node.text,
-          kind: def.name.slice('definition.'.length),
-          start: def.node.startIndex,
-          end: def.node.endIndex,
-          line: name.node.startPosition.row + 1,
-          hash: hashDefinition(def.node, name.node.text),
-          receiver: receiver?.node.text,
-        });
+      const raw = collectRawDefs(lang.tagsQuery, tree.rootNode);
+
+      // For embedded-language grammars the outer tree is only a locator: it
+      // contributes no definitions, so its parse state says nothing about
+      // whether the tags query saw every definition. Only the injected
+      // parses (the trees that actually produce defs) count toward
+      // hasParseErrors. Counting the locator would let a markup-grammar gap
+      // masquerade as "fix your target file" on a file whose scripts are fine.
+      let hasParseErrors =
+        lang.injections.length === 0 ? tree.rootNode.hasError : false;
+
+      for (const injection of lang.injections) {
+        const ranges = injectionRanges(tree.rootNode, injection);
+        if (ranges.length === 0) continue;
+        const injected = parseInjected(injection, content, ranges);
+        if (!injected) continue;
+        raw.push(...collectRawDefs(injection.tagsQuery, injected.rootNode));
+        hasParseErrors ||= injected.rootNode.hasError;
       }
 
       // The upstream query and a receiver-aware extra can capture the same
@@ -298,8 +373,6 @@ export class Resolver {
         }
       }
       const deduped = [...byRange.values()];
-
-      const hasParseErrors = tree.rootNode.hasError;
 
       // Nesting chain = names of strictly-enclosing definitions, outermost
       // first. Overloads / merged declarations with an identical chain
