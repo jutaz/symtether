@@ -1,5 +1,5 @@
-scripts/copy-grammars.mjs#grammars  ast:sha256:184f0f9b640ced4c7d6c0438618f2078c51ddfd3fdde000e185bc683dc7ce15f  2026-09-20
-scripts/copy-grammars.mjs#vendored  ast:sha256:9b783fad48d18ad4a593d8fe971975eeecbf779b7963a92a32872f0c43fc1017  2026-09-20
+scripts/copy-grammars.mjs#grammars  ast:sha256:a4a3ceba84f1fb00381ac29eb8653e7e89a4613912556f95105496a6521e781e  2026-09-20
+scripts/copy-grammars.mjs#vendored  ast:sha256:602999eac15b00146f7b818ea5aef2ff75f5f9d5ec96d3389105ed2da0b4540e  2026-09-20
 src/check.ts#GLOB_OPTIONS  ast:sha256:ebd35aa435b78a09a5a8b008157f339d428910604eea7e29342ba855b6c6f55f  2026-09-20
 src/check.ts#check  ast:sha256:6ab5b117f282c03acaa8bcc7eb408215b144fe24c39fb2910059ffe0eb3171c5  2026-09-20
 src/checksum.ts#hashDefinition  ast:sha256:fcb5896ec31513c65f93844e6117f6b617267bd33df0d248778ad526fa754a40  2026-09-20
