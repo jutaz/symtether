@@ -1,6 +1,9 @@
-# Markdown is hand-authored; the AGENTS.md managed block must stay
-# byte-identical to what `symtether init` writes.
+# Markdown is hand-authored and has never been prettier-formatted; pointing
+# prettier at it would reflow README/SPEC/docs. The AGENTS.md managed block is
+# a prettier fixed point (see the regression test in test/init.test.ts), so
+# this ignore no longer hides an init-vs-prettier mismatch.
 *.md
+.scratch/
 dist/
 coverage/
 grammars/

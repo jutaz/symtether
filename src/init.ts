@@ -16,17 +16,31 @@ const END = '<!-- symtether:end -->';
 const STALE_LINE =
   '- On stale refs: re-read the doc prose against the current code; fix the doc or run `npx symtether update <target>`.';
 
-/** Exact managed block (design doc §8). Hard budget: ≤ 80 tokens. */
+/**
+ * Exact managed block (design doc §8). Hard budget: ≤ 80 tokens.
+ *
+ * Blank lines separate the marker, heading, prose, list, and `Spec:` here
+ * because prettier reflows markdown to exactly this shape. Without them a
+ * `prettier --write` in a consumer repo rewrites the block and the next
+ * `init` rewrites it back, a permanent dirty tree. The blank line before
+ * `Spec:` also stops it being a CommonMark lazy continuation of the last
+ * bullet, which rendered it inside the list item.
+ */
 export function managedBlock(withStaleLine = false): string {
   return `${BEGIN}
+
 ## Code references
+
 Links like \`[x](path/file.ts#sym:Class.method)\` point at a symbol in that file.
+
 - Resolve: grep the symbol name in the file; read the surrounding code.
 - After renaming/moving symbols: run \`npx symtether check\`, repair refs (\`npx symtether fix\`).
 - When writing docs/skills, prefer \`#sym:\` refs over line numbers or pasted snippets.${
     withStaleLine ? `\n${STALE_LINE}` : ''
   }
+
 Spec: https://symtether.dev/spec
+
 ${END}`;
 }
 
