@@ -39,7 +39,7 @@ not a language-exact qualified name.
 
 - The resolver extracts all named definitions in the target file as
   `(name, kind, nesting-chain, range)` tuples.
-- A ref matches a definition if the dotpath segments equal the *trailing*
+- A ref matches a definition if the dotpath segments equal the _trailing_
   segments of that definition's nesting chain. `ApiClient.fetchData` matches
   a method `fetchData` nested in class `ApiClient`, even if `ApiClient` is
   itself inside a namespace.
