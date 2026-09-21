@@ -27,7 +27,7 @@
 > Docs that point at real code, and fail CI when they stop.
 > Built for `AGENTS.md` and the other docs coding agents read as instructions.
 
-Your `AGENTS.md` says *"follow the pattern in `fetchData`."* Three sprints
+Your `AGENTS.md` says _"follow the pattern in `fetchData`."_ Three sprints
 later someone renames `fetchData` and nothing fails. The doc still reads
 fine, and everyone who follows the pointer spends time hunting for code
 that is gone.
@@ -38,6 +38,7 @@ verifies the file, and nothing verifies the symbol inside it.
 ```markdown
 <!-- The file exists, so every link checker passes this, -->
 <!-- but fetchData was renamed two weeks ago. -->
+
 Follow the fetch pattern in [fetchData](src/api/client.ts#L42).
 ```
 
@@ -148,10 +149,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: jutaz/symtether@v1        # or @v1.2.3 to pin a release
+      - uses: jutaz/symtether@v1 # or @v1.2.3 to pin a release
         with:
           command: check
-          strict: true                   # also fail on stale stamped refs
+          strict: true # also fail on stale stamped refs
           exclude: |
             test/fixtures/**
 ```
@@ -189,7 +190,7 @@ Full spec: [SPEC.md](SPEC.md). The short version:
 
 ```markdown
 [text](path/to/file.ts#sym:Class.method)
-[text](path/to/file.ts#sym:fn:parseConfig)      ← optional kind: fn | class | type | const
+[text](path/to/file.ts#sym:fn:parseConfig) ← optional kind: fn | class | type | const
 [text](/src/from-repo-root.ts#sym:Widget)
 ```
 
@@ -205,11 +206,11 @@ output. Anything that could not be fully verified shows up as `lexical` or
 `file-only` rather than passing quietly (see
 [Resolver](src/resolve.ts#sym:class:Resolver)):
 
-| Tier | When | Meaning |
-|---|---|---|
-| `ast` | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash | Symbol verified against the parsed AST |
-| `lexical` | any other text file | Word-boundary match for the symbol name |
-| `file-only` | fragment not checkable | Path existence only, reported as a warning |
+| Tier        | When                                                                                                                               | Meaning                                    |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `ast`       | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash, Svelte, Astro | Symbol verified against the parsed AST     |
+| `lexical`   | any other text file                                                                                                                | Word-boundary match for the symbol name    |
+| `file-only` | fragment not checkable                                                                                                             | Path existence only, reported as a warning |
 
 Adding a tier-1 language is mostly a grammar import plus fixtures (see the
 registry in [loadLanguage](src/languages/index.ts#sym:fn:loadLanguage)).
@@ -260,13 +261,13 @@ it. That is why stale output lists every referencing doc for review.
 
 Other tools work on the same problem in different ways.
 
-| Tool | Mechanism | Difference |
-|---|---|---|
-| [Fiberplane Drift](https://github.com/fiberplane/drift) | Stateful binder. `drift link` writes bindings and AST fingerprints into `drift.lock` | The lockfile is the source of truth, and every intentional change needs re-stamping |
-| [docref](https://github.com/supersterling/docref) | Early exploration of markdown `path#Symbol` links plus tree-sitter and `.docref.lock` | Lockfile-first, cargo-only, and never released. It prototyped the direction and deserves the credit |
-| [Roam-Code](https://github.com/Cranot/roam-code) | A codebase intelligence platform with a SQLite symbol index | Requires indexing, and doc checking is one feature among hundreds |
-| [AgentLinter](https://github.com/seojoonkim/agentlinter) | Lints AGENTS.md structure, token budget, and file-level references | Overlaps with symtether's `file-only` tier, and symtether adds AST symbol resolution. A repo can run both linters |
-| [lychee](https://github.com/lycheeverse/lychee), [markdown-link-check](https://github.com/tcort/markdown-link-check) | HTTP and filesystem link checkers | They verify that URLs return 200 and that files exist. Neither reads the code, so `#L42` and `#sym:` fragments pass as long as the file does. They are complementary to symtether |
+| Tool                                                                                                                 | Mechanism                                                                             | Difference                                                                                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Fiberplane Drift](https://github.com/fiberplane/drift)                                                              | Stateful binder. `drift link` writes bindings and AST fingerprints into `drift.lock`  | The lockfile is the source of truth, and every intentional change needs re-stamping                                                                                               |
+| [docref](https://github.com/supersterling/docref)                                                                    | Early exploration of markdown `path#Symbol` links plus tree-sitter and `.docref.lock` | Lockfile-first, cargo-only, and never released. It prototyped the direction and deserves the credit                                                                               |
+| [Roam-Code](https://github.com/Cranot/roam-code)                                                                     | A codebase intelligence platform with a SQLite symbol index                           | Requires indexing, and doc checking is one feature among hundreds                                                                                                                 |
+| [AgentLinter](https://github.com/seojoonkim/agentlinter)                                                             | Lints AGENTS.md structure, token budget, and file-level references                    | Overlaps with symtether's `file-only` tier, and symtether adds AST symbol resolution. A repo can run both linters                                                                 |
+| [lychee](https://github.com/lycheeverse/lychee), [markdown-link-check](https://github.com/tcort/markdown-link-check) | HTTP and filesystem link checkers                                                     | They verify that URLs return 200 and that files exist. Neither reads the code, so `#L42` and `#sym:` fragments pass as long as the file does. They are complementary to symtether |
 
 symtether differs in three ways:
 

@@ -31,6 +31,10 @@ per-language logic. The steps to reach tier 1 are:
 3. register the extension in the [`SPECS`](/src/languages/index.ts#sym:const:SPECS) table,
 4. add test fixtures.
 
+If the grammar keeps definitions inside opaque text (Svelte, Astro), step 3
+also declares an `injections` descriptor instead of a tags query. See
+[Embedded languages](#embedded-languages) below.
+
 ## Prerequisites
 
 The grammar package must ship a prebuilt WASM. Most tree-sitter
@@ -40,9 +44,9 @@ the design laws in AGENTS.md). You have two options.
 
 - **Vendor the WASM under `vendor/grammars/`** and register it in the
   [`vendored`](/scripts/copy-grammars.mjs#sym:const:vendored) list in
-  `scripts/copy-grammars.mjs`. Swift takes this route because upstream
-  publishes no WASM. The vendor script builds the grammar in Docker and
-  commits the artifact.
+  `scripts/copy-grammars.mjs`. Swift takes this route because its package
+  ships no WASM, and Astro because it has no npm package at all. The
+  vendor script builds the grammar in Docker and commits the artifact.
 - **Skip the language.** Tier 2 already catches most breakage in docs.
 
 ## 1. Add the grammar as a dev-dependency
@@ -101,12 +105,12 @@ The `<kind>` disambiguator (`#sym:fn:foo`) filters by capture kind.
 The mapping table is
 [KIND_MAP](/src/languages/index.ts#sym:const:KIND_MAP).
 
-| `<kind>` | Accepts |
-|---|---|
-| `fn` | function, method, macro |
-| `class` | class, struct, object |
-| `type` | interface, type, enum, module, class, struct, object |
-| `const` | constant, field, property, variable |
+| `<kind>` | Accepts                                              |
+| -------- | ---------------------------------------------------- |
+| `fn`     | function, method, macro                              |
+| `class`  | class, struct, object                                |
+| `type`   | interface, type, enum, module, class, struct, object |
+| `const`  | constant, field, property, variable                  |
 
 Your `tags.scm` (or the supplemental `queries/<yours>.extra.scm`) has
 to emit `@definition.<capture-kind>` captures that match one of these
@@ -161,11 +165,73 @@ two places when you send the PR:
   [registry snippet](/src/languages/index.ts#sym:fn:loadLanguage),
 - the [Guide's Resolution tiers section](./guide.md).
 
+## Embedded languages
+
+Some grammars cannot see their own definitions. Svelte and Astro keep the
+contents of `<script>` blocks (and, for Astro, frontmatter) as opaque
+`raw_text`/`frontmatter_js_block` nodes. A single tags query cannot look
+inside them, and neither grammar ships a `tags.scm` at all. To reach tier
+1, the grammar row carries an `injections` list in
+[`SPECS`](/src/languages/index.ts#sym:const:SPECS):
+
+```ts
+'.svelte': {
+  grammar: 'svelte',
+  tags: [],
+  injections: [
+    {
+      node: 'raw_text',
+      parent: 'script_element',
+      grammar: 'typescript',
+      tags: ['javascript', 'typescript'],
+    },
+  ],
+},
+```
+
+Each descriptor is data:
+
+- `node` is the outer-tree node type that holds the embedded source.
+- `parent` (optional) restricts `node` to one immediate parent type. Use
+  it when the node type is not exclusive to scripts, e.g., Svelte's
+  `raw_text` also backs `<style>`.
+- `grammar` and `tags` name the embedded grammar and its tag chain, the
+  same way the outer row does.
+
+The resolver walks the outer tree for matching nodes, re-parses their byte
+ranges with the embedded grammar via web-tree-sitter's `includedRanges`
+(which preserves absolute file offsets and line numbers), and runs the
+embedded tags query over the result. Injected definitions join the same
+dedup, nesting-chain, and hashing pipeline as native ones, so nothing
+downstream needs to know the language was embedded.
+
+Two consequences:
+
+- The outer grammar is only a locator. It contributes no definitions, so
+  its parse errors must not count toward the "file has syntax errors"
+  message: only the injected parses do. Otherwise a markup-grammar gap
+  would blame a script that parses fine.
+- Mix the script language freely. The TypeScript grammar parses plain
+  JavaScript cleanly, so a `<script>` with no `lang` attribute needs no
+  special handling; always inject TypeScript.
+
+Astro has no npm package at all, canonical or otherwise. Rather than take
+a third-party WASM redistribution into the supply chain, we build it from
+upstream source at a pinned revision and commit the artifact, the same
+route Swift takes. See
+[`scripts/vendor-astro.mjs`](https://github.com/jutaz/symtether/blob/main/scripts/vendor-astro.mjs)
+and the [`vendored`](/scripts/copy-grammars.mjs#sym:const:vendored) list.
+
 ## Grammars that need vendoring
 
-symtether never compiles a grammar. Users pull the prebuilt WASM that
-we already prepared, and the build in this repo does the same. The
-one exception is Swift, which uses the vendor path. See
-[scripts/vendor-swift.mjs](https://github.com/jutaz/symtether/blob/main/scripts/vendor-swift.mjs).
-Grammars whose npm package emits no WASM cannot be added unless you
-vendor a prebuilt artifact the same way.
+symtether never compiles a grammar at install or build time. Users pull
+the prebuilt WASM that we already prepared, and the build in this repo
+does the same. Two grammars take the vendor path: Swift, whose package
+ships no WASM
+([scripts/vendor-swift.mjs](https://github.com/jutaz/symtether/blob/main/scripts/vendor-swift.mjs)),
+and Astro, which has no npm package at all and is cloned from git at a
+pinned revision
+([scripts/vendor-astro.mjs](https://github.com/jutaz/symtether/blob/main/scripts/vendor-astro.mjs)).
+Both compile in Docker on a maintainer's machine, never in CI or on a
+user's install. Grammars whose npm package emits no WASM cannot be added
+unless you vendor a prebuilt artifact the same way.

@@ -52,7 +52,8 @@
     "typecheck": "tsc --noEmit",
     "vendor:swift": "node scripts/vendor-swift.mjs",
     "favicons:build": "node scripts/render-favicons.mjs",
-    "prepublishOnly": "npm run build && npm run lint && vitest run"
+    "prepublishOnly": "npm run build && npm run lint && vitest run",
+    "vendor:astro": "node scripts/vendor-astro.mjs"
   },
   "engines": {
     "node": ">=20"
@@ -76,6 +77,7 @@
     "@nolebase/vitepress-plugin-og-image": "^2.18.2",
     "@tree-sitter-grammars/tree-sitter-kotlin": "^1.1.0",
     "@tree-sitter-grammars/tree-sitter-lua": "^0.4.1",
+    "@tree-sitter-grammars/tree-sitter-svelte": "^1.0.2",
     "@types/mdast": "^4.0.4",
     "@types/node": "^26.1.2",
     "@vitest/coverage-v8": "^4.1.10",

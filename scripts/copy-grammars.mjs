@@ -61,6 +61,17 @@ const grammars = [
     'lua',
     ['lua'],
   ],
+  // Svelte carries no upstream tags.scm: its own tree only locates the
+  // opaque script/style blocks, which the resolver re-parses with the
+  // TypeScript grammar (see src/languages/index.ts). The copied tags.scm is
+  // therefore empty on purpose. Astro is the same shape but vendored below,
+  // because upstream publishes no npm package at all.
+  [
+    '@tree-sitter-grammars/tree-sitter-svelte',
+    'tree-sitter-svelte.wasm',
+    'svelte',
+    [],
+  ],
 ];
 
 // Grammars whose WASM upstream doesn't publish; we compile and commit them
@@ -68,7 +79,12 @@ const grammars = [
 // [basename, extra basenames, replaceUpstreamTags]
 // Swift's upstream tags.scm captures whole classes for member definitions,
 // which breaks containment-based chain building, so our query replaces it.
-const vendored = [['swift', ['swift'], true]];
+// Astro has no tags.scm of its own at all: it is a locator for the
+// frontmatter and script blocks the resolver re-parses as TypeScript.
+const vendored = [
+  ['swift', ['swift'], true],
+  ['astro', [], true],
+];
 
 await mkdir(outDir, { recursive: true });
 

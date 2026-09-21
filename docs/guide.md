@@ -5,10 +5,10 @@
 > code, e.g., `[fetchData](src/client.ts#sym:ApiClient.fetchData)`.
 > It also ships the reference toolkit that enforces the spec. The CLI
 > verifies every ref against the code at three tiers. Tier one is AST
-> resolution via tree-sitter for 18 languages, tier two is lexical
+> resolution via tree-sitter for 20 languages, tier two is lexical
 > search for everything else, and tier three is file-only when the
 > fragment cannot be checked. It runs on any repo with `npx symtether
-> check`, needs no config, no repo indexing, and no native compile,
+check`, needs no config, no repo indexing, and no native compile,
 > and fails CI when a ref is broken.
 
 symtether validates `#sym:` references in markdown. These are links that
@@ -64,11 +64,11 @@ output. Anything that could not be fully verified shows up as `lexical` or
 `file-only` rather than passing quietly
 ([Resolver](/src/resolve.ts#sym:class:Resolver)):
 
-| Tier | When | Meaning |
-|---|---|---|
-| `ast` | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash | Symbol verified against the parsed AST |
-| `lexical` | any other text file | Word-boundary match for the symbol name |
-| `file-only` | fragment not checkable | Path existence only, reported as a warning |
+| Tier        | When                                                                                                                               | Meaning                                    |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `ast`       | TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash, Svelte, Astro | Symbol verified against the parsed AST     |
+| `lexical`   | any other text file                                                                                                                | Word-boundary match for the symbol name    |
+| `file-only` | fragment not checkable                                                                                                             | Path existence only, reported as a warning |
 
 Adding a tier-1 language is mostly a grammar import plus fixtures
 ([loadLanguage](/src/languages/index.ts#sym:fn:loadLanguage)). See
@@ -87,12 +87,12 @@ they exist to break ties rather than to classify. Each kind accepts these
 definition kinds from the underlying grammars
 ([KIND_MAP](/src/languages/index.ts#sym:const:KIND_MAP)):
 
-| `<kind>` | Accepts | Examples |
-|---|---|---|
-| `fn` | function, method, macro | a Go func, a Python method, a Rust `macro_rules!` |
-| `class` | class, struct, object | a TS class, a C struct, a Kotlin object, a C# record |
-| `type` | interface, type, enum, module, class, struct, object | a TS interface, a Rust enum, a Go type, a C++ namespace |
-| `const` | constant, field, property, variable | a Go const, a Java field, a Scala val, a Python class attribute |
+| `<kind>` | Accepts                                              | Examples                                                        |
+| -------- | ---------------------------------------------------- | --------------------------------------------------------------- |
+| `fn`     | function, method, macro                              | a Go func, a Python method, a Rust `macro_rules!`               |
+| `class`  | class, struct, object                                | a TS class, a C struct, a Kotlin object, a C# record            |
+| `type`   | interface, type, enum, module, class, struct, object | a TS interface, a Rust enum, a Go type, a C++ namespace         |
+| `const`  | constant, field, property, variable                  | a Go const, a Java field, a Scala val, a Python class attribute |
 
 The overlaps are intentional. `class` and `type` both accept classes and
 structs, since a class is a type. Languages also disagree about what counts

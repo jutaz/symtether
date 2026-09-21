@@ -64,6 +64,26 @@ function grammarDir(): string {
   return GRAMMAR_DIR;
 }
 
+/**
+ * Locates an embedded language inside an outer grammar's opaque text node.
+ * Svelte and Astro keep script bodies in raw text that their own tags query
+ * cannot see, so the resolver re-parses these byte ranges with the embedded
+ * grammar. The fields are pure data: the resolver owns the tree walk.
+ */
+interface InjectionSpec {
+  /** Outer-tree node type whose text is embedded-language source. */
+  node: string;
+  /**
+   * Restrict `node` to this immediate parent type. Needed when a node type
+   * is not exclusive to scripts (Svelte's `raw_text` also backs <style>).
+   */
+  parent?: string;
+  /** Grammar/wasm basename of the embedded language, in grammars/. */
+  grammar: string;
+  /** tags.scm basenames for the embedded language, chained like `tags`. */
+  tags: string[];
+}
+
 interface GrammarSpec {
   /** Grammar/wasm basename in grammars/. */
   grammar: string;
@@ -73,6 +93,11 @@ interface GrammarSpec {
    * layering GitHub code navigation uses.
    */
   tags: string[];
+  /**
+   * Embedded languages to pull out of opaque text nodes. Empty for ordinary
+   * grammars, whose tags query sees every definition directly.
+   */
+  injections?: InjectionSpec[];
 }
 
 const SPECS: Record<string, GrammarSpec> = {
@@ -108,6 +133,41 @@ const SPECS: Record<string, GrammarSpec> = {
   '.exs': { grammar: 'elixir', tags: ['elixir'] },
   '.lua': { grammar: 'lua', tags: ['lua'] },
   '.swift': { grammar: 'swift', tags: ['swift'] },
+  // Svelte's grammar has no tags.scm: its own tree only locates the script
+  // and style blocks. The script body is `raw_text` under `script_element`,
+  // re-parsed below as TypeScript (which parses plain JS cleanly, so the
+  // `lang` attribute needs no sniffing).
+  '.svelte': {
+    grammar: 'svelte',
+    tags: [],
+    injections: [
+      {
+        node: 'raw_text',
+        parent: 'script_element',
+        grammar: 'typescript',
+        tags: ['javascript', 'typescript'],
+      },
+    ],
+  },
+  // Astro's grammar likewise ships no tags.scm. It puts frontmatter in
+  // `frontmatter_js_block` and component scripts in `script_element`.
+  '.astro': {
+    grammar: 'astro',
+    tags: [],
+    injections: [
+      {
+        node: 'frontmatter_js_block',
+        grammar: 'typescript',
+        tags: ['javascript', 'typescript'],
+      },
+      {
+        node: 'raw_text',
+        parent: 'script_element',
+        grammar: 'typescript',
+        tags: ['javascript', 'typescript'],
+      },
+    ],
+  },
 };
 
 /**
@@ -142,10 +202,26 @@ export interface LoadedLanguage {
   language: Language;
   tagsQuery: Query;
   newParser(): Parser;
+  /** Embedded-language locators, resolved to loaded sub-grammars. */
+  injections: LoadedInjection[];
+}
+
+/** An injection resolved to its loaded grammar, ready to parse ranges. */
+export interface LoadedInjection extends LoadedGrammar {
+  node: string;
+  parent?: string;
+}
+
+interface LoadedGrammar {
+  language: Language;
+  tagsQuery: Query;
+  newParser(): Parser;
 }
 
 let parserInitialized: Promise<void> | null = null;
 const cache = new Map<string, Promise<LoadedLanguage | null>>();
+/** Sub-grammars (and outer grammars) keyed by grammar + tag chain. */
+const grammarCache = new Map<string, Promise<LoadedGrammar>>();
 
 /** Load the grammar for a file extension, or `null` when unsupported (tier 2). */
 export function loadLanguage(ext: string): Promise<LoadedLanguage | null> {
@@ -169,11 +245,44 @@ async function load(
   parserInitialized ??= Parser.init();
   await parserInitialized;
 
+  const outer = await loadGrammar(spec.grammar, spec.tags);
+  const injections: LoadedInjection[] = [];
+  for (const injection of spec.injections ?? []) {
+    const sub = await loadGrammar(injection.grammar, injection.tags);
+    injections.push({
+      node: injection.node,
+      parent: injection.parent,
+      ...sub,
+    });
+  }
+
+  return { ...outer, injections };
+}
+
+async function loadGrammar(
+  grammar: string,
+  tags: string[],
+): Promise<LoadedGrammar> {
+  const key = `${grammar}:${tags.join(',')}`;
+  let loaded = grammarCache.get(key);
+  if (!loaded) {
+    loaded = loadGrammarUncached(grammar, tags);
+    grammarCache.set(key, loaded);
+  }
+  return loaded;
+}
+
+async function loadGrammarUncached(
+  grammar: string,
+  tags: string[],
+): Promise<LoadedGrammar> {
   const dir = grammarDir();
-  const language = await Language.load(path.join(dir, `${spec.grammar}.wasm`));
+  const language = await Language.load(path.join(dir, `${grammar}.wasm`));
   const tagsSources = await Promise.all(
-    spec.tags.map((t) => readFile(path.join(dir, `${t}.tags.scm`), 'utf8')),
+    tags.map((t) => readFile(path.join(dir, `${t}.tags.scm`), 'utf8')),
   );
+  // An empty query is valid; some grammars are locators only (Svelte/Astro)
+  // and contribute no definitions of their own.
   const tagsQuery = new Query(language, tagsSources.join('\n'));
 
   return {

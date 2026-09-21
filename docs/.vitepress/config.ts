@@ -213,7 +213,7 @@ const faqSchema = {
       name: 'Which languages does symtether support?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Eighteen languages resolve at the AST tier via tree-sitter: TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, and Bash. Every other text file falls back to lexical (word-boundary) search, and file-only when the fragment cannot be checked. Every reference reports the tier it resolved at.',
+        text: 'Twenty languages resolve at the AST tier via tree-sitter: TypeScript, TSX, JavaScript, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash, Svelte, and Astro. Every other text file falls back to lexical (word-boundary) search, and file-only when the fragment cannot be checked. Every reference reports the tier it resolved at.',
       },
     },
     {

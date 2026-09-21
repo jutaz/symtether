@@ -6,21 +6,21 @@ description: "Broken URLs 404. Broken code references don't. #sym: verifies mark
 
 hero:
   name: symtether
-  text: "Docs that point at real code, and fail CI when they stop."
+  text: 'Docs that point at real code, and fail CI when they stop.'
   tagline: Tethered Docs. Real Code. Zero Hallucinations.
   actions:
     - theme: brand
       text: Get started
       link: /guide
     - theme: alt
-      text: "The #sym: syntax"
+      text: 'The #sym: syntax'
       link: /spec/
 
 features:
   - title: Nothing to set up
     details: npx symtether check works on an unmodified repo. Exclusions come from your .gitignore.
   - title: Checked against the AST
-    details: Eighteen languages resolve through tree-sitter (TS, TSX, JS, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash). Everything else falls back to lexical search, and every ref reports which tier it resolved at.
+    details: Twenty languages resolve through tree-sitter (TS, TSX, JS, Python, Go, Rust, Java, Kotlin, Swift, Ruby, PHP, C, C++, C#, Scala, Elixir, Lua, Bash, Svelte, Astro). Everything else falls back to lexical search, and every ref reports which tier it resolved at.
   - title: Built for agents
     details: symtether init adds a short managed section to AGENTS.md so coding agents read, write, and repair refs as part of normal work.
   - title: Staleness detection when you want it
@@ -29,7 +29,7 @@ features:
 
 ## The problem
 
-Your `AGENTS.md` says *"follow the pattern in `fetchData`."* Three sprints
+Your `AGENTS.md` says _"follow the pattern in `fetchData`."_ Three sprints
 later someone renames `fetchData` and nothing fails. The doc still reads
 fine. Every agent session and every new teammate now follows a pointer to
 code that does not exist, and they find out only after they have spent time
@@ -42,6 +42,7 @@ that the symbol inside it was removed.
 ```markdown
 <!-- The file still exists, so every link checker passes this, -->
 <!-- but fetchData was renamed two weeks ago. -->
+
 Follow the fetch pattern in [fetchData](src/api/client.ts#L42).
 ```
 

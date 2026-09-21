@@ -1,8 +1,10 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { format, resolveConfig } from 'prettier';
 import { describe, expect, it } from 'vitest';
-import { init, MANAGED_BLOCK } from '../src/init.js';
+import { init, MANAGED_BLOCK, managedBlock } from '../src/init.js';
 import { UsageError } from '../src/types.js';
 import { setupFixture } from './helpers.js';
 
@@ -35,6 +37,24 @@ describe('init', () => {
       expect(third.match(/symtether:begin/g)).toHaveLength(1);
     } finally {
       await fixture.cleanup();
+    }
+  });
+
+  it('emits a block prettier leaves byte-identical', async () => {
+    // Regression: prettier used to reflow the block (blank lines around the
+    // heading/list, indenting Spec:), so a consumer's `prettier --write`
+    // rewrote it and the next `init` rewrote it back forever. The block must
+    // be a fixed point under the repo's own resolved prettier config.
+    const config =
+      (await resolveConfig(
+        fileURLToPath(new URL('../AGENTS.md', import.meta.url)),
+      )) ?? {};
+    for (const block of [MANAGED_BLOCK, managedBlock(true)]) {
+      const asFile = `${block}\n`;
+      const once = await format(asFile, { ...config, parser: 'markdown' });
+      const twice = await format(once, { ...config, parser: 'markdown' });
+      expect(once).toBe(asFile);
+      expect(twice).toBe(asFile);
     }
   });
 

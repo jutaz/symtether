@@ -173,9 +173,11 @@ describe('language registry invariants', () => {
     );
     for (const [kind, accepts] of Object.entries(KIND_MAP)) {
       // Each row of the appendix table must list exactly the map's kinds.
+      // Cell padding is prettier's business, so match on the cell contents
+      // rather than a fixed-width prefix.
       const row = guide
         .split('\n')
-        .find((l) => l.startsWith(`| \`${kind}\` |`));
+        .find((l) => l.replace(/\s+/g, ' ').startsWith(`| \`${kind}\` |`));
       expect(row, `docs/guide.md must document kind "${kind}"`).toBeDefined();
       for (const accepted of accepts) {
         expect(
