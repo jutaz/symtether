@@ -74,25 +74,23 @@ export async function update(
         targetFilter.some((t) => pathInScope(ref.targetPath, toPosix(t)));
 
       const resolution = await resolver.resolve(ref);
+      const prev = previous.get(key);
       if (resolution.status === 'ok' && resolution.hash) {
-        if (inScope) {
-          next.set(key, { target: key, hash: resolution.hash, date: today });
-        } else {
-          // Out of scope: carry the previous stamp forward unchanged, or
-          // stamp fresh if it never existed (a sum file must cover every
-          // resolvable ref, or --strict would silently skip some).
-          const prev = previous.get(key);
-          next.set(
-            key,
-            prev ?? { target: key, hash: resolution.hash, date: today },
-          );
-        }
+        // Keep the previous line verbatim when out of scope or when its hash
+        // is unchanged; re-dating unchanged lines makes branches conflict.
+        // Stamp fresh otherwise, including out-of-scope refs that were never
+        // stamped (a sum file must cover every resolvable ref, or --strict
+        // would silently skip some).
+        const keep = prev && (!inScope || prev.hash === resolution.hash);
+        next.set(
+          key,
+          keep ? prev : { target: key, hash: resolution.hash, date: today },
+        );
       } else {
         if (resolution.status === 'broken') skippedBroken++;
         // Broken or unverifiable refs never get a fresh stamp, but a scoped
         // run must not silently discard existing stamps either. The sum
         // file is a shadow; only a full-scope run prunes.
-        const prev = previous.get(key);
         if (prev && !inScope) next.set(key, prev);
       }
     }

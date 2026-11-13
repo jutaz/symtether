@@ -133,12 +133,15 @@ describe('update output snapshot', () => {
     }
   });
 
-  it('is idempotent: a second update run is byte-identical', async () => {
+  it('is idempotent: a second update run, even days later, is byte-identical', async () => {
     const fixture = await setupFixture('basic');
     const sumPath = path.join(fixture.dir, 'symtether.sum');
     try {
       await update({ cwd: fixture.dir });
       const first = await readFile(sumPath, 'utf8');
+      // A later day must not re-date unchanged lines, or every branch that
+      // runs `update` conflicts with every other on the whole sum file.
+      vi.setSystemTime(new Date('2026-08-15T12:00:00Z'));
       await update({ cwd: fixture.dir });
       const second = await readFile(sumPath, 'utf8');
       expect(second).toBe(first);
