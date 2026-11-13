@@ -54,6 +54,11 @@ sync with the resolver's behavior.
   aligned columns. Alignment would rewrite every line whenever a longer
   entry lands, which is exactly the merge-conflict amplification the
   line-oriented format is meant to avoid.
+- Deviation on record: the sum-file date is the day a hash was first
+  stamped, not the day of the last `update` run. `update` keeps an
+  entry's date while its hash is unchanged, so a run only rewrites lines
+  whose target changed. Re-dating every line made every branch that ran
+  `update` conflict with every other.
 - Deviation on record: hashes are full SHA-256, not 16-hex truncation.
   The only cost is line width in a derived file.
 - `queries/*.extra.scm` supplement the upstream tags.scm (const/let/var,

@@ -20,9 +20,9 @@ export const SUM_FILE = 'symtether.sum';
 export interface SumEntry {
   /** `path#dotpath` or `path#kind:dotpath`. Fragment without `sym:`. */
   target: string;
-  /** `ast:sha256:<16hex>` or `lex:sha256:<16hex>`. */
+  /** `ast:sha256:<64hex>` or `lex:sha256:<64hex>`. */
   hash: string;
-  /** ISO date of the last `update` stamp. Informational only. */
+  /** ISO date this hash was first stamped. Informational only. */
   date: string;
 }
 
